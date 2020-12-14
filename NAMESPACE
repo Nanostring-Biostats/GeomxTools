@@ -7,6 +7,7 @@ import(Biobase)
 importClassesFrom(IRanges, NumericList)
 importClassesFrom(methods, ANY, character, environment, formula, list, matrix,
                   missing, "NULL", ".NULL")
+importClassesFrom(NanoStringNCTools, SignatureSet)
 importMethodsFrom(methods, initialize, show)
 importFrom(Biostrings, BStringSet, DNAStringSet)
 importFrom(ggbeeswarm, position_beeswarm)
@@ -27,13 +28,13 @@ importFrom(utils, read.csv, write.csv)
 importFrom(rjson, fromJSON)
 importFrom(readxl, read_xlsx)
 importFrom(reshape2, dcast)
-importFrom(EnvStats, geoMean)
+importFrom(NanoStringNCTools, ngeoMean)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
 
-exportClasses(SignatureSet, NanoStringDccSet)
+exportClasses(SignatureSet, NanoStringGeomxSet)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 generics
@@ -45,7 +46,7 @@ exportClasses(SignatureSet, NanoStringDccSet)
 
 exportMethods(show,
               weights, "weights<-", length, names, lengths,
-              NanoStringRccSet, groups, "groups<-", version, "version<-",
+              NanoStringGeomxSet, groups, "groups<-", version, "version<-",
               sData, svarLabels, dimLabels, "dimLabels<-",
               signatures, "signatures<-", signatureScores,
               design, "design<-", signatureGroups,
@@ -57,10 +58,11 @@ exportMethods(show,
               munge, transform, getSigFuncs, signatureFuncs,
               setQCFlags, normalize)
 
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export non-generic functions
 
-export(readNanoStringDccSet,
+export(readNanoStringGeomxSet,
        readDccFile,
        readPKCFile
        )
@@ -68,6 +70,5 @@ export(readNanoStringDccSet,
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S3 methods
 
-S3method(ggplot, NanoStringRccSet)
-S3method(autoplot, NanoStringRccSet)
+
 
