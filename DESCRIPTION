@@ -12,12 +12,12 @@ Imports: BiocGenerics, Biostrings, ggbeeswarm, ggiraph, grDevices, IRanges,
 Suggests: biovizBase, ggbio, RUnit
 License: Artistic-2.0
 Collate: DccMetadata.R
-         NanoStringDccSet-class.R
-         NanoStringDccSet-validity.R
-         NanoStringDccSet-accessors.R
-         NanoStringDccSet-signatures.R
+         NanoStringGeomxSet-class.R
+         NanoStringGeomxSet-validity.R
+         NanoStringGeomxSet-accessors.R
+         NanoStringGeomxSet-signatures.R
          readDccFile.R
          readPKCFile.R
-         readNanoStringDccSet.R
+         readNanoStringGeomxSet.R
          
 

@@ -1,7 +1,7 @@
 setClassUnion("formulaOrNULL", c("formula", "NULL"))
 
 # Class definition
-setClass("NanoStringDccSet",
+setClass("NanoStringGeomxSet",
          contains = "ExpressionSet",
          slots = c(dimLabels = "character",
                    signatures = "SignatureSet",
@@ -9,12 +9,12 @@ setClass("NanoStringDccSet",
          prototype = prototype(
            new("VersionedBiobase",
                versions = c(classVersion("ExpressionSet"),
-                            NanoStringDccSet = "1.0.0")),
+                            NanoStringGeomxSet = "1.0.0")),
            signatures = SignatureSet(),
            design = NULL))
 
 # Show method
-setMethod("show", signature = "NanoStringDccSet",
+setMethod("show", signature = "NanoStringGeomxSet",
 function(object) {
   callNextMethod(object)
   cat("signature: ")
@@ -25,7 +25,7 @@ function(object) {
 })
 
 # Constructors
-setGeneric("NanoStringDccSet",
+setGeneric("NanoStringGeomxSet",
 function(assayData,
          phenoData = annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -36,10 +36,10 @@ function(assayData,
          signatures = SignatureSet(),
          design = NULL,
          ...)
-  standardGeneric("NanoStringDccSet"),
+  standardGeneric("NanoStringGeomxSet"),
 signature = "assayData")
 
-setMethod("NanoStringDccSet", "missing",
+setMethod("NanoStringGeomxSet", "missing",
 function(assayData,
          phenoData = annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -59,7 +59,7 @@ function(assayData,
               ...)
 })
 
-setMethod("NanoStringDccSet", "environment",
+setMethod("NanoStringGeomxSet", "environment",
 function(assayData,
          phenoData = annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -71,7 +71,7 @@ function(assayData,
          design = NULL,
          ...)
 {
-  new2("NanoStringDccSet",
+  new2("NanoStringGeomxSet",
        assayData = assayData,
        phenoData = phenoData,
        featureData = featureData,
@@ -84,7 +84,7 @@ function(assayData,
        ...)
 })
 
-setMethod("NanoStringDccSet", "matrix",
+setMethod("NanoStringGeomxSet", "matrix",
 function(assayData,
          phenoData = annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -104,7 +104,7 @@ function(assayData,
               ...)
 })
 
-setMethod("NanoStringDccSet", "ExpressionSet",
+setMethod("NanoStringGeomxSet", "ExpressionSet",
 function(assayData,
          phenoData = annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -128,7 +128,7 @@ function(assayData,
               ...)
 })
 
-setMethod("NanoStringDccSet", "NanoStringDccSet",
+setMethod("NanoStringGeomxSet", "NanoStringGeomxSet",
 function(assayData,
          phenoData = annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -153,5 +153,5 @@ function(assayData,
 })
 
 # Coersion
-setAs("ExpressionSet", "NanoStringDccSet",
-      function(from) NanoStringDccSet(from))
+setAs("ExpressionSet", "NanoStringGeomxSet",
+      function(from) NanoStringGeomxSet(from))
