@@ -1,6 +1,6 @@
 ---
-title: "Introduction to the NanoStringDCCSet Class"
-author: "David Henderson, Patrick Aboyoun, Nicole Ortogero, Zhi Yang, Jason Reeves, Kara Gorman, Rona Vitancol, Thomas Smith"
+title: "Introduction to the NanoStringGeomxSet Class"
+author: "David Henderson, Patrick Aboyoun, Nicole Ortogero, Zhi Yang, Jason Reeves, Kara Gorman, Rona Vitancol, Thomas Smith, Maddy Griswold"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -21,13 +21,13 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-The NanoStringDCCSet was inherited from Biobase's ExpressionSet class. The NanoStringDCCSet class was designed to encapsulate data and corresponding methods for Nanostring DCC files generated from the NanoString GeoMx 
+The NanoStringGeomxSet was inherited from Biobase's ExpressionSet class. The NanoStringGeomxSet class was designed to encapsulate data and corresponding methods for NanoString DCC files generated from the NanoString GeoMx 
 Digital Spatial Profiling (DSP) platform.
 
 
 ## Loading Packages
 
-Loading the NanoStringNCTools package allows users access to the NanoStringDCCSet class.
+Loading the NanoStringNCTools package allows users access to the NanoStringGeomxSet class.
 
 ```{r, message=FALSE, warning=FALSE}
 library(NanoStringNCTools)
@@ -42,15 +42,14 @@ library(ggplotify)
 ```
 
 
-## Building a NanoStringDCCSet from .DCC files 
+## Building a NanoStringGeomxSet from .DCC files 
 
 ```{r}
-setwd("~/hades/zyang/DCCSet_demo/")
-DccFiles <- list.files( file.path( "." , "dnd_output" ) , 
-                         full.names = TRUE , pattern = ".dcc" )
-PKCFiles <- c(file.path( ".", "PKCs" , "VnV_GeoMx_Hs_CTA_v1.2.pkc" ),
-              file.path( "." , "PKCs", "Six-gene_test_v1_v1.1.pkc"))
-SampleAnnotationFile <- file.path( "." , "annotations.xlsx" )
+datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+                       package="NanoStringNCTools")
+dccFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)
+PKCFiles <- dir(datadir, pattern=".pkc$", full.names=TRUE)
+SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
 demoData <-
   readNanoStringDccSet(dccFiles = DccFiles,
@@ -68,9 +67,9 @@ demoData
 ```
 
 
-## Accessing and Assigning NanoStringDCCSet Data Members
+## Accessing and Assigning NanoStringGeomxSet Data Members
 
-Alongside the accessors associated with the ExpressionSet class, NanoStringDCCSet objects have unique additional assignment and accessor methods faciliting common ways to view DSP data and associated labels.
+Alongside the accessors associated with the ExpressionSet class, NanoStringGeomxSet objects have unique additional assignment and accessor methods faciliting common ways to view DSP data and associated labels.
 
 ```{r}
 head( pData( demoData ), 2 )
@@ -79,7 +78,7 @@ svarLabels( demoData )
 head( sData(demoData), 2 )
 ```
 
-Design information can be assigned to the NanoStringDCCSet object, as well as feature and sample labels to use for NanoStringDCCSet plotting methods.
+Design information can be assigned to the NanoStringGeomxSet object, as well as feature and sample labels to use for NanoStringGeomxSet plotting methods.
 
 ```{r}
 design( demoData ) <- ~ `segments`
