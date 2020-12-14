@@ -23,7 +23,7 @@ readDccFile(file)
     gene probe counts.}
 }
 
-\author{Zhi Yang & Nicole Ortegero}
+\author{Zhi Yang & Nicole Ortogero}
 
 \seealso{\code{\link{readNanoStringGeomxSet}}}
 

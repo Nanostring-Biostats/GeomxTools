@@ -126,7 +126,7 @@ NanoStringGeomxSet(assayData,
   }
 }
 
-\author{Zhi Yang & Nicole Ortegero}
+\author{Zhi Yang & Nicole Ortogero}
 
 \seealso{
   \code{\link{readNanoStringGeomxSet}},

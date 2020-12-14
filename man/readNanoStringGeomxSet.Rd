@@ -37,7 +37,7 @@ readNanoStringGeomxSet(dccFiles, pkcFiles = NULL, phenoDataFile = NULL,
   An instance of the \code{\linkS4class{NanoStringGeomxSet}} class.
 }
 
-\author{Zhi Yang & Nicole Ortegero}
+\author{Zhi Yang & Nicole Ortogero}
 
 \seealso{
 \code{\link{NanoStringGeomxSet}}

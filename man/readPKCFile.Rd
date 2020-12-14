@@ -24,7 +24,7 @@ readPKCFile(file)
   \item{\ldots}{additional columns}
 }
 
-\author{Zhi Yang & Nicole Ortegero}
+\author{Zhi Yang & Nicole Ortogero}
 
 \seealso{\code{\link{readNanoStringGeomxSet}}}
 
