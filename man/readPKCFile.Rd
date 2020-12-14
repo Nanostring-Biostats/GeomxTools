@@ -30,7 +30,7 @@ readPKCFile(file)
 
 \examples{
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
-                       package="NanoStringNCTools")
+                       package="GeomxTools")
 pkc <- dir(datadir, pattern=".pkc$", full.names=TRUE)
 PKCData <- readPKCFile(pkc)
 }

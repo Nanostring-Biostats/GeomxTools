@@ -1,40 +1,16 @@
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Imports
 
-import(BiocGenerics)
-import(S4Vectors)
-import(Biobase)
-importClassesFrom(IRanges, NumericList)
-importClassesFrom(methods, ANY, character, environment, formula, list, matrix,
-                  missing, "NULL", ".NULL")
 importClassesFrom(NanoStringNCTools, SignatureSet)
-importMethodsFrom(methods, initialize, show)
-importFrom(Biostrings, BStringSet, DNAStringSet)
-importFrom(ggbeeswarm, position_beeswarm)
-importFrom(ggiraph, geom_boxplot_interactive, geom_line_interactive,
-           geom_point_interactive, GeomInteractiveBoxplot, GeomInteractiveLine,
-           GeomInteractivePoint)
-importFrom(ggplot2, aes, aes_, aes_string, autoplot, element_blank,
-           element_text, geom_hline, ggplot, guide_legend, guides, layer,
-           scale_x_continuous, scale_x_discrete, scale_y_continuous,
-           stat_boxplot, theme)
-importFrom(grDevices, colorRampPalette)
-importFrom(IRanges, NumericList)
-importFrom(methods, as, callGeneric, callNextMethod, is, validObject)
-importFrom(pheatmap, pheatmap)
-importFrom(RColorBrewer, brewer.pal)
-importFrom(stats, as.formula, coef, lm, model.frame, qnorm, quantile, update)
-importFrom(utils, read.csv, write.csv)
+importFrom(NanoStringNCTools, SignatureSet)
 importFrom(rjson, fromJSON)
 importFrom(readxl, read_xlsx)
-importFrom(reshape2, dcast)
-importFrom(NanoStringNCTools, ngeoMean)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
 
-exportClasses(SignatureSet, NanoStringGeomxSet)
+exportClasses(NanoStringGeomxSet)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 generics
@@ -45,18 +21,9 @@ exportClasses(SignatureSet, NanoStringGeomxSet)
 ### Export S4 methods
 
 exportMethods(show,
-              weights, "weights<-", length, names, lengths,
-              NanoStringGeomxSet, groups, "groups<-", version, "version<-",
               sData, svarLabels, dimLabels, "dimLabels<-",
               signatures, "signatures<-", signatureScores,
-              design, "design<-", signatureGroups,
-              summary, "[", subset, "setSignatureFuncs<-", "setSignatureGroups<-",
-              endogenousSubset, housekeepingSubset,
-              negativeControlSubset, positiveControlSubset,
-              controlSubset, nonControlSubset, signatureSubset,
-              assayDataApply, signatureScoresApply, esBy, with,
-              munge, transform, getSigFuncs, signatureFuncs,
-              setQCFlags, normalize)
+              design, "design<-", signatureGroups)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -64,8 +31,7 @@ exportMethods(show,
 
 export(readNanoStringGeomxSet,
        readDccFile,
-       readPKCFile
-       )
+       readPKCFile)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S3 methods

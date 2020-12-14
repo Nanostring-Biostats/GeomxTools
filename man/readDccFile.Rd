@@ -29,7 +29,7 @@ readDccFile(file)
 
 \examples{
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
-                       package="NanoStringNCTools")
+                       package="GeomxTools")
 dccFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)
 dccData <- sapply(dccFiles, readDccFile, simplify = FALSE)
 }
