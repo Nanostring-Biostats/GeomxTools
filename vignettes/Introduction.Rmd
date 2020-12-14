@@ -1,5 +1,5 @@
 ---
-title: "Introduction to the NanoStringRCCSet Class"
+title: "Introduction to the NanoStringDCCSet Class"
 author: "David Henderson, Patrick Aboyoun, Nicole Ortogero, Zhi Yang, Jason Reeves, Kara Gorman, Rona Vitancol, Thomas Smith"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -21,12 +21,13 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-The NanoStringRCCSet was inherited from Biobase's ExpressionSet class. The NanoStringRCCSet class was designed to encapsulate data and corresponding methods for Nanostring RCC files generated from the NanoString nCounter platform.
+The NanoStringDCCSet was inherited from Biobase's ExpressionSet class. The NanoStringDCCSet class was designed to encapsulate data and corresponding methods for Nanostring DCC files generated from the NanoString GeoMx 
+Digital Spatial Profiling (DSP) platform.
 
 
 ## Loading Packages
 
-Loading the NanoStringNCTools package allows users access to the NanoStringRCCSet class.
+Loading the NanoStringNCTools package allows users access to the NanoStringDCCSet class.
 
 ```{r, message=FALSE, warning=FALSE}
 library(NanoStringNCTools)
@@ -41,18 +42,25 @@ library(ggplotify)
 ```
 
 
-## Building a NanoStringRCCSet from .RCC files 
+## Building a NanoStringDCCSet from .DCC files 
 
 ```{r}
-setwd("~/NAS_data/dhenderson/360TestData/IO/demo")
-rcc_files <- list.files( file.path( "." , "RCCs" ) , full.names = TRUE , pattern = ".RCC" )
-rlf_file <- file.path( "." , "NS_IO_360_v1.0.rlf" )
-sample_annotation <- file.path( "." , "TRTDEMO_Annotation.csv" )
+setwd("~/hades/zyang/DCCSet_demo/")
+DccFiles <- list.files( file.path( "." , "dnd_output" ) , 
+                         full.names = TRUE , pattern = ".dcc" )
+PKCFiles <- c(file.path( ".", "PKCs" , "VnV_GeoMx_Hs_CTA_v1.2.pkc" ),
+              file.path( "." , "PKCs", "Six-gene_test_v1_v1.1.pkc"))
+SampleAnnotationFile <- file.path( "." , "annotations.xlsx" )
 
-demoData <- readNanoStringRccSet( rccFiles = rcc_files ,
-                                  rlfFile = rlf_file ,
-                                  phenoDataFile = sample_annotation ,
-                                  phenoDataRccColName = "RCC" )
+demoData <-
+  readNanoStringDccSet(dccFiles = DccFiles,
+                       pkcFiles = PKCFiles,
+                       phenoDataFile = SampleAnnotationFile,
+                       phenoDataSheet = "CW005",
+                       phenoDataDccColName = "Sample_ID",
+                       protocolDataColNames = c("aoi", "cell_line", 
+                                                "roi_rep", "pool_rep", "slide_rep"),
+                       experimentDataColNames = c("panel"))
 class( demoData )
 isS4( demoData )
 is( demoData, "ExpressionSet" )
@@ -60,9 +68,9 @@ demoData
 ```
 
 
-## Accessing and Assigning NanoStringRCCSet Data Members
+## Accessing and Assigning NanoStringDCCSet Data Members
 
-Alongside the accessors associated with the ExpressionSet class, NanoStringRCCSet objects have unique additional assignment and accessor methods faciliting common ways to view nCounter data and associated labels.
+Alongside the accessors associated with the ExpressionSet class, NanoStringDCCSet objects have unique additional assignment and accessor methods faciliting common ways to view DSP data and associated labels.
 
 ```{r}
 head( pData( demoData ), 2 )
@@ -71,174 +79,15 @@ svarLabels( demoData )
 head( sData(demoData), 2 )
 ```
 
-Design information can be assigned to the NanoStringRCCSet object, as well as feature and sample labels to use for NanoStringRCCSet plotting methods.
+Design information can be assigned to the NanoStringDCCSet object, as well as feature and sample labels to use for NanoStringDCCSet plotting methods.
 
 ```{r}
-design( demoData ) <- ~ `Mutational Status`
+design( demoData ) <- ~ `segments`
 design( demoData )
 
 dimLabels( demoData )
 dimLabels( demoData )[2] <- "Sample ID"
 dimLabels( demoData )
-```
-
-
-## Summarizing NanoString nCounter Data
-
-Easily summarize count results using the summary method. Data summaries can be generated across features or samples. Labels can be used to generate summaries based on feature or sample groupings.
-
-```{r}
-head( summary( demoData , MARGIN = 1 ), 2 )
-head( summary( demoData , MARGIN = 2 ), 2 )
-unique( sData( demoData )$"Mutational Status" )
-head( summary( demoData , MARGIN = 2, GROUP = "Mutational Status" )$Mutated, 2 )
-head( summary( demoData , MARGIN = 2, GROUP = "Mutational Status" )$"Not Mutated", 2 )
-head( summary( demoData , MARGIN = 2, GROUP = "Mutational Status", log2 = FALSE )$"Not Mutated", 2 )
-```
-
-
-## Subsetting NanoStringRCCSet Objects
-
-Common subsetting methods including those to separate endogenous features from controls are provided with NanoStringRCCSet objects. In addition, users can use the subset or select arguments to further subset by feature or sample, respectively.
-
-```{r}
-length( sampleNames( demoData ) )
-length( sampleNames( subset( demoData , 
-                             select = phenoData( demoData )[["Mutational Status"]] == "Mutated" ) ) )
-
-dim( exprs( demoData ) )
-dim( exprs( endogenousSubset( demoData, 
-                              select = phenoData( demoData )[["Mutational Status"]] == "Mutated" ) ) )
-
-with( housekeepingSubset( demoData ) , table( CodeClass ) )
-with( negativeControlSubset( demoData ) , table( CodeClass ) )
-with( positiveControlSubset( demoData ) , table( CodeClass ) )
-with( controlSubset( demoData ) , table( CodeClass ) )
-with( nonControlSubset( demoData ) , table( CodeClass ) )
-```
-
-
-## Apply Functions Across Assay Data
-
-Similar to the ExpressionSet's esApply function, an equivalent method is available with NanoStringRCCSet objects. Functions can be applied to assay data feature- or sample-wise.
-
-```{r}
-assayDataElement( demoData, "demoElem" ) <- 
-  assayDataApply( demoData, MARGIN=2, FUN=log, base=10, elt="exprs" )
-assayDataElement( demoData, "demoElem" )[1:3, 1:2]
-assayDataApply( demoData, MARGIN=1, FUN=mean, elt="demoElem")[1:5]
-
-head( esBy( demoData, 
-            GROUP = "Mutational Status", 
-            FUN = function( x ) { 
-              assayDataApply( x, MARGIN = 1, FUN=mean, elt="demoElem" ) 
-            } ) )
-```
-
-There is also a preloaded nCounter normalization method that comes with the NanoStringRCCSet class. This includes the default normalization performed in nSolver.
-
-```{r}
-demoData <- normalize( demoData , type="nSolver", fromELT = "exprs" , toELT = "exprs_norm" )
-assayDataElement( demoData , elt = "exprs_norm" )[1:3, 1:2]
-```
-
-
-## Transforming NanoStringRCCSet Data to Data Frames
-
-The NanoStringRCCSet munge function helps users generate data frames for downstream modeling and visualization. There is also a transform method, which functions similarly to the base transform function.
-
-```{r}
-neg_set <- negativeControlSubset( demoData )
-class( neg_set )
-neg_ctrls <- munge( neg_set )
-head( neg_ctrls, 2 )
-class( neg_ctrls )
-head( munge( demoData ), 2 )
-munge( demoData, mapping = ~`Therapeutic Response` + GeneMatrix )
-
-exprs_df <- transform( assayData( demoData )[["exprs_norm"]] )
-class( exprs_df )
-exprs_df[1:3, 1:2]
-```
-
-
-## Built-in Quality Control Assessment
-
-Users can flag samples that fail QC thresholds or have borderline results based on housekeeper and ERCC expression, imaging quality, and binding density. Additionally, QC results can be visualized using the NanoStringRCCSet autoplot method.
-
-```{r, fig.cap="Housekeeping Genes QC Plot"}
-demoData <- setQCFlags( demoData )
-tail( svarLabels( demoData ) )
-head( protocolData( demoData )[["QCFlags"]], 2 )
-head( protocolData( demoData )[["QCBorderlineFlags"]], 2 )
-```
-
-Binding Density QC
-```{r}
-theme_set( theme_gray( base_family = "Arial" ) )
-
-###### Remove tooltip call after bug fix
-girafe( ggobj = autoplot( demoData , "bindingDensity-mean", tooltipID = dimLabels( demoData )[2]  ) )
-girafe( ggobj = autoplot( demoData , "bindingDensity-sd", tooltipID = dimLabels( demoData )[2]  ) )
-```
-
-QC by Lane
-```{r}
-###### To remove once bug fixes #########
-hkSet <- summary( housekeepingSubset( demoData ) , 2L , elt = "exprs" )
-#########################################
-
-###### Remove tooltip call after bug fix
-girafe( ggobj = autoplot( demoData , "lane-bindingDensity", tooltipID = dimLabels( demoData )[2]  ) )
-girafe( ggobj = autoplot( demoData , "lane-fov", tooltipID = dimLabels( demoData )[2] ) )
-```
-
-Housekeeping Genes QC
-```{r}
-subData <- subset( demoData, select = phenoData( demoData )[["Mutational Status"]] == "Not Mutated" )
-
-###### To remove once bug fixes #########
-hkData <- housekeepingSubset( subData )
-subData[["hkStats"]] <- summary( hkData , 2L , elt = "exprs" )
-rownames( subData[["hkStats"]] ) <- pData( subData )[, dimLabels( subData )[2]]
-#########################################
-
-###### Remove tooltip call after bug fix
-girafe( ggobj = autoplot( subData, "housekeep-geom", tooltipID = dimLabels( subData )[2] ) )
-```
-
-ERCC QC
-```{r}
-###### To remove once bug fixes #########
-nrows <- function( x ) { return( nrow( x ) ) }
-#########################################
-
-###### Remove tooltip call after bug fix
-girafe( ggobj = autoplot( demoData , "ercc-linearity", tooltipID = dimLabels( demoData )[2] ) )
-girafe( ggobj = autoplot( subData , "ercc-lod", tooltipID = dimLabels( subData )[2] ) )
-```
-
-## Data exploration
-
-Further data exploration can be performed by visualizing a select feature's expression or by getting a bird's eye view with expression heatmaps auto-generated with unsupervised clustering dendrograms.
-
-```{r}
-###### To remove once bug fixes #########
-strwrpr <- function(x) {
-  if(!grepl(' ', x)) {
-    x <- gsub('(.{16})', '\\1 ', x)
-  }
-  paste(strwrap(x, 16), collapse = '\n')
-}
-#########################################
-
-girafe( ggobj = autoplot( demoData , "boxplot-feature" , index = "Endogenous_TAP2_NM_018833.2" , elt = "exprs" ) )
-
-####### Remove once bug fixed ##########
-plot.new()
-########################################
-
-autoplot( demoData , "heatmap-genes" , elt = "exprs_norm" )
 ```
 
 ```{r}
