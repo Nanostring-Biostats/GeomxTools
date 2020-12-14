@@ -1,0 +1,23 @@
+Package: GeomxTools
+Title: NanoString GeoMx Tools
+Description: Tools for NanoString Technologies Geomx Technology.
+Version: 0.0.9
+Encoding: UTF-8
+Author: Who wrote it
+Maintainer: The package maintainer <yourself@somewhere.net>
+Depends: R (>= 3.3.0), Biobase, S4Vectors, ggplot2
+Imports: BiocGenerics, Biostrings, ggbeeswarm, ggiraph, grDevices, IRanges,
+         methods, pheatmap, RColorBrewer, stats, utils, rjson, readxl, reshape2, 
+         EnvStats
+Suggests: biovizBase, ggbio, RUnit
+License: Artistic-2.0
+Collate: DccMetadata.R
+         NanoStringDccSet-class.R
+         NanoStringDccSet-validity.R
+         NanoStringDccSet-accessors.R
+         NanoStringDccSet-signatures.R
+         readDccFile.R
+         readPKCFile.R
+         readNanoStringDccSet.R
+         
+

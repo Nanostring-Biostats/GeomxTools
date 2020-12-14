@@ -1,0 +1,95 @@
+---
+title: "Introduction to the NanoStringDCCSet Class"
+author: "David Henderson, Patrick Aboyoun, Nicole Ortogero, Zhi Yang, Jason Reeves, Kara Gorman, Rona Vitancol, Thomas Smith"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 5,
+  fig.height = 4,
+  dpi=200
+)
+```
+
+## Introduction
+
+The NanoStringDCCSet was inherited from Biobase's ExpressionSet class. The NanoStringDCCSet class was designed to encapsulate data and corresponding methods for Nanostring DCC files generated from the NanoString GeoMx 
+Digital Spatial Profiling (DSP) platform.
+
+
+## Loading Packages
+
+Loading the NanoStringNCTools package allows users access to the NanoStringDCCSet class.
+
+```{r, message=FALSE, warning=FALSE}
+library(NanoStringNCTools)
+```
+
+Load additional packages for vignette plotting.
+
+```{r, message=FALSE, warning=FALSE}
+library(ggthemes)
+library(ggiraph)
+library(ggplotify)
+```
+
+
+## Building a NanoStringDCCSet from .DCC files 
+
+```{r}
+setwd("~/hades/zyang/DCCSet_demo/")
+DccFiles <- list.files( file.path( "." , "dnd_output" ) , 
+                         full.names = TRUE , pattern = ".dcc" )
+PKCFiles <- c(file.path( ".", "PKCs" , "VnV_GeoMx_Hs_CTA_v1.2.pkc" ),
+              file.path( "." , "PKCs", "Six-gene_test_v1_v1.1.pkc"))
+SampleAnnotationFile <- file.path( "." , "annotations.xlsx" )
+
+demoData <-
+  readNanoStringDccSet(dccFiles = DccFiles,
+                       pkcFiles = PKCFiles,
+                       phenoDataFile = SampleAnnotationFile,
+                       phenoDataSheet = "CW005",
+                       phenoDataDccColName = "Sample_ID",
+                       protocolDataColNames = c("aoi", "cell_line", 
+                                                "roi_rep", "pool_rep", "slide_rep"),
+                       experimentDataColNames = c("panel"))
+class( demoData )
+isS4( demoData )
+is( demoData, "ExpressionSet" )
+demoData
+```
+
+
+## Accessing and Assigning NanoStringDCCSet Data Members
+
+Alongside the accessors associated with the ExpressionSet class, NanoStringDCCSet objects have unique additional assignment and accessor methods faciliting common ways to view DSP data and associated labels.
+
+```{r}
+head( pData( demoData ), 2 )
+protocolData( demoData )
+svarLabels( demoData )
+head( sData(demoData), 2 )
+```
+
+Design information can be assigned to the NanoStringDCCSet object, as well as feature and sample labels to use for NanoStringDCCSet plotting methods.
+
+```{r}
+design( demoData ) <- ~ `segments`
+design( demoData )
+
+dimLabels( demoData )
+dimLabels( demoData )[2] <- "Sample ID"
+dimLabels( demoData )
+```
+
+```{r}
+sessionInfo()
+```

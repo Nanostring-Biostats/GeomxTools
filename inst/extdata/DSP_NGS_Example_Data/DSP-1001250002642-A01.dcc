@@ -1,0 +1,39 @@
+<Header>
+FileVersion,0.01
+SoftwareVersion,1.0.0
+Date,2020-7-14
+</Header>
+
+<Scan_Attributes>
+ID,DSP-1001250002642-A01
+Plate_ID,1001250002642
+Well,A01
+</Scan_Attributes>
+
+<NGS_Processing_Attributes>
+SeqSetId,VH00121:3:AAAG2YWM5
+tamperedIni,No
+trimGaloreOpts," --hardtrim5 26 --dont_gzip"
+flash2Opts," -m 26 -e 26 -f 26 -s 1 -r 27"
+umiExtractOpts," --bc-pattern=NNNNNNNNNNNNNN"
+bowtie2Opts," --end-to-end -L 4 --trim5 0 --trim3 0 --norc"
+umiDedupOpts," --edit-distance-threshold=1"
+Raw,161
+Trimmed,161
+Stitched,12
+Aligned,12
+umiQ30,0.9881
+rtsQ30,0.9792
+</NGS_Processing_Attributes>
+
+<Code_Summary>
+RTS0040511,1
+RTS0040785,1
+RTS0041678,1
+RTS0042445,1
+RTS0043600,1
+RTS0044800,1
+RTS0045342,1
+</Code_Summary>
+
+SOMEHASH100000000000

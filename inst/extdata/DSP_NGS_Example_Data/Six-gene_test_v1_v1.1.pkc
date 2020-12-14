@@ -1,0 +1,1306 @@
+{
+  "Name": "Six gene test custom", 
+  "Version": 1.1, 
+  "AnalyteType": "RNA", 
+  "MinArea": 16000, 
+  "MinNuclei": 200, 
+  "Compatibility": "01", 
+  "Date": "200707", 
+  "ReporterSpace": "0", 
+  "ProbeGroups": [
+    {
+      "Name": "Custom Target", 
+      "Targets": [
+        "Custom Negative Probe", 
+        "C1orf43", 
+        "ZNF207", 
+        "AUP1", 
+        "SLC25A3", 
+        "HNRNPK", 
+        "SEPTIN10", 
+        "ADCY7", 
+        "SNRPD3"
+      ]
+    }
+  ], 
+  "ProbeGroupVersion": 1.0, 
+  "Targets": [
+    {
+      "AnalyteType": "RNA", 
+      "DisplayName": "ZNF207", 
+      "CodeClass": "Endogenous02", 
+      "Probes": [
+        {
+          "RTS_Seq": "GTCACAAGAGAA", 
+          "DisplayName": "ZNF207_01", 
+          "ProbeID": "NM_003457.2:165_3p", 
+          "SystematicName": [
+            "ZNF207"
+          ], 
+          "Accession": [
+            "NM_003457.2", 
+            "NM_001098507.1", 
+            "NM_003457.3", 
+            "NM_001032293.2", 
+            "XR_002958061.1", 
+            "XM_017025019.2", 
+            "XR_001752615.2", 
+            "XR_001752613.2", 
+            "XR_002958060.1", 
+            "XR_001752616.2", 
+            "XR_001752612.2", 
+            "XR_002958059.1", 
+            "XR_934543.3", 
+            "XR_934542.3", 
+            "XR_001752614.2", 
+            "XR_001752611.2"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TTTTCTCCTCCCTTTTACTTTGCCGGTAGAACACAGTTATGGGTCGCAAGAAGAAGAAGCAGCTGAAGCCGTGGTGCTGGTATTGTAATAGAGATTTTGA", 
+          "RTS_ID": "RTS0995624", 
+          "GeneID": [
+            "7756"
+          ]
+        }, 
+        {
+          "RTS_Seq": "CTGCAGATCAGC", 
+          "DisplayName": "ZNF207_02", 
+          "ProbeID": "NM_003457.3:351_3p", 
+          "SystematicName": [
+            "ZNF207"
+          ], 
+          "Accession": [
+            "NM_001032293.1", 
+            "NM_001098507.1", 
+            "NM_003457.3", 
+            "XR_934542.1", 
+            "XR_934543.1", 
+            "XR_001752616.1", 
+            "XR_001752612.1", 
+            "XR_001752615.1", 
+            "XR_001752614.1", 
+            "XM_017025019.1", 
+            "XR_001752613.1", 
+            "XR_001752611.1", 
+            "XR_002958061.1", 
+            "XR_002958063.1", 
+            "XR_002958060.1", 
+            "XR_002958062.1", 
+            "XR_002958059.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "AATACCTGGAAGAACAGACATAGAGTTGGAAATATATGGTATGGAAGGTATTCCAGAAAAAGACATGGATGAAAGACGACGACTTCTTGAACAGAAAACA", 
+          "RTS_ID": "RTS0995625", 
+          "GeneID": [
+            "7756"
+          ]
+        }, 
+        {
+          "RTS_Seq": "CTTAGGATCGAC", 
+          "DisplayName": "ZNF207_03", 
+          "ProbeID": "NM_003457.3:505_3p", 
+          "SystematicName": [
+            "ZNF207"
+          ], 
+          "Accession": [
+            "NM_001032293.1", 
+            "NM_001098507.1", 
+            "NM_003457.3", 
+            "XR_934542.1", 
+            "XR_934543.1", 
+            "XR_001752616.1", 
+            "XR_001752612.1", 
+            "XR_001752615.1", 
+            "XR_001752614.1", 
+            "XM_017025019.1", 
+            "XR_001752613.1", 
+            "XR_001752611.1", 
+            "XR_002958061.1", 
+            "XR_002958063.1", 
+            "XR_002958060.1", 
+            "XR_002958062.1", 
+            "XR_002958059.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "GACTCTGCAGCCTCAACTTCATTTCAGCCACAGCCTGTTCAACCTCAGCAAGGTTATATTCCTCCAATGGCACAGCCAGGACTGCCACCAGTACCAGGAG", 
+          "RTS_ID": "RTS0995626", 
+          "GeneID": [
+            "7756"
+          ]
+        }, 
+        {
+          "RTS_Seq": "CGCATCGCATGT", 
+          "DisplayName": "ZNF207_04", 
+          "ProbeID": "NM_003457.3:815_3p", 
+          "SystematicName": [
+            "ZNF207"
+          ], 
+          "Accession": [
+            "NM_001032293.1", 
+            "NM_001098507.1", 
+            "NM_003457.3", 
+            "XR_934542.1", 
+            "XR_934543.1", 
+            "XR_001752616.1", 
+            "XR_001752612.1", 
+            "XR_001752615.1", 
+            "XR_001752614.1", 
+            "XM_017025019.1", 
+            "XR_001752613.1", 
+            "XR_001752611.1", 
+            "XR_002958061.1", 
+            "XR_002958063.1", 
+            "XR_002958060.1", 
+            "XR_002958062.1", 
+            "XR_002958059.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "AAGCACAGGCTGTTTCAGCGCCAGGTATTCTTAATAGACCACCTGCACCAACAGCAACTGTACCTGCCCCACAGCCTCCAGTTACTAAGCCTCTTTTCCC", 
+          "RTS_ID": "RTS0995627", 
+          "GeneID": [
+            "7756"
+          ]
+        }, 
+        {
+          "RTS_Seq": "TAGCAGCGAGAG", 
+          "DisplayName": "ZNF207_05", 
+          "ProbeID": "NM_003457.3:1097_3p", 
+          "SystematicName": [
+            "ZNF207"
+          ], 
+          "Accession": [
+            "NM_001098507.1", 
+            "NM_003457.3", 
+            "NM_001032293.2", 
+            "XR_002958061.1", 
+            "XR_002958063.1", 
+            "XM_017025019.2", 
+            "XR_001752615.2", 
+            "XR_001752613.2", 
+            "XR_002958060.1", 
+            "XR_001752616.2", 
+            "XR_001752612.2", 
+            "XR_002958062.1", 
+            "XR_002958059.1", 
+            "XR_934543.3", 
+            "XR_934542.3", 
+            "XR_001752614.2", 
+            "XR_001752611.2"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "CCCCAAAGCCTACATTCCCTGCTTATACACAGTCTACAGCTTCAACAACTAGTACAACAAATAGTACTGCAGCTAAACCAGCGGCTTCAATAACAAGTAA", 
+          "RTS_ID": "RTS0995628", 
+          "GeneID": [
+            "7756"
+          ]
+        }
+      ]
+    }, 
+    {
+      "AnalyteType": "RNA", 
+      "DisplayName": "AUP1", 
+      "CodeClass": "Endogenous02", 
+      "Probes": [
+        {
+          "RTS_Seq": "GCAGCATGTCGA", 
+          "DisplayName": "AUP1_01", 
+          "ProbeID": "NM_181575.5:305_3p", 
+          "SystematicName": [
+            "AUP1"
+          ], 
+          "Accession": [
+            "NR_126510.1", 
+            "NR_126511.1", 
+            "NM_181575.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "GCCCGGCAGGAGGACTCCGGACTCCGGGATCACAGTGTCAGGGTCCTCATTTCCAACCATGTGACACCTTTCGACCACAACATAGTCAATTTGCTTACCA", 
+          "RTS_ID": "RTS0995629", 
+          "GeneID": [
+            "550"
+          ]
+        }, 
+        {
+          "RTS_Seq": "GCAACGGCGCCT", 
+          "DisplayName": "AUP1_02", 
+          "ProbeID": "NM_181575.5:556_3p", 
+          "SystematicName": [
+            "AUP1"
+          ], 
+          "Accession": [
+            "NR_126510.1", 
+            "NR_126511.1", 
+            "NM_181575.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TGAGGAAGAGGCCACCAATGGCCGGGAGGGGCTCCTGCGCTTCAGTTCCTGGCCATTTTCTATCCAAGATGTGGTACAACCTCTTACCCTGCAAGTTCAG", 
+          "RTS_ID": "RTS0995630", 
+          "GeneID": [
+            "550"
+          ]
+        }, 
+        {
+          "RTS_Seq": "TAACATAACTAC", 
+          "DisplayName": "AUP1_03", 
+          "ProbeID": "NM_181575.5:700_3p", 
+          "SystematicName": [
+            "AUP1"
+          ], 
+          "Accession": [
+            "NR_126510.1", 
+            "NR_126511.1", 
+            "NM_181575.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "AGAACTGCTGTGGTCACTTTTCGTCCCTTTCACGGTGTATCAAGTAAGGTGGCTTCGTCCTGTTCATCGCCAACTAGGGGAAGCGAATGAGGAGTTTGCA", 
+          "RTS_ID": "RTS0995631", 
+          "GeneID": [
+            "550"
+          ]
+        }, 
+        {
+          "RTS_Seq": "TCGCGCCGTTCC", 
+          "DisplayName": "AUP1_04", 
+          "ProbeID": "NM_181575.5:936_3p", 
+          "SystematicName": [
+            "AUP1"
+          ], 
+          "Accession": [
+            "NR_126510.1", 
+            "NR_126511.1", 
+            "NM_181575.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "CCTCCCCTGGTCCTTCTCCTGATGTGCAACTGGCAACTCTGGCTCAGAGAGTCAAGGAAGTTTTGCCCCATGTGCCATTGGGTGTCATCCAGAGAGACCT", 
+          "RTS_ID": "RTS0995632", 
+          "GeneID": [
+            "550"
+          ]
+        }, 
+        {
+          "RTS_Seq": "GGTAACGGAGGC", 
+          "DisplayName": "AUP1_05", 
+          "ProbeID": "NM_181575.5:1045_3p", 
+          "SystematicName": [
+            "AUP1"
+          ], 
+          "Accession": [
+            "NR_126510.1", 
+            "NR_126511.1", 
+            "NM_181575.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TGGCTGTGTAGACTTGACTATCACTAATCTGCTTGAGGGGGCCGTAGCTTTCATGCCTGAAGACATCACCAAGGGAACTCAGTCCCTACCCACAGCCTCT", 
+          "RTS_ID": "RTS0995633", 
+          "GeneID": [
+            "550"
+          ]
+        }
+      ]
+    }, 
+    {
+      "AnalyteType": "RNA", 
+      "DisplayName": "SNRPD3", 
+      "CodeClass": "Control02", 
+      "Probes": [
+        {
+          "RTS_Seq": "TAGGACTTCACC", 
+          "DisplayName": "SNRPD3_01", 
+          "ProbeID": "NM_004175.4:1027_5p", 
+          "SystematicName": [
+            "SNRPD3"
+          ], 
+          "Accession": [
+            "NR_103819.1", 
+            "NM_001278656.1", 
+            "NM_004175.4", 
+            "NM_004175.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "AGTTTGCTTTGGCTAAATTTTGACACCCTGGGGGATGTCCTGGGAGAATGCCAGTACTTTGAAATAGCACAGCTATTGATGAGATTTTAAGCTGCTGTTC", 
+          "RTS_ID": "RTS0995667", 
+          "GeneID": [
+            "6634"
+          ]
+        }, 
+        {
+          "RTS_Seq": "TGGCACGAAGAA", 
+          "DisplayName": "SNRPD3_02", 
+          "ProbeID": "NM_004175.4:1568_3p", 
+          "SystematicName": [
+            "SNRPD3"
+          ], 
+          "Accession": [
+            "NR_103819.1", 
+            "NM_001278656.1", 
+            "NM_004175.4", 
+            "NM_004175.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TACTCCAGCTTGGGTGACAGAGCGAGACTGCACCTCAAAAAAAAAAAAGTAATTCAGGGGATCCTAGTGGCCAGCTTCCTTGGCTCGTATACTGGCTACA", 
+          "RTS_ID": "RTS0995668", 
+          "GeneID": [
+            "6634"
+          ]
+        }, 
+        {
+          "RTS_Seq": "ATCTAATCTCTC", 
+          "DisplayName": "SNRPD3_03", 
+          "ProbeID": "NM_004175.4:1701_3p", 
+          "SystematicName": [
+            "SNRPD3"
+          ], 
+          "Accession": [
+            "NR_103819.1", 
+            "NM_001278656.1", 
+            "NM_004175.4", 
+            "NM_004175.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TTCTTGGGAGCATATCAGAGCATCTCAGCATTGATTGGCACATCCATAGTTGTTAATGTAGGAAGGGTGACCAGCAGCTCAGCACAGTGGCTTGCTTCCA", 
+          "RTS_ID": "RTS0995669", 
+          "GeneID": [
+            "6634"
+          ]
+        }, 
+        {
+          "RTS_Seq": "AGCTACGGTGTC", 
+          "DisplayName": "SNRPD3_04", 
+          "ProbeID": "NM_004175.4:1701_5p", 
+          "SystematicName": [
+            "SNRPD3"
+          ], 
+          "Accession": [
+            "NR_103819.1", 
+            "NM_001278656.1", 
+            "NM_004175.4", 
+            "NM_004175.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TTCTTGGGAGCATATCAGAGCATCTCAGCATTGATTGGCACATCCATAGTTGTTAATGTAGGAAGGGTGACCAGCAGCTCAGCACAGTGGCTTGCTTCCA", 
+          "RTS_ID": "RTS0995670", 
+          "GeneID": [
+            "6634"
+          ]
+        }, 
+        {
+          "RTS_Seq": "CACTAATGAATA", 
+          "DisplayName": "SNRPD3_05", 
+          "ProbeID": "NM_004175.4:1207_5p", 
+          "SystematicName": [
+            "SNRPD3"
+          ], 
+          "Accession": [
+            "NR_103819.1", 
+            "NM_001278656.1", 
+            "NM_004175.4", 
+            "NM_004175.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TCAGACACAGGCACATAGTGTGGCACTTTGTTCAGTTAACATTTGTGGAGCTGTCATCAGCTCAGCTTTAACAACACAGGTGACTCTTTCCCTTGATAAA", 
+          "RTS_ID": "RTS0995671", 
+          "GeneID": [
+            "6634"
+          ]
+        }
+      ]
+    }, 
+    {
+      "AnalyteType": "RNA", 
+      "DisplayName": "SLC25A3", 
+      "CodeClass": "Endogenous02", 
+      "Probes": [
+        {
+          "RTS_Seq": "TAATAGGAACTC", 
+          "DisplayName": "SLC25A3_01", 
+          "ProbeID": "NM_005888.3:416_3p", 
+          "SystematicName": [
+            "SLC25A3"
+          ], 
+          "Accession": [
+            "NM_213611.1", 
+            "NM_002635.2", 
+            "NM_005888.3"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "GTACAAGGGCATATTTAACGGATTCTCAGTTACACTTAAAGAGGATGGTGTTCGTGGTTTGGCTAAAGGATGGGCTCCGACTTTCCTTGGCTACTCCATG", 
+          "RTS_ID": "RTS0995634", 
+          "GeneID": [
+            "5250"
+          ]
+        }, 
+        {
+          "RTS_Seq": "AAGAAGTGTTAC", 
+          "DisplayName": "SLC25A3_02", 
+          "ProbeID": "NM_005888.3:577_3p", 
+          "SystematicName": [
+            "SLC25A3"
+          ], 
+          "Accession": [
+            "NM_213611.1", 
+            "NM_002635.2", 
+            "NM_005888.3"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "GAGAGGAGAATACTTATCTCTGGCGCACATCACTATATTTGGCTGCCTCTGCCAGTGCTGAATTCTTTGCTGACATTGCCCTGGCTCCTATGGAAGCTGC", 
+          "RTS_ID": "RTS0995635", 
+          "GeneID": [
+            "5250"
+          ]
+        }, 
+        {
+          "RTS_Seq": "TGGAGCCAGTGT", 
+          "DisplayName": "SLC25A3_03", 
+          "ProbeID": "NM_005888.3:832_3p", 
+          "SystematicName": [
+            "SLC25A3"
+          ], 
+          "Accession": [
+            "NM_213611.1", 
+            "NM_002635.2", 
+            "NM_005888.3"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TTGAACGTACTGTTGAAGCACTGTACAAGTTTGTGGTTCCTAAGCCCCGCAGTGAATGTTCAAAGCCAGAGCAGCTGGTTGTAACATTTGTAGCAGGTTA", 
+          "RTS_ID": "RTS0995636", 
+          "GeneID": [
+            "5250"
+          ]
+        }, 
+        {
+          "RTS_Seq": "GAATTCATACTC", 
+          "DisplayName": "SLC25A3_04", 
+          "ProbeID": "NM_005888.3:969_3p", 
+          "SystematicName": [
+            "SLC25A3"
+          ], 
+          "Accession": [
+            "NM_213611.1", 
+            "NM_002635.2", 
+            "NM_005888.3"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "GCTGATTCTGTGGTATCTGTGTTGAATAAAGAAAAAGGTAGCAGTGCTTCTCTGGTCCTCAAGAGACTTGGATTTAAAGGTGTATGGAAGGGACTGTTTG", 
+          "RTS_ID": "RTS0995637", 
+          "GeneID": [
+            "5250"
+          ]
+        }, 
+        {
+          "RTS_Seq": "GAGACAGTTCGG", 
+          "DisplayName": "SLC25A3_05", 
+          "ProbeID": "NM_005888.3:1108_3p", 
+          "SystematicName": [
+            "SLC25A3"
+          ], 
+          "Accession": [
+            "NM_213611.1", 
+            "NM_002635.2", 
+            "NM_005888.3"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "GGTTTATCTATGACTCCGTGAAGGTCTACTTCAGACTTCCTCGCCCTCCTCCACCCGAGATGCCAGAGTCTCTGAAGAAGAAGCTTGGGTTAACTCAGTA", 
+          "RTS_ID": "RTS0995638", 
+          "GeneID": [
+            "5250"
+          ]
+        }
+      ]
+    }, 
+    {
+      "AnalyteType": "SpikeIn", 
+      "DisplayName": "Custom Negative Probe", 
+      "CodeClass": "Negative02", 
+      "Probes": [
+        {
+          "RTS_Seq": "TAGAGGTCGGCT", 
+          "DisplayName": "Custom Negative Probe_01", 
+          "ProbeID": "ERCC_00104.1:603_5p", 
+          "SystematicName": [
+            "ERCC-00104"
+          ], 
+          "Accession": [
+            "ERCC_00104.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TGTCTTTAGAAGGTTATAAGAAATCAGATATTGATTTACTTCCAGATGTGGTTAATGAGGTAGCTGATGATTTTGATTATGTAATTATAGATGCTCCAGC", 
+          "RTS_ID": "RTS0995657", 
+          "GeneID": []
+        }, 
+        {
+          "RTS_Seq": "CTATACCAAGTA", 
+          "DisplayName": "Custom Negative Probe_02", 
+          "ProbeID": "ERCC_00104.1:1071_5p", 
+          "SystematicName": [
+            "ERCC-00104"
+          ], 
+          "Accession": [
+            "ERCC_00104.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TTAAAATAATAAGGAAAGAAAGCTTTATAGATAAAATTAAGAGATTATTTAGGATGTATTAATTATCTTGATTTAAAAATTTTAATTATCATCCTTTTCC", 
+          "RTS_ID": "RTS0995656", 
+          "GeneID": []
+        }, 
+        {
+          "RTS_Seq": "TCGAGCGTCACG", 
+          "DisplayName": "Custom Negative Probe_03", 
+          "ProbeID": "ERCC_00104.1:1062_5p", 
+          "SystematicName": [
+            "ERCC-00104"
+          ], 
+          "Accession": [
+            "ERCC_00104.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "AAGATGAAATTAAAATAATAAGGAAAGAAAGCTTTATAGATAAAATTAAGAGATTATTTAGGATGTATTAATTATCTTGATTTAAAAATTTTAATTATCA", 
+          "RTS_ID": "RTS0995655", 
+          "GeneID": []
+        }, 
+        {
+          "RTS_Seq": "CTTCTGGAATGG", 
+          "DisplayName": "Custom Negative Probe_04", 
+          "ProbeID": "ERCC_00086.1:45_5p", 
+          "SystematicName": [
+            "ERCC-00086"
+          ], 
+          "Accession": [
+            "ERCC_00086.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TCTTTCAAAGAGTCCTTATCATAACCAAATACATAAACTCTAACTCTATTTCCTTTTGATTCTATTGTGCAATCAATGTCCATCCTTGATAATCTCTCAC", 
+          "RTS_ID": "RTS0995654", 
+          "GeneID": []
+        }, 
+        {
+          "RTS_Seq": "ATTGTACATATA", 
+          "DisplayName": "Custom Negative Probe_05", 
+          "ProbeID": "ERCC_00158.1:837_5p", 
+          "SystematicName": [
+            "ERCC-00158"
+          ], 
+          "Accession": [
+            "ERCC_00158.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "ACAACTTTGAGATATTTTTAATACTGATAAACGTTATCTTTGGATTAGGTATATTAACAAAGAGGAATATAAGGAATAATAAATAAAGTTGGGGGATGAT", 
+          "RTS_ID": "RTS0995658", 
+          "GeneID": []
+        }, 
+        {
+          "RTS_Seq": "TTACCGTGGCGA", 
+          "DisplayName": "Custom Negative Probe_06", 
+          "ProbeID": "ERCC_00158.1:846_5p", 
+          "SystematicName": [
+            "ERCC-00158"
+          ], 
+          "Accession": [
+            "ERCC_00158.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "AGATATTTTTAATACTGATAAACGTTATCTTTGGATTAGGTATATTAACAAAGAGGAATATAAGGAATAATAAATAAAGTTGGGGGATGATGATGAAGAG", 
+          "RTS_ID": "RTS0995659", 
+          "GeneID": []
+        }, 
+        {
+          "RTS_Seq": "CCGCGTTGTGTG", 
+          "DisplayName": "Custom Negative Probe_07", 
+          "ProbeID": "ERCC_00158.1:855_5p", 
+          "SystematicName": [
+            "ERCC-00158"
+          ], 
+          "Accession": [
+            "ERCC_00158.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TAATACTGATAAACGTTATCTTTGGATTAGGTATATTAACAAAGAGGAATATAAGGAATAATAAATAAAGTTGGGGGATGATGATGAAGAGATTTGCATT", 
+          "RTS_ID": "RTS0995660", 
+          "GeneID": []
+        }, 
+        {
+          "RTS_Seq": "CGACTATTAATG", 
+          "DisplayName": "Custom Negative Probe_08", 
+          "ProbeID": "ERCC_00138.1:576_5p", 
+          "SystematicName": [
+            "ERCC-00138"
+          ], 
+          "Accession": [
+            "ERCC_00138.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "CAGGAGCAATTAATGTCCATTTTAAGCTTATAATCCACTCAATAAATCTAAAAACTTCTTAGTTTTCTCTTTTTTAACCTTACCAAATTTCTCTAATTTG", 
+          "RTS_ID": "RTS0995661", 
+          "GeneID": []
+        }
+      ]
+    }, 
+    {
+      "AnalyteType": "RNA", 
+      "DisplayName": "C1orf43", 
+      "CodeClass": "Control02", 
+      "Probes": [
+        {
+          "RTS_Seq": "TTATCGTTCACG", 
+          "DisplayName": "C1orf43_05", 
+          "ProbeID": "NM_015449.3:1041_5p", 
+          "SystematicName": [
+            "C1orf43"
+          ], 
+          "Accession": [
+            "NM_015449.3", 
+            "NM_001297718.2", 
+            "NM_138740.4", 
+            "NM_001297717.2", 
+            "NM_001098616.3", 
+            "NM_001297720.2", 
+            "NM_015449.4"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "ACTCTGTGACGGAGCTGAAGGACTCTTGCCGTAGATTAAGCCAGTCAGTTGCAATGTGCAAGACAGGCTGCTTGCCGGGCCGCCCTCGGAACATCTGGCC", 
+          "RTS_ID": "RTS0995666", 
+          "GeneID": [
+            "25912"
+          ]
+        }, 
+        {
+          "RTS_Seq": "GGCCGATTCCGG", 
+          "DisplayName": "C1orf43_04", 
+          "ProbeID": "NM_015449.3:862_5p", 
+          "SystematicName": [
+            "C1orf43"
+          ], 
+          "Accession": [
+            "NM_015449.3", 
+            "NM_001297718.2", 
+            "NM_138740.4", 
+            "NM_001297717.2", 
+            "NM_001098616.3", 
+            "NM_001297720.2", 
+            "NM_015449.4"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "CACGAATTGGGAGCTCTCAGCGACATCACCAGTCAGCAGCCAAAGACCTAACTCAGTCCCCTGAGGTCTCCCCAACAACCATCCAGGTGACATACCTCCC", 
+          "RTS_ID": "RTS0995665", 
+          "GeneID": [
+            "25912"
+          ]
+        }, 
+        {
+          "RTS_Seq": "CATCGAGCATGT", 
+          "DisplayName": "C1orf43_03", 
+          "ProbeID": "NM_015449.3:862_3p", 
+          "SystematicName": [
+            "C1orf43"
+          ], 
+          "Accession": [
+            "NM_015449.3", 
+            "NM_001297718.2", 
+            "NM_138740.4", 
+            "NM_001297717.2", 
+            "NM_001098616.3", 
+            "NM_001297720.2", 
+            "NM_015449.4"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "CACGAATTGGGAGCTCTCAGCGACATCACCAGTCAGCAGCCAAAGACCTAACTCAGTCCCCTGAGGTCTCCCCAACAACCATCCAGGTGACATACCTCCC", 
+          "RTS_ID": "RTS0995664", 
+          "GeneID": [
+            "25912"
+          ]
+        }, 
+        {
+          "RTS_Seq": "GTATGGTCACTA", 
+          "DisplayName": "C1orf43_02", 
+          "ProbeID": "NM_015449.3:650_5p", 
+          "SystematicName": [
+            "C1orf43"
+          ], 
+          "Accession": [
+            "NM_001297723.1", 
+            "NM_001297721.1", 
+            "NM_015449.3", 
+            "NM_001297718.2", 
+            "NM_138740.4", 
+            "NM_001297717.2", 
+            "NM_001098616.3", 
+            "NM_001297720.2", 
+            "NM_015449.4"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "CCGGCATCCCCGTTCCTTAATGGGCAAGAATTTCCGCTCCTACCTGCTGGATCTGCGAAACACTAGTACGCCTTTCAAGGGTGTACGCAAAGCACTCATT", 
+          "RTS_ID": "RTS0995663", 
+          "GeneID": [
+            "25912"
+          ]
+        }, 
+        {
+          "RTS_Seq": "GGTTGCGTACCT", 
+          "DisplayName": "C1orf43_01", 
+          "ProbeID": "NM_015449.3:460_5p", 
+          "SystematicName": [
+            "C1orf43"
+          ], 
+          "Accession": [
+            "NM_001297723.1", 
+            "NM_001297721.1", 
+            "NM_015449.3", 
+            "NM_001297718.2", 
+            "NM_138740.4", 
+            "NM_001297717.2", 
+            "NM_001098616.3", 
+            "NM_001297720.2", 
+            "NM_015449.4"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TGAAAGAGGAGATTGATATTCGACTCTCCAGGGTTCAGGATATCAAGTATGAGCCCCAGCTCCTTGCAGATGATGATGCTAGACTACTACAACTGGAAAC", 
+          "RTS_ID": "RTS0995662", 
+          "GeneID": [
+            "25912"
+          ]
+        }
+      ]
+    }, 
+    {
+      "AnalyteType": "RNA", 
+      "DisplayName": "ADCY7", 
+      "CodeClass": "Endogenous02", 
+      "Probes": [
+        {
+          "RTS_Seq": "CACTAACGTATT", 
+          "DisplayName": "ADCY7_01", 
+          "ProbeID": "NM_001114.5:569_3p", 
+          "SystematicName": [
+            "ADCY7"
+          ], 
+          "Accession": [
+            "NM_001286057.1", 
+            "XM_011522842.1", 
+            "XM_011522839.1", 
+            "XM_011522836.1", 
+            "XM_011522835.1", 
+            "XM_011522840.1", 
+            "XM_011522837.1", 
+            "XM_011522838.1", 
+            "XM_017022899.1", 
+            "XM_017022898.1", 
+            "XR_001751822.1", 
+            "NM_001114.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "GACCCCTCCAGACACCAGGCCATTCTGGGCATGGCGTTCCTGGTGCTGGCGGTGTTTGCGGCCCTCTCTGTGCTGATGTACGTCGAGTGTCTCCTGCGGC", 
+          "RTS_ID": "RTS0995649", 
+          "GeneID": [
+            "113"
+          ]
+        }, 
+        {
+          "RTS_Seq": "ATGAGGTAATTG", 
+          "DisplayName": "ADCY7_02", 
+          "ProbeID": "NM_001114.5:1089_3p", 
+          "SystematicName": [
+            "ADCY7"
+          ], 
+          "Accession": [
+            "NM_001286057.1", 
+            "XM_011522842.1", 
+            "XM_011522839.1", 
+            "XM_011522836.1", 
+            "XM_011522835.1", 
+            "XM_011522840.1", 
+            "XM_011522837.1", 
+            "XM_011522838.1", 
+            "XM_017022897.1", 
+            "XM_017022899.1", 
+            "XM_017022898.1", 
+            "XR_001751822.1", 
+            "XM_017022896.1", 
+            "NM_001114.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "ACCTGCTGCTGTCAGTGCTTCCGGCCCACATCTCCATGGGCATGAAGCTGGCCATCATCGAACGGCTCAAGGAGCATGGTGACCGTCGCTGCATGCCTGA", 
+          "RTS_ID": "RTS0995650", 
+          "GeneID": [
+            "113"
+          ]
+        }, 
+        {
+          "RTS_Seq": "TGATTACCGTGT", 
+          "DisplayName": "ADCY7_03", 
+          "ProbeID": "NM_001114.5:1516_3p", 
+          "SystematicName": [
+            "ADCY7"
+          ], 
+          "Accession": [
+            "NM_001286057.1", 
+            "XM_011522842.1", 
+            "XM_011522839.1", 
+            "XM_011522836.1", 
+            "XM_011522835.1", 
+            "XM_011522840.1", 
+            "XM_011522837.1", 
+            "XM_011522838.1", 
+            "XM_017022897.1", 
+            "XM_017022899.1", 
+            "XM_017022898.1", 
+            "XR_001751822.1", 
+            "XM_017022896.1", 
+            "NM_001114.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "GGGCATACACTCGGGGAATGTGCTGTGCGGGGTCATCGGGCTGCGCAAGTGGCAGTATGACGTGTGGTCCCACGACGTGTCCCTGGCCAACCGGATGGAG", 
+          "RTS_ID": "RTS0995651", 
+          "GeneID": [
+            "113"
+          ]
+        }, 
+        {
+          "RTS_Seq": "GTGAGGCTCATC", 
+          "DisplayName": "ADCY7_04", 
+          "ProbeID": "NM_001114.5:2019_3p", 
+          "SystematicName": [
+            "ADCY7"
+          ], 
+          "Accession": [
+            "NM_001286057.1", 
+            "XM_011522842.1", 
+            "XM_011522839.1", 
+            "XM_011522836.1", 
+            "XM_011522835.1", 
+            "XM_011522840.1", 
+            "XM_011522837.1", 
+            "XM_011522838.1", 
+            "XM_017022897.1", 
+            "XM_017022899.1", 
+            "XM_017022898.1", 
+            "XR_001751822.1", 
+            "XM_017022896.1", 
+            "NM_001114.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "AGGATGACTCGTACGATGACGAGATGCTGTCAGCCATTGAGGGGCTCAGCTCCACGAGGCCCTGCTGCTCCAAGTCCGATGACTTCTACACCTTTGGGTC", 
+          "RTS_ID": "RTS0995652", 
+          "GeneID": [
+            "113"
+          ]
+        }, 
+        {
+          "RTS_Seq": "ATTACTCTATGA", 
+          "DisplayName": "ADCY7_05", 
+          "ProbeID": "NM_001114.5:2426_3p", 
+          "SystematicName": [
+            "ADCY7"
+          ], 
+          "Accession": [
+            "NM_001286057.1", 
+            "XM_011522842.1", 
+            "XM_011522839.1", 
+            "XM_011522836.1", 
+            "XM_011522835.1", 
+            "XM_011522840.1", 
+            "XM_011522837.1", 
+            "XM_011522838.1", 
+            "XM_017022897.1", 
+            "XM_017022899.1", 
+            "XM_017022898.1", 
+            "XR_001751822.1", 
+            "XM_017022896.1", 
+            "NM_001114.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "GGCAGCCTGCTCACTGTGGCCATCATCAACCTGCCCCTGATGCCTTTCCAAGTTCCAGAGCTGCCTGTTGGCAATGAGACAGGCCTACTGGCCGCGAGCA", 
+          "RTS_ID": "RTS0995653", 
+          "GeneID": [
+            "113"
+          ]
+        }
+      ]
+    }, 
+    {
+      "AnalyteType": "RNA", 
+      "DisplayName": "HNRNPK", 
+      "CodeClass": "Endogenous02", 
+      "Probes": [
+        {
+          "RTS_Seq": "ATTGATAAGAGT", 
+          "DisplayName": "HNRNPK_01", 
+          "ProbeID": "NM_002140.3:231_5p", 
+          "SystematicName": [
+            "HNRNPK"
+          ], 
+          "Accession": [
+            "NM_002140.3", 
+            "XM_005251960.2", 
+            "NM_001318186.1", 
+            "NM_001318188.1", 
+            "NM_031262.3", 
+            "NM_001318187.1", 
+            "NM_002140.4", 
+            "XM_017014668.1", 
+            "XM_017014669.1", 
+            "XM_005251963.4", 
+            "XM_005251965.3", 
+            "XM_011518616.2", 
+            "NM_031263.4"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "GATTGGTGTGCCCGTTTAATAAAAGAATATGGAAACTGAACAGCCAGAAGAAACCTTCCCTAACACTGAAACCAATGGTGAATTTGGTAAACGCCCTGCA", 
+          "RTS_ID": "RTS0995639", 
+          "GeneID": [
+            "3190"
+          ]
+        }, 
+        {
+          "RTS_Seq": "CAAGTTGAGATT", 
+          "DisplayName": "HNRNPK_02", 
+          "ProbeID": "NM_002140.3:231_3p", 
+          "SystematicName": [
+            "HNRNPK"
+          ], 
+          "Accession": [
+            "NM_002140.3", 
+            "XM_005251960.2", 
+            "NM_001318186.1", 
+            "NM_001318188.1", 
+            "NM_031262.3", 
+            "NM_001318187.1", 
+            "NM_002140.4", 
+            "XM_017014668.1", 
+            "XM_017014669.1", 
+            "XM_005251963.4", 
+            "XM_005251965.3", 
+            "XM_011518616.2", 
+            "NM_031263.4"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "GATTGGTGTGCCCGTTTAATAAAAGAATATGGAAACTGAACAGCCAGAAGAAACCTTCCCTAACACTGAAACCAATGGTGAATTTGGTAAACGCCCTGCA", 
+          "RTS_ID": "RTS0995640", 
+          "GeneID": [
+            "3190"
+          ]
+        }, 
+        {
+          "RTS_Seq": "GAACGCGGACGA", 
+          "DisplayName": "HNRNPK_03", 
+          "ProbeID": "NM_031263.2:652_3p", 
+          "SystematicName": [
+            "HNRNPK"
+          ], 
+          "Accession": [
+            "NM_031263.2", 
+            "XM_005251960.2", 
+            "NM_001318186.1", 
+            "NM_001318188.1", 
+            "NM_031262.3", 
+            "NM_001318187.1", 
+            "NM_002140.4", 
+            "XM_017014668.1", 
+            "XM_017014669.1", 
+            "XM_005251963.4", 
+            "XM_005251965.3", 
+            "XM_011518616.2", 
+            "NM_031263.4"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TGACTGCGAGTTGAGGCTGTTGATTCATCAGAGTCTAGCAGGAGGAATTATTGGGGTCAAAGGTGCTAAAATCAAAGAACTTCGAGAGAACACTCAAACC", 
+          "RTS_ID": "RTS0995641", 
+          "GeneID": [
+            "3190"
+          ]
+        }, 
+        {
+          "RTS_Seq": "TAGTGCAGGACT", 
+          "DisplayName": "HNRNPK_04", 
+          "ProbeID": "NM_002140.4:1042_5p", 
+          "SystematicName": [
+            "HNRNPK"
+          ], 
+          "Accession": [
+            "NM_031262.1", 
+            "NM_031263.1", 
+            "XM_005251960.1", 
+            "XM_005251965.1", 
+            "XM_005251963.1", 
+            "XM_011518616.1", 
+            "NM_001318186.1", 
+            "NM_001318188.1", 
+            "NM_001318187.1", 
+            "NM_002140.4", 
+            "XM_017014668.1", 
+            "XM_017014669.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "AAGGACGTGCACAGCCTTATGATCCCAATTTTTACGATGAAACCTATGATTATGGTGGTTTTACAATGATGTTTGATGACCGTCGCGGACGCCCAGTGGG", 
+          "RTS_ID": "RTS0995642", 
+          "GeneID": [
+            "3190"
+          ]
+        }, 
+        {
+          "RTS_Seq": "CAACTAAGCTTA", 
+          "DisplayName": "HNRNPK_05", 
+          "ProbeID": "NM_002140.4:1042_3p", 
+          "SystematicName": [
+            "HNRNPK"
+          ], 
+          "Accession": [
+            "NM_031262.1", 
+            "NM_031263.1", 
+            "XM_005251960.1", 
+            "XM_005251965.1", 
+            "XM_005251963.1", 
+            "XM_011518616.1", 
+            "NM_001318186.1", 
+            "NM_001318188.1", 
+            "NM_001318187.1", 
+            "NM_002140.4", 
+            "XM_017014668.1", 
+            "XM_017014669.1"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "AAGGACGTGCACAGCCTTATGATCCCAATTTTTACGATGAAACCTATGATTATGGTGGTTTTACAATGATGTTTGATGACCGTCGCGGACGCCCAGTGGG", 
+          "RTS_ID": "RTS0995643", 
+          "GeneID": [
+            "3190"
+          ]
+        }
+      ]
+    }, 
+    {
+      "AnalyteType": "RNA", 
+      "DisplayName": "SEPTIN10", 
+      "CodeClass": "Endogenous02", 
+      "Probes": [
+        {
+          "RTS_Seq": "CACACGTAATGT", 
+          "DisplayName": "SEPTIN10_01", 
+          "ProbeID": "NM_144710.5:806_5p", 
+          "SystematicName": [
+            "SEPTIN10"
+          ], 
+          "Accession": [
+            "NM_178584.1", 
+            "XM_006712317.1", 
+            "XM_011510702.1", 
+            "XR_922870.1", 
+            "XM_011510698.1", 
+            "XM_011510704.1", 
+            "XM_011510700.1", 
+            "XM_011510699.1", 
+            "XM_011510703.1", 
+            "XM_011510701.1", 
+            "NM_001321501.1", 
+            "NM_001321513.1", 
+            "NM_001321504.1", 
+            "NM_001321511.1", 
+            "NM_001321512.1", 
+            "NM_001321505.1", 
+            "NM_001321498.1", 
+            "NM_001321506.1", 
+            "NM_001321508.1", 
+            "NM_001321499.1", 
+            "NM_001321515.1", 
+            "NM_001321507.1", 
+            "NM_001321514.1", 
+            "NM_001321496.1", 
+            "NM_001321502.1", 
+            "NM_001321510.1", 
+            "NM_001321509.1", 
+            "NM_001321503.1", 
+            "NM_001321500.1", 
+            "NM_144710.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TCAAGCTCATGAGTGAATTGGTCAGCAATGGCGTCCAGATATACCAGTTCCCAACGGATGATGACACTATTGCTAAGGTCAACGCTGCAATGAATGGACA", 
+          "RTS_ID": "RTS0995644", 
+          "GeneID": [
+            "151011"
+          ]
+        }, 
+        {
+          "RTS_Seq": "CCAGTCCGCTAT", 
+          "DisplayName": "SEPTIN10_02", 
+          "ProbeID": "NM_144710.5:806_3p", 
+          "SystematicName": [
+            "SEPTIN10"
+          ], 
+          "Accession": [
+            "NM_178584.1", 
+            "XM_006712317.1", 
+            "XM_011510702.1", 
+            "XR_922870.1", 
+            "XM_011510698.1", 
+            "XM_011510704.1", 
+            "XM_011510700.1", 
+            "XM_011510699.1", 
+            "XM_011510703.1", 
+            "XM_011510701.1", 
+            "NM_001321501.1", 
+            "NM_001321513.1", 
+            "NM_001321504.1", 
+            "NM_001321511.1", 
+            "NM_001321512.1", 
+            "NM_001321505.1", 
+            "NM_001321498.1", 
+            "NM_001321506.1", 
+            "NM_001321508.1", 
+            "NM_001321499.1", 
+            "NM_001321515.1", 
+            "NM_001321507.1", 
+            "NM_001321514.1", 
+            "NM_001321496.1", 
+            "NM_001321502.1", 
+            "NM_001321510.1", 
+            "NM_001321509.1", 
+            "NM_001321503.1", 
+            "NM_001321500.1", 
+            "NM_144710.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "TCAAGCTCATGAGTGAATTGGTCAGCAATGGCGTCCAGATATACCAGTTCCCAACGGATGATGACACTATTGCTAAGGTCAACGCTGCAATGAATGGACA", 
+          "RTS_ID": "RTS0995645", 
+          "GeneID": [
+            "151011"
+          ]
+        }, 
+        {
+          "RTS_Seq": "TACTGGTATTCA", 
+          "DisplayName": "SEPTIN10_03", 
+          "ProbeID": "NM_144710.5:910_5p", 
+          "SystematicName": [
+            "SEPTIN10"
+          ], 
+          "Accession": [
+            "NM_178584.1", 
+            "XM_006712317.1", 
+            "XM_011510702.1", 
+            "XR_922870.1", 
+            "XM_011510698.1", 
+            "XM_011510704.1", 
+            "XM_011510700.1", 
+            "XM_011510699.1", 
+            "XM_011510703.1", 
+            "XM_011510701.1", 
+            "NM_001321501.1", 
+            "NM_001321513.1", 
+            "NM_001321504.1", 
+            "NM_001321511.1", 
+            "NM_001321512.1", 
+            "NM_001321505.1", 
+            "NM_001321498.1", 
+            "NM_001321506.1", 
+            "NM_001321508.1", 
+            "NM_001321499.1", 
+            "NM_001321515.1", 
+            "NM_001321507.1", 
+            "NM_001321514.1", 
+            "NM_001321496.1", 
+            "NM_001321502.1", 
+            "NM_001321510.1", 
+            "NM_001321509.1", 
+            "NM_001321503.1", 
+            "NM_001321500.1", 
+            "NM_144710.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "CCGTTTGCTGTTGTGGGAAGTATGGATGAGGTAAAAGTCGGAAACAAGATGGTCAAAGCTCGCCAGTACCCTTGGGGTGTTGTACAAGTGGAAAATGAAA", 
+          "RTS_ID": "RTS0995646", 
+          "GeneID": [
+            "151011"
+          ]
+        }, 
+        {
+          "RTS_Seq": "GCTTGTTGGCGC", 
+          "DisplayName": "SEPTIN10_04", 
+          "ProbeID": "NM_144710.5:910_3p", 
+          "SystematicName": [
+            "SEPTIN10"
+          ], 
+          "Accession": [
+            "NM_178584.1", 
+            "XM_006712317.1", 
+            "XM_011510702.1", 
+            "XR_922870.1", 
+            "XM_011510698.1", 
+            "XM_011510704.1", 
+            "XM_011510700.1", 
+            "XM_011510699.1", 
+            "XM_011510703.1", 
+            "XM_011510701.1", 
+            "NM_001321501.1", 
+            "NM_001321513.1", 
+            "NM_001321504.1", 
+            "NM_001321511.1", 
+            "NM_001321512.1", 
+            "NM_001321505.1", 
+            "NM_001321498.1", 
+            "NM_001321506.1", 
+            "NM_001321508.1", 
+            "NM_001321499.1", 
+            "NM_001321515.1", 
+            "NM_001321507.1", 
+            "NM_001321514.1", 
+            "NM_001321496.1", 
+            "NM_001321502.1", 
+            "NM_001321510.1", 
+            "NM_001321509.1", 
+            "NM_001321503.1", 
+            "NM_001321500.1", 
+            "NM_144710.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "CCGTTTGCTGTTGTGGGAAGTATGGATGAGGTAAAAGTCGGAAACAAGATGGTCAAAGCTCGCCAGTACCCTTGGGGTGTTGTACAAGTGGAAAATGAAA", 
+          "RTS_ID": "RTS0995647", 
+          "GeneID": [
+            "151011"
+          ]
+        }, 
+        {
+          "RTS_Seq": "GTCACCTTGTGT", 
+          "DisplayName": "SEPTIN10_05", 
+          "ProbeID": "NM_144710.5:1325_3p", 
+          "SystematicName": [
+            "SEPTIN10"
+          ], 
+          "Accession": [
+            "NM_178584.1", 
+            "XM_006712317.1", 
+            "XM_011510702.1", 
+            "XR_922870.1", 
+            "XM_011510698.1", 
+            "XM_011510704.1", 
+            "XM_011510700.1", 
+            "XM_011510699.1", 
+            "XM_011510703.1", 
+            "XM_011510701.1", 
+            "NM_001321501.1", 
+            "NM_001321513.1", 
+            "NM_001321504.1", 
+            "NM_001321511.1", 
+            "NM_001321512.1", 
+            "NM_001321505.1", 
+            "NM_001321498.1", 
+            "NM_001321506.1", 
+            "NM_001321508.1", 
+            "NM_001321499.1", 
+            "NM_001321515.1", 
+            "NM_001321507.1", 
+            "NM_001321514.1", 
+            "NM_001321496.1", 
+            "NM_001321502.1", 
+            "NM_001321510.1", 
+            "NM_001321509.1", 
+            "NM_001321503.1", 
+            "NM_001321500.1", 
+            "NM_144710.5"
+          ], 
+          "GenomeCoordinates": [], 
+          "TargetSequence": "AGAGACTTCACCAAGAAGAGAGAATGAAGCTTGAAGAAAAGAGAAGACTTTTGGAAGAAGAAATAATTGCTTTCTCTAAAAAGAAAGCTACCTCCGAGAT", 
+          "RTS_ID": "RTS0995648", 
+          "GeneID": [
+            "151011"
+          ]
+        }
+      ]
+    }
+  ]
+}
