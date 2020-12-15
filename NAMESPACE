@@ -6,6 +6,7 @@ importFrom(NanoStringNCTools, SignatureSet)
 importFrom(rjson, fromJSON)
 importFrom(readxl, read_xlsx)
 importFrom(EnvStats, geoMean)
+importFrom(reshape2, dcast)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
