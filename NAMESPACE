@@ -5,7 +5,7 @@ importClassesFrom(NanoStringNCTools, SignatureSet)
 importFrom(NanoStringNCTools, SignatureSet)
 importFrom(rjson, fromJSON)
 importFrom(readxl, read_xlsx)
-
+importFrom(EnvStats, geoMean)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
