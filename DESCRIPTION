@@ -5,7 +5,7 @@ Version: 0.1.0
 Encoding: UTF-8
 Author: Zhi Yang & Nicole Ortogero
 Maintainer: Zhi Yang <zyang@nanostring.com> & Nicole Ortogero <nortogero@nanostring.com>
-Depends: R (>= 3.3.0), NanoStringNCTools, rjson, readxl, EnvStats, reshape2
+Depends: R (>= 3.6), NanoStringNCTools, rjson, readxl, EnvStats, reshape2
 Imports: 
 Suggests: 
 License: Artistic-2.0
@@ -18,5 +18,5 @@ Collate: DccMetadata.R
          readPKCFile.R
          readNanoStringGeomxSet.R
          utils.R
-         
-
+biocViews: TechnologyData
+VignetteEngine: knitr

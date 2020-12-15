@@ -126,6 +126,10 @@ NanoStringGeomxSet(assayData,
   }
 }
 
+\value{
+  An S4 class containing data from a NanoString GeoMx experiment
+}
+
 \author{Zhi Yang & Nicole Ortogero}
 
 \seealso{

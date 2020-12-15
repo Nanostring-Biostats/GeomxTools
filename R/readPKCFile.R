@@ -24,12 +24,12 @@ function(file)
   rnaid_lookup_df <- DataFrame(rnaid_lookup_df)
   
   # Extract header
-  header <- list(PKCFileName = sapply(pkc_json_list, function(list) list[["Name"]]),
-                 PKCFileVersion = sapply(pkc_json_list, function(list) list[["Version"]]),
-                 PKCFileDate = sapply(pkc_json_list, function(list) list[["Date"]]),
-                 AnalyteType = sapply(pkc_json_list, function(list) list[["AnalyteType"]]),
-                 MinArea = sapply(pkc_json_list, function(list) list[["MinArea"]]),
-                 MinNuclei = sapply(pkc_json_list, function(list) list[["MinNuclei"]])  
+  header <- list(PKCFileName = vapply(pkc_json_list, function(list) list[["Name"]]),
+                 PKCFileVersion = vapply(pkc_json_list, function(list) list[["Version"]]),
+                 PKCFileDate = vapply(pkc_json_list, function(list) list[["Date"]]),
+                 AnalyteType = vapply(pkc_json_list, function(list) list[["AnalyteType"]]),
+                 MinArea = vapply(pkc_json_list, function(list) list[["MinArea"]]),
+                 MinNuclei = vapply(pkc_json_list, function(list) list[["MinNuclei"]])  
                  )
   
   metadata(rnaid_lookup_df) <- header
@@ -44,7 +44,7 @@ generate_pkc_lookup <- function(jsons_vec) {
                           Module=character(), 
                           Codeclass=character(),
                           stringsAsFactors=FALSE)
-  for (curr_idx in 1:length(jsons_vec)) {
+  for (curr_idx in seq_len(length(jsons_vec))) {
     curr_module <- names(jsons_vec)[curr_idx]
     curr_json <- jsons_vec[[curr_idx]]
     for (targ in curr_json[["Targets"]]) {
@@ -72,7 +72,7 @@ generate_pkc_targ_notes <- function(jsons_vec, lookup_tab) {
                Codeclass=sub_lookup[, "Codeclass"],
                Pooling=sub_lookup[, "Module"],
                stringsAsFactors=FALSE)
-  for (curr_idx in 1:length(jsons_vec)) {
+  for (curr_idx in seq_len(length(jsons_vec))) {
     curr_module <- names(jsons_vec)[curr_idx]
     curr_json <- jsons_vec[[curr_idx]]
     if(length(curr_json[["ProbeGroups"]]) > 0) {

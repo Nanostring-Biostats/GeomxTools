@@ -6,7 +6,7 @@ function(file)
 
   # Split data by tags
   tags <- names(.dccMetadata[["schema"]])
-  output <- sapply(tags, function(tag)
+  output <- vapply(tags, function(tag)
   {
     bounds <- charmatch(sprintf(c("<%s>", "</%s>"), tag), lines)
     if (anyNA(bounds) || bounds[1L] + 1L >= bounds[2L])
