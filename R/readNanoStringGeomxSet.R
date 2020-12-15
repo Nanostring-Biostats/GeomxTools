@@ -12,7 +12,7 @@ function(dccFiles,
   data <- structure(lapply(dccFiles, readDccFile), names = basename(dccFiles))
 
   # remove any zero reads in Dcc files
-  zeroRead <- which(vapply(seq_len(length(data)), 
+  zeroRead <- which(sapply(seq_len(length(data)), 
                            function(x) nrow(data[[x]]$Code_Summary))==0)
   if(length(zeroRead) > 0){
     warning("The following DCC files are removed: ", names(data)[zeroRead])
@@ -55,7 +55,7 @@ function(dccFiles,
                                 dimLabels = c("sampleNames", "sampleColumns"))
   }
   
-  #stopifnot(all(vapply(feature, function(x) identical(feature[[1L]], x))))
+  #stopifnot(all(sapply(feature, function(x) identical(feature[[1L]], x))))
   if (is.null(pkcFiles)) {
     stop("Please specify an input for pkcFiles")
   } else if (!is.null(pkcFiles)) {
@@ -97,7 +97,7 @@ function(dccFiles,
             paste0(duplicatedGenes, collapse = ",")))
     for (duplicatedGene in duplicatedGenes ){
       gene_assay$Gene[which(gene_assay$Gene == duplicatedGene)] <- 
-        vapply(which(gene_assay$Gene == duplicatedGene), 
+        sapply(which(gene_assay$Gene == duplicatedGene), 
                       function(index) paste0(gene_assay[index, c("Gene", "Pool")], 
                                              collapse = "_"))
     }
@@ -123,7 +123,7 @@ function(dccFiles,
                       other = c(experimentList, pkcHeader))
   
   # Create annotation
-  annotation <- sort(vapply(strsplit(pkcFiles, "/"), function(x) x[length(x)]))
+  annotation <- sort(sapply(strsplit(pkcFiles, "/"), function(x) x[length(x)]))
   if(!identical(annotation, paste0(sort(unique(probe_assay[['Pool']])), ".pkc"))) {
     stop("Name mismatch between pool and PKC files")
   }

@@ -18,18 +18,19 @@ function(file)
   # Remove codeclass column, only needed for target notes generation
   rnaid_lookup_df <- 
     rnaid_lookup_df[, !colnames(rnaid_lookup_df) %in% c("Codeclass", "PoolNum")]
-  # change "RTS00" to "RNA" (only check the first characters, also need to change from RNA to RTS00)
+  # change "RTS00" to "RNA" (only check the first characters, also need to 
+  #   change from RNA to RTS00)
   rnaid_lookup_df$RTS_ID <- gsub("RTS00", "RNA", rnaid_lookup_df[["RTS_ID"]])
   # Coerce output to DataFrame
   rnaid_lookup_df <- DataFrame(rnaid_lookup_df)
   
   # Extract header
-  header <- list(PKCFileName = vapply(pkc_json_list, function(list) list[["Name"]]),
-                 PKCFileVersion = vapply(pkc_json_list, function(list) list[["Version"]]),
-                 PKCFileDate = vapply(pkc_json_list, function(list) list[["Date"]]),
-                 AnalyteType = vapply(pkc_json_list, function(list) list[["AnalyteType"]]),
-                 MinArea = vapply(pkc_json_list, function(list) list[["MinArea"]]),
-                 MinNuclei = vapply(pkc_json_list, function(list) list[["MinNuclei"]])  
+  header <- list(PKCFileName = sapply(pkc_json_list, function(list) list[["Name"]]),
+                 PKCFileVersion = sapply(pkc_json_list, function(list) list[["Version"]]),
+                 PKCFileDate = sapply(pkc_json_list, function(list) list[["Date"]]),
+                 AnalyteType = sapply(pkc_json_list, function(list) list[["AnalyteType"]]),
+                 MinArea = sapply(pkc_json_list, function(list) list[["MinArea"]]),
+                 MinNuclei = sapply(pkc_json_list, function(list) list[["MinNuclei"]])  
                  )
   
   metadata(rnaid_lookup_df) <- header
