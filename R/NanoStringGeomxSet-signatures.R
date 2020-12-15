@@ -1,12 +1,12 @@
 # signatures Accessor and Replacer
 setGeneric("signatures", signature = "object",
            function(object) standardGeneric("signatures"))
-setMethod("signatures", "NanoStringDccSet",
+setMethod("signatures", "NanoStringGeomxSet",
           function(object) object@signatures)
 
 setGeneric("signatures<-", signature = c("object", "value"),
            function(object, value) standardGeneric("signatures<-"))
-setReplaceMethod("signatures", c("NanoStringDccSet", "SignatureSet"),
+setReplaceMethod("signatures", c("NanoStringGeomxSet", "SignatureSet"),
                  function(object, value) {
                    object@signatures <- value
                    object
@@ -31,7 +31,7 @@ setReplaceMethod("signatures", c("NanoStringDccSet", "SignatureSet"),
 
 setGeneric("signatureScores", signature = "object",
            function(object, ...) standardGeneric("signatureScores"))
-setMethod("signatureScores", "NanoStringDccSet",
+setMethod("signatureScores", "NanoStringGeomxSet",
           function(object, elt = "exprs") {
             if (length(signatures(object)) == 0L) {
               return(matrix(numeric(), nrow = 0L, ncol = ncol(object),
@@ -61,19 +61,19 @@ setMethod("signatureScores", "NanoStringDccSet",
 
 setGeneric( "signatureGroups" , signature = "object" ,
             function (object , ... ) standardGeneric( "signatureGroups" ) )
-setMethod("signatureGroups", "NanoStringDccSet",
+setMethod("signatureGroups", "NanoStringGeomxSet",
           function( object ) {
             groups( object@signatures )
           } )
 
 setGeneric("setSignatureGroups<-", signature = c("object", "value"),
            function(object, value) standardGeneric("setSignatureGroups<-"))
-setReplaceMethod("setSignatureGroups", c("NanoStringDccSet", "factor"),
+setReplaceMethod("setSignatureGroups", c("NanoStringGeomxSet", "factor"),
                  function(object, value) {
                    groups( object@signatures ) <- value
                    return( object )
                  })
-setReplaceMethod("setSignatureGroups", c("NanoStringDccSet", "character"),
+setReplaceMethod("setSignatureGroups", c("NanoStringGeomxSet", "character"),
                  function(object, value) {
                    groups( object@signatures ) <- value
                    return( object )
@@ -81,14 +81,14 @@ setReplaceMethod("setSignatureGroups", c("NanoStringDccSet", "character"),
 
 setGeneric( "signatureFuncs" , signature = "object" ,
             function (object , ... ) standardGeneric( "signatureFuncs" ) )
-setMethod("signatureFuncs", "NanoStringDccSet",
+setMethod("signatureFuncs", "NanoStringGeomxSet",
           function( object ) {
             getSigFuncs( object@signatures )
           } )
 
 setGeneric("setSignatureFuncs<-", signature = c("object", "value"),
            function(object, value) standardGeneric("setSignatureFuncs<-"))
-setReplaceMethod("setSignatureFuncs", c("NanoStringDccSet", "character"),
+setReplaceMethod("setSignatureFuncs", c("NanoStringGeomxSet", "character"),
                  function(object, value) {
                    setSigFuncs( object@signatures ) <- value
                    return( object )

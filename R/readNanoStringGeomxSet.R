@@ -1,4 +1,4 @@
-readNanoStringDccSet <-
+readNanoStringGeomxSet <-
 function(dccFiles,
          pkcFiles,
          phenoDataFile,
@@ -151,8 +151,8 @@ function(dccFiles,
                                        annot_labelDescription),
                                  dimLabels = c("sampleNames", "sampleColumns"))
 
-  # Create NanoStringDccSet
-  NanoStringDccSet(assayData = assay,
+  # Create NanoStringGeomxSet
+  NanoStringGeomxSet(assayData = assay,
                    phenoData = pheno,
                    featureData = feature,
                    experimentData = experiment,
