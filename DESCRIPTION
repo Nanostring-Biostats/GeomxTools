@@ -19,6 +19,6 @@ Collate: DccMetadata.R
          readNanoStringGeomxSet.R
          utils.R
 biocViews: GeneExpression, Transcription, CellBasedAssays, DataImport, 
-Transcriptomics, Proteomics, StructuralGenomics, mRNAMicroaray, 
-ProprietaryPlatforms, RNASeq, TechnologyData
+           Transcriptomics, Proteomics, StructuralGenomics, mRNAMicroaray, 
+           ProprietaryPlatforms, RNASeq, TechnologyData
 VignetteEngine: knitr
