@@ -7,7 +7,7 @@ Author: Zhi Yang & Nicole Ortogero
 Maintainer: Zhi Yang <zyang@nanostring.com>, Nicole Ortogero <nortogero@nanostring.com>
 Depends: R (>= 3.6), NanoStringNCTools, rjson, readxl, EnvStats, reshape2
 Imports: 
-Suggests: rmarkdown
+Suggests: markdown
 License: Artistic-2.0
 Collate: DccMetadata.R
          NanoStringGeomxSet-class.R
