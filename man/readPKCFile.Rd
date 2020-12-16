@@ -31,7 +31,7 @@ readPKCFile(file)
 \examples{
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
-pkc <- dir(datadir, pattern=".pkc$", full.names=TRUE)
+pkc <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
 PKCData <- readPKCFile(pkc)
 }
 
