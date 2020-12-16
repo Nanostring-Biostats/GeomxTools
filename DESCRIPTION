@@ -21,4 +21,4 @@ Collate: DccMetadata.R
 biocViews: GeneExpression, Transcription, CellBasedAssays, DataImport, 
            Transcriptomics, Proteomics, mRNAMicroarray, 
            ProprietaryPlatforms, RNASeq
-VignetteEngine: knitr
+VignetteEngine: knitr::rmarkdown
