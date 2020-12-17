@@ -47,7 +47,7 @@ readNanoStringGeomxSet(dccFiles, pkcFiles, phenoDataFile,
 # Data file paths
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
-dccFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)
+dccs <- dir(datadir, pattern=".dcc$", full.names=TRUE)
 pkc <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
 sampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
