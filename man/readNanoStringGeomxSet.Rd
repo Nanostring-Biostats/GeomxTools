@@ -10,8 +10,8 @@
 }
 
 \usage{
-readNanoStringGeomxSet(dccFiles, pkcFiles = NULL, phenoDataFile = NULL, 
-                     phenoDataSheet = NULL, phenoDataDccColName = "Sample_ID",
+readNanoStringGeomxSet(dccFiles, pkcFiles, phenoDataFile, 
+                     phenoDataSheet, phenoDataDccColName = "Sample_ID",
                      phenoDataColPrefix = "", protocolDataColNames = c("slide name"),
                      experimentDataColNames = c("panel"))
 }
