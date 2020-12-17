@@ -1,6 +1,7 @@
 Package: GeomxTools
 Title: NanoString GeoMx Tools
-Description: Tools for NanoString Technologies GeoMx Technology.
+Description: Tools for NanoString Technologies GeoMx Technology.  Package provides functions for reading in DCC and
+         PKC files based on an ExpressionSet derived object.  Normalization and QC functions are also included.
 Version: 0.99.0
 Encoding: UTF-8
 Author: Zhi Yang & Nicole Ortogero
