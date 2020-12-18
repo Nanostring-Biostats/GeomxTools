@@ -67,7 +67,7 @@ function(file)
   output[["Code_Summary"]] <- paste0("RNAID,Count\n", 
                                      paste(output[["Code_Summary"]], collapse = "\n"))
   output[["Code_Summary"]] <-
-    read.csv(textConnection(output[["Code_Summary"]]),
+    utils::read.csv(textConnection(output[["Code_Summary"]]),
              colClasses = c(RNAID = "character", Count = "numeric"))
   output[["Code_Summary"]][["Count"]] <-
     as.integer(round(output[["Code_Summary"]][["Count"]]))

@@ -21,6 +21,12 @@ importFrom(Biobase, AnnotatedDataFrame)
 importFrom(S4Vectors, na.omit)
 importFrom(S4Vectors, metadata)
 importFrom(S4Vectors, DataFrame)
+importFrom(utils, read.csv)
+importFrom(stats, as.formula)
+importFrom(stats, weights)
+importFrom(methods, callGeneric)
+importFrom(methods, callNextMethod)
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes

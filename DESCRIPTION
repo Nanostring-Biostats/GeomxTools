@@ -7,7 +7,7 @@ Encoding: UTF-8
 Authors@R: c(person("Nicole", "Ortogero", email = "nortogero@nanostring.com", role = c("cre", "aut")), 
              person("Zhi", "Yang", email = "zyang@nanostring.com", role = c("aut")))
 Depends: R (>= 3.6), NanoStringNCTools
-Imports: Biobase, S4Vectors, rjson, readxl, EnvStats, reshape2
+Imports: Biobase, S4Vectors, rjson, readxl, EnvStats, reshape2, methods
 Suggests: knitr
 License: Artistic-2.0
 Collate: DccMetadata.R

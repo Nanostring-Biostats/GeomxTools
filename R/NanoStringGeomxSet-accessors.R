@@ -35,7 +35,7 @@ setReplaceMethod("design", c("NanoStringGeomxSet", "formula"),
                  })
 setReplaceMethod("design", c("NanoStringGeomxSet", "ANY"),
                  function(object, value) {
-                   object@design <- as.formula(value)
+                   object@design <- stats::as.formula(value)
                    object
                  })
 setReplaceMethod("design", c("NanoStringGeomxSet", "NULL"),
@@ -43,3 +43,5 @@ setReplaceMethod("design", c("NanoStringGeomxSet", "NULL"),
                    object@design <- NULL
                    object
                  })
+
+

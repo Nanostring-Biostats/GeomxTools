@@ -78,7 +78,7 @@
     "Restriction Site,TRUE,CNV",
     "Invariant,TRUE,CNV")
 .codeClassMetadata <-
-  read.csv(textConnection(paste0(.codeClassMetadata, collapse = "\n")),
+  utils::read.csv(textConnection(paste0(.codeClassMetadata, collapse = "\n")),
            colClasses = c("character", "logical", "character"),
            stringsAsFactors = FALSE)
 

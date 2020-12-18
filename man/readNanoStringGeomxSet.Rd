@@ -65,13 +65,17 @@ dccSet <- readNanoStringGeomxSet(dccFiles=dccFiles,
                                phenoDataColPrefix="")
 
 # All data
-dccSet <-
-  readNanoStringGeomxSet(dccFiles, pkcFile = pkc, phenoDataFile = sampleAnnotationFile, phenoDataSheet="CW005")
+dccSet <- readNanoStringGeomxSet(dccFiles, pkcFile = pkc,
+                                 phenoDataFile = sampleAnnotationFile,
+                                 phenoDataSheet="CW005")
 varLabels(dccSet)
 
 # All data with phenoData prefix
-dccSetPhenoPrefix <-
-  readNanoStringGeomxSet(dccFiles, pkcFile = pkc, phenoDataFile = sampleAnnotationFile, phenoDataSheet="CW005", phenoDataColPrefix = "PHENO_")
+dccSetPhenoPrefix <- readNanoStringGeomxSet(dccFiles, 
+                                pkcFile = pkc, 
+                                phenoDataFile = sampleAnnotationFile,
+                                phenoDataSheet="CW005", 
+                                phenoDataColPrefix = "PHENO_")
 varLabels(dccSetPhenoPrefix)
 }
 

@@ -16,7 +16,7 @@ setClass("NanoStringGeomxSet",
 # Show method
 setMethod("show", signature = "NanoStringGeomxSet",
 function(object) {
-  callNextMethod(object)
+  methods::callNextMethod(object)
   cat("signature: ")
   if (length(signatures(object)) == 0L)
     cat("none\n")
@@ -52,7 +52,7 @@ function(assayData,
          ...)
 {
   assayData <- assayDataNew(exprs = matrix(integer(), nrow = 0L, ncol = 0L))
-  callGeneric(assayData = assayData, phenoData = phenoData,
+  methods::callGeneric(assayData = assayData, phenoData = phenoData,
               featureData = featureData, experimentData = experimentData,
               annotation = annotation, protocolData = protocolData,
               dimLabels = dimLabels, signatures = signatures, design = design,
@@ -97,7 +97,7 @@ function(assayData,
          ...)
 {
   assayData <- assayDataNew(exprs = assayData)
-  callGeneric(assayData = assayData, phenoData = phenoData,
+  methods::callGeneric(assayData = assayData, phenoData = phenoData,
               featureData = featureData, experimentData = experimentData,
               annotation = annotation, protocolData = protocolData,
               dimLabels = dimLabels, signatures = signatures, design = design,
@@ -116,7 +116,7 @@ function(assayData,
          design = NULL,
          ...)
 {
-  callGeneric(assayData = copyEnv(assayData(assayData)),
+  methods::callGeneric(assayData = copyEnv(assayData(assayData)),
               phenoData = Biobase::phenoData(assayData),
               featureData = Biobase::featureData(assayData),
               experimentData = Biobase::experimentData(assayData),
@@ -140,7 +140,7 @@ function(assayData,
          design = NULL,
          ...)
 {
-  callGeneric(assayData = copyEnv(assayData(assayData)),
+  methods::callGeneric(assayData = copyEnv(assayData(assayData)),
               phenoData = Biobase::phenoData(assayData),
               featureData = Biobase::featureData(assayData),
               experimentData = Biobase::experimentData(assayData),

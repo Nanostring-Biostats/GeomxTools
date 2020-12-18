@@ -40,13 +40,13 @@ setMethod("signatureScores", "NanoStringGeomxSet",
             exprs <- t(assayDataElement2(object, elt))
             colnames(exprs) <- featureData(object)[["GeneName"]]
             sigFuncList <- signatureFuncs( object )
-            linWeights <- weights( signatures( object ) )[names( sigFuncList )[which( sigFuncList %in% "default" )]]
+            linWeights <- stats::weights( signatures( object ) )[names( sigFuncList )[which( sigFuncList %in% "default" )]]
             nonLinFuncs <- sigFuncList[which( !( sigFuncList %in% "default" ) )]
             scores <- .sigCalc(exprs, linWeights)
             while (length(idx <- which(rowSums(is.na(scores)) > 0L))) {
               subscores <-
                 .sigCalc(cbind(exprs, t(scores[-idx, , drop = FALSE])),
-                         weights(signatures(object))[idx])
+                         stats::weights(signatures(object))[idx])
               if (all(is.na(subscores)))
                 break
               else
@@ -56,7 +56,7 @@ setMethod("signatureScores", "NanoStringGeomxSet",
             if (ncol(nonLinScores) > 0) {
                 scores <- rbind( scores , nonLinScores )
             }
-            return( scores[names( weights( signatures( object ) ) ),] )
+            return( scores[names( stats::weights( signatures( object ) ) ),] )
           })
 
 setGeneric( "signatureGroups" , signature = "object" ,

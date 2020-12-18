@@ -71,7 +71,7 @@ function(object)
     if (any(numGenes == 0L)) {
       msg <- c(msg, "'signatures' vectors must be non-empty")
     } else {
-      genes <- names(unlist(unname(weights(signatures(object)))))
+      genes <- names(unlist(unname(stats::weights(signatures(object)))))
       if (is.null(genes) || any(nchar(genes) == 0L)) {
         msg <- c(msg, "'signatures' vectors must be named")
       } else if(!all(unique(genes) %in%
