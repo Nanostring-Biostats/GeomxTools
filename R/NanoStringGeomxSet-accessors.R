@@ -1,7 +1,7 @@
 assayDataElement2 <- function(object, elt)
 {
-  if (elt %in% assayDataElementNames(object))
-    assayDataElement(object, elt)
+  if (elt %in% Biobase::assayDataElementNames(object))
+    Biobase::assayDataElement(object, elt)
   else
     stop("'elt' not present in assayData(object)")
 }

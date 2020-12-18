@@ -29,7 +29,7 @@ function(dccFiles,
   if (is.null(phenoDataFile)) {
     stop("Please specify an input for phenoDataFile.")
   } else {
-    pheno <- read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet)
+    pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet)
     pheno <- data.frame(pheno, stringsAsFactors = FALSE, check.names = FALSE)
     j <- grep(phenoDataDccColName, colnames(pheno), ignore.case = TRUE)
     if (length(j) == 0L){
@@ -51,7 +51,7 @@ function(dccFiles,
       colnames(pheno) <- paste0(phenoDataColPrefix, colnames(pheno))
       protocolDataColNames <- paste0(phenoDataColPrefix, protocolDataColNames)
     }
-    pheno <- AnnotatedDataFrame(pheno,
+    pheno <- Biobase::AnnotatedDataFrame(pheno,
                                 dimLabels = c("sampleNames", "sampleColumns"))
   }
   
@@ -61,7 +61,7 @@ function(dccFiles,
   } else if (!is.null(pkcFiles)) {
     pkcData <- readPKCFile(pkcFiles)
 
-    pkcHeader <- metadata(pkcData)
+    pkcHeader <- S4Vectors::metadata(pkcData)
     pkcHeader[["PKCFileDate"]] <- as.character(pkcHeader[["PKCFileDate"]])
 
     #chang RNA to RTS00
@@ -88,7 +88,7 @@ function(dccFiles,
                Sample_ID = names(data)[x]))
   probe_assay <- do.call(rbind, probe_assay)
   
-  gene_assay <- dcast(probe_assay, Gene + Pool ~ Sample_ID, 
+  gene_assay <- reshape2::dcast(probe_assay, Gene + Pool ~ Sample_ID, 
                       value.var = 'Count', fun.aggregate = ngeoMean, fill = 1)
   
   if ( length(unique(gene_assay$Gene)) != nrow(gene_assay) ) {
@@ -116,10 +116,10 @@ function(dccFiles,
   # Create experimentData
   experimentList<- lapply(experimentDataColNames, 
                             function(experimentDataColName) 
-                              unique(na.omit(pheno@data[[experimentDataColName]])))
+                              unique(S4Vectors::na.omit(pheno@data[[experimentDataColName]])))
   names(experimentList) <- experimentDataColNames
   
-  experiment <- MIAME(name = "", 
+  experiment <- Biobase::MIAME(name = "", 
                       other = c(experimentList, pkcHeader))
   
   # Create annotation

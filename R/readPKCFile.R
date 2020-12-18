@@ -1,7 +1,7 @@
 readPKCFile <-
 function(file)
 {
-  pkc_json_list <- lapply(file, function(pkc_file) {fromJSON(file = pkc_file)})
+  pkc_json_list <- lapply(file, function(pkc_file) {rjson::fromJSON(file = pkc_file)})
   pkc_names <- 
     unlist(lapply( file, 
                    function(file) {
@@ -22,7 +22,7 @@ function(file)
   #   change from RNA to RTS00)
   rnaid_lookup_df$RTS_ID <- gsub("RTS00", "RNA", rnaid_lookup_df[["RTS_ID"]])
   # Coerce output to DataFrame
-  rnaid_lookup_df <- DataFrame(rnaid_lookup_df)
+  rnaid_lookup_df <- S4Vectors::DataFrame(rnaid_lookup_df)
   
   # Extract header
   header <- list(PKCFileName = sapply(pkc_json_list, function(list) list[["Name"]]),
@@ -33,7 +33,7 @@ function(file)
                  MinNuclei = sapply(pkc_json_list, function(list) list[["MinNuclei"]])  
                  )
   
-  metadata(rnaid_lookup_df) <- header
+  S4Vectors::metadata(rnaid_lookup_df) <- header
   
   return(rnaid_lookup_df)
 }

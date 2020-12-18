@@ -4,10 +4,10 @@ Description: Tools for NanoString Technologies GeoMx Technology.  Package provid
          PKC files based on an ExpressionSet derived object.  Normalization and QC functions are also included.
 Version: 0.99.0
 Encoding: UTF-8
-Author: Zhi Yang & Nicole Ortogero
-Maintainer: Zhi Yang <zyang@nanostring.com>, Nicole Ortogero <nortogero@nanostring.com>
-Depends: R (>= 3.6), NanoStringNCTools, rjson, readxl, EnvStats, reshape2
-Imports: Biobase, S4Vectors
+Authors@R: c(person("Nicole", "Ortogero", email = "nortogero@nanostring.com", role = c("cre", "aut")), 
+             person("Zhi", "Yang", email = "zyang@nanostring.com", role = c("aut")))
+Depends: R (>= 3.6), NanoStringNCTools
+Imports: Biobase, S4Vectors, rjson, readxl, EnvStats, reshape2
 Suggests: knitr
 License: Artistic-2.0
 Collate: DccMetadata.R

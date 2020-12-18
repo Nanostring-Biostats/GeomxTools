@@ -47,7 +47,7 @@ readNanoStringGeomxSet(dccFiles, pkcFiles, phenoDataFile,
 # Data file paths
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
-dccs <- dir(datadir, pattern=".dcc$", full.names=TRUE)
+dccFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)
 pkc <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
 sampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
@@ -66,14 +66,12 @@ dccSet <- readNanoStringGeomxSet(dccFiles=dccFiles,
 
 # All data
 dccSet <-
-  readNanoStringGeomxSet(dccs, pkcFile = pkc, phenoDataFile = sampleAnnotationFile,
-  phenoDataSheet="CW005")
+  readNanoStringGeomxSet(dccFiles, pkcFile = pkc, phenoDataFile = sampleAnnotationFile, phenoDataSheet="CW005")
 varLabels(dccSet)
 
 # All data with phenoData prefix
 dccSetPhenoPrefix <-
-  readNanoStringGeomxSet(dccs, pkcFile = pkc, phenoDataFile = sampleAnnotationFile,
-                       phenoDataSheet="CW005", phenoDataColPrefix = "PHENO_")
+  readNanoStringGeomxSet(dccFiles, pkcFile = pkc, phenoDataFile = sampleAnnotationFile, phenoDataSheet="CW005", phenoDataColPrefix = "PHENO_")
 varLabels(dccSetPhenoPrefix)
 }
 

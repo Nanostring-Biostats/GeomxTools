@@ -13,7 +13,14 @@ importFrom(Biobase, featureData)
 importFrom(Biobase, experimentData)
 importFrom(Biobase, annotation)
 importFrom(Biobase, protocolData)
-
+importFrom(Biobase, assayDataElementNames)
+importFrom(Biobase, assayDataElement)
+importFrom(Biobase, annotatedDataFrameFrom)
+importFrom(Biobase, MIAME)
+importFrom(Biobase, AnnotatedDataFrame)
+importFrom(S4Vectors, na.omit)
+importFrom(S4Vectors, metadata)
+importFrom(S4Vectors, DataFrame)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes

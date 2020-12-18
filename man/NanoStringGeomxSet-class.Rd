@@ -46,9 +46,9 @@
 
 \usage{
 NanoStringGeomxSet(assayData,
-                 phenoData=annotatedDataFrameFrom(assayData, byrow=FALSE),
-                 featureData=annotatedDataFrameFrom(assayData, byrow=TRUE),
-                 experimentData=MIAME(),
+                 phenoData=Biobase::annotatedDataFrameFrom(assayData, byrow=FALSE),
+                 featureData=Biobase::annotatedDataFrameFrom(assayData, byrow=TRUE),
+                 experimentData=Biobase::MIAME(),
                  annotation=character(),
                  protocolData=annotatedDataFrameFrom(assayData, byrow=FALSE),
                  dimLabels=c("GeneName", "SampleID"),
