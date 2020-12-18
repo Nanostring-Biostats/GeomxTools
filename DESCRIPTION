@@ -6,7 +6,7 @@ Version: 0.99.0
 Encoding: UTF-8
 Authors@R: c(person("Nicole", "Ortogero", email = "nortogero@nanostring.com", role = c("cre", "aut")), 
              person("Zhi", "Yang", email = "zyang@nanostring.com", role = c("aut")))
-Depends: R (>= 4.1), NanoStringNCTools
+Depends: R (>= 3.6), NanoStringNCTools
 Imports: Biobase, S4Vectors, rjson, readxl, EnvStats, reshape2
 Suggests: knitr
 License: Artistic-2.0
