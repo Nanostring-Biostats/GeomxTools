@@ -7,7 +7,8 @@ Encoding: UTF-8
 Authors@R: c(person("Nicole", "Ortogero", email = "nortogero@nanostring.com", role = c("cre", "aut")), 
              person("Zhi", "Yang", email = "zyang@nanostring.com", role = c("aut")))
 Depends: R (>= 3.6), NanoStringNCTools
-Imports: Biobase, S4Vectors, rjson, readxl, EnvStats, reshape2, methods
+Imports: Biobase, S4Vectors, rjson, readxl, EnvStats, reshape2, methods, 
+         utils, stats, BiocGenerics
 Suggests: knitr
 License: Artistic-2.0
 Collate: DccMetadata.R
@@ -21,6 +22,8 @@ Collate: DccMetadata.R
          utils.R
 biocViews: GeneExpression, Transcription, CellBasedAssays, DataImport, 
            Transcriptomics, Proteomics, mRNAMicroarray, 
-           ProprietaryPlatforms, RNASeq
+           ProprietaryPlatforms, RNASeq, Sequencing, ExperimentalDesign, 
+           Normalization
 VignetteEngine: knitr::rmarkdown
 VignetteBuilder: knitr
+RoxygenNote: 7.1.1

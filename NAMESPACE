@@ -1,6 +1,7 @@
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Imports
-
+import(S4Vectors)
+import(Biobase)
 importClassesFrom(NanoStringNCTools, SignatureSet)
 importClassesFrom(S4Vectors,DataFrame)
 importFrom(NanoStringNCTools, SignatureSet)
@@ -8,24 +9,13 @@ importFrom(rjson, fromJSON)
 importFrom(readxl, read_xlsx)
 importFrom(EnvStats, geoMean)
 importFrom(reshape2, dcast)
-importFrom(Biobase, phenoData)
-importFrom(Biobase, featureData)
-importFrom(Biobase, experimentData)
-importFrom(Biobase, annotation)
-importFrom(Biobase, protocolData)
-importFrom(Biobase, assayDataElementNames)
-importFrom(Biobase, assayDataElement)
-importFrom(Biobase, annotatedDataFrameFrom)
-importFrom(Biobase, MIAME)
-importFrom(Biobase, AnnotatedDataFrame)
-importFrom(S4Vectors, na.omit)
-importFrom(S4Vectors, metadata)
-importFrom(S4Vectors, DataFrame)
 importFrom(utils, read.csv)
 importFrom(stats, as.formula)
 importFrom(stats, weights)
 importFrom(methods, callGeneric)
 importFrom(methods, callNextMethod)
+importFrom(BiocGenerics, design)
+importFrom(BiocGenerics, "design<-")
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

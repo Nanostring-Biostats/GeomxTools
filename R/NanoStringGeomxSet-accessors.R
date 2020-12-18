@@ -6,6 +6,17 @@ assayDataElement2 <- function(object, elt)
     stop("'elt' not present in assayData(object)")
 }
 
+# Show method
+setMethod("show", signature = "NanoStringGeomxSet",
+          function(object) {
+            methods::callNextMethod(object)
+            cat("signature: ")
+            if (length(signatures(object)) == 0L)
+              cat("none\n")
+            else
+              cat("use 'signatures(object)'")
+          })
+
 # sData Accessor
 setGeneric("sData", signature = "object",
            function(object) standardGeneric("sData"))
@@ -43,5 +54,6 @@ setReplaceMethod("design", c("NanoStringGeomxSet", "NULL"),
                    object@design <- NULL
                    object
                  })
+
 
 
