@@ -31,6 +31,8 @@
 \alias{signatures<-,NanoStringGeomxSet,SignatureSet-method}
 \alias{signatureScores}
 \alias{signatureScores,NanoStringGeomxSet-method}
+\alias{signatureGroups}
+\alias{signatureGroups,NanoStringGeomxSet-method}
 \alias{design,NanoStringGeomxSet-method}
 \alias{design<-,NanoStringGeomxSet,ANY-method}
 \alias{design<-,NanoStringGeomxSet,NULL-method}
@@ -50,7 +52,7 @@ NanoStringGeomxSet(assayData,
                  featureData=Biobase::annotatedDataFrameFrom(assayData, byrow=TRUE),
                  experimentData=Biobase::MIAME(),
                  annotation=character(),
-                 protocolData=annotatedDataFrameFrom(assayData, byrow=FALSE),
+                 protocolData=Biobase::annotatedDataFrameFrom(assayData, byrow=FALSE),
                  dimLabels=c("GeneName", "SampleID"),
                  signatures=SignatureSet(),
                  design=NULL,
@@ -123,6 +125,15 @@ NanoStringGeomxSet(assayData,
       representing the experimental design based on columns from
       \code{\link[Biobase]{phenoData}}.
     }
+    \item{}{
+      \code{signatureGroups(object)}: extract the groups of
+      \code{\link{SignatureSet}}.
+    }     
+    \item{}{
+      \code{signatureGroups(object) <- value }: replaces the groups of
+      \code{\link{SignatureSet}}.
+    }   
+    
   }
 }
 
