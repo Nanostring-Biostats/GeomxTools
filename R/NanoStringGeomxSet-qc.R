@@ -1,6 +1,6 @@
-DEFAULTS <- list(minPercentUnique=0.7, minReads=10000, minSaturation=50, 
-    minProbeRatio=0.1, minimumCount=10, localOutlierAlpha=0.01, 
-    globalOutlierRatio=0.2, loqCutoff=1.0, highCountCutoff=10000)
+DEFAULTS <- list(minSaturation=0.7, minReads=10000, minProbeRatio=0.1, 
+    minimumCount=10, localOutlierAlpha=0.01, globalOutlierRatio=0.2, 
+    loqCutoff=1.0, highCountCutoff=10000)
 
 #' Add QC flags to feature or protocol data
 #' 
@@ -30,49 +30,54 @@ setMethod("setQCFlags",
             featType=featureType(object), qcCutoffs=qcCutoffs)
 })
 
-setGeneric(".setGeomxFlags", signature=c("dataDim", "featType"), 
+#NEO these (setGeomxFlags) should match the default calls in DA
+setGeneric(".setGeomxFlags", 
     function(object, qcCutoffs, ...) standardGeneric("setGeomxFlags"))
 
-setMethod(".setGeomxFlags", signature(dataDim="sample", featType="Probe"),
+setMethod(".setGeomxFlags", 
+    signature(dataDim="sample"),
     function(object, qcCutoffs=DEFAULTS) {
-        .setUniqueFlags(object=object, cutoff=qcCutoffs[["minUnique"]])
-        .setLowReadFlags(object=object, cutoff=qcCutoffs[["minReads"]])
-})
-
-setMethod(".setGeomxFlags",
-    signature(dataDim="sample", featType="Target"),
-    function(object, qcCutoffs=DEFAULTS) {
-        .setSaturationFlags(object=object, cutoff=qcCutoffs[["minSaturation"]])
+        object <- setSaturationFlags(object=object, 
+            cutoff=qcCutoffs[["minSaturation"]])
+        object <- setLowReadFlags(object=object, 
+            cutoff=qcCutoffs[["minReads"]])
 })
 
 setMethod(".setGeomxFlags",
     signature(dataDim="feature", featType="Probe"),
     function(object, qcCutoffs=DEFAULTS) {
-        .setProbeRatioFlags(object=object, cutoff=qcCutoffs[["minProbeRatio"]])
-        .setProbeCountFlags(object=object, cutoff=qcCutoffs[["minimumCount"]])
-        .setLocalFlags(object=object, cutoff=qcCutoffs[["localOutlierAlpha"]])
-        .setGlobalFlags(object=object,
+        object <- setProbeRatioFlags(object=object, 
+            cutoff=qcCutoffs[["minProbeRatio"]])
+        object <- setProbeCountFlags(object=object, 
+            cutoff=qcCutoffs[["minimumCount"]])
+        object <- setLocalFlags(object=object, 
+            cutoff=qcCutoffs[["localOutlierAlpha"]])
+        object <- setGlobalFlags(object=object, 
             cutoff=qcCutoffs[["globalOutlierRatio"]])
 })
 
 setMethod(".setGeomxFlags",
     signature(dataDim="feature", featType="Target"),
     function(object, qcCutoffs=DEFAULTS) {
-        .setLOQFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
-        .setHighCountFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
+        object <- 
+            setLOQFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
+        object <- 
+            setHighCountFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
+        return(object)
 })
 
-.setLowReadFlags <- function(object, cutoff=DEFAULTS[["minPercentUnique"]]) {
-    dim(demoData)[["Features"]] > 
+#NEO these are exported so advanced users can use filters not default
+setSaturationFlags <- function(object, cutoff=DEFAULTS[["minSaturation"]]) {
+    percentUnique <- 
+        sData(object)[["DeduplicatedReads"]] / sData(object)[["Aligned"]]
+    protocolData(object)[["QCFlags"]][, "Saturation"] <- 
+        percentUnique > cutoff
+    return(object)
 }
 
-.setLowReadFlags <- function(object, cutoff=DEFAULTS[["minReads"]]) {
-    sData(object)[[""]]
+setLowReadFlags <- function(object, cutoff=DEFAULTS[["minReads"]]) {
+    protocolData(object)[["QCFlags"]][, "LowReads"] <- sData(object)[["Raw"]] < cutoff
+    return(object)
 }
-
-.setSaturationFlags <- function(object, minSaturation=50) {
-
-}
-
 
 
