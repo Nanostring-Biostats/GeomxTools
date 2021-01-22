@@ -2,6 +2,7 @@ DEFAULTS <- list(minSaturation=0.7, minReads=10000, minProbeRatio=0.1,
     minimumCount=10, localOutlierAlpha=0.01, globalOutlierRatio=0.2, 
     loqCutoff=1.0, highCountCutoff=10000)
 
+#NEO to fix the rox comments with new stuff
 #' Add QC flags to feature or protocol data
 #' 
 #' @param object name of the object class to perform QC on
@@ -66,7 +67,7 @@ setMethod(".setGeomxFlags",
         return(object)
 })
 
-#NEO these are exported so advanced users can use filters not default
+#NEO these are exported so advanced users can use filters not part of default DA pipeline
 setSaturationFlags <- function(object, cutoff=DEFAULTS[["minSaturation"]]) {
     percentUnique <- 
         sData(object)[["DeduplicatedReads"]] / sData(object)[["Aligned"]]
@@ -76,8 +77,17 @@ setSaturationFlags <- function(object, cutoff=DEFAULTS[["minSaturation"]]) {
 }
 
 setLowReadFlags <- function(object, cutoff=DEFAULTS[["minReads"]]) {
-    protocolData(object)[["QCFlags"]][, "LowReads"] <- sData(object)[["Raw"]] < cutoff
+    protocolData(object)[["QCFlags"]][, "LowReads"] <- 
+        sData(object)[["Raw"]] < cutoff
     return(object)
 }
 
+# NEO gene needs to be replaced with Target throughout
+setProbeRatioFlags <- function(object=object, 
+    cutoff=qcCutoffs[["minProbeRatio"]]) {
+        #NEO make generic aggregate counts function so this can be called many times in QC or to generate new class
+        gene_assay <- reshape2::dcast(probe_assay, Gene + Pool ~ Sample_ID, 
+            value.var = 'Count', fun.aggregate = ngeoMean, fill = 1)
+        targetMeans <- lapply(featureNames(object), assayDataElement(object, elt="exprs"))
+}
 
