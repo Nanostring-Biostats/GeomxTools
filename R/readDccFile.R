@@ -81,6 +81,7 @@ function(file)
     output[["Code_Summary"]] <- output[["Code_Summary"]][ok, , drop = FALSE]
   }
   rownames(output[["Code_Summary"]]) <- rn
+  output[["Code_Summary"]][, "Unique"] <- length(rn)
 
   output
 }
