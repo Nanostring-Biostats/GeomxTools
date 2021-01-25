@@ -74,7 +74,7 @@ function(dccFiles,
   
   for (index in seq_len(length(data))) {
     countMat <- data[[index]]$Code_Summary
-    #NEO this should be a check and we should stop if not all genes found in pkc?
+    #NEO this should be a check and we should stop if not all targets found in pkc?
     #countMat <- countMat[which(rownames(countMat) %in% rownames(pkcData)), , drop = FALSE]
     countMat$Target <- pkcData$Target[match(countMat$RNAID, 
                                         pkcData$RTS_ID)]
@@ -89,26 +89,26 @@ function(dccFiles,
                Sample_ID = names(data)[x]))
   probe_assay <- do.call(rbind, probe_assay)
   
-  gene_assay <- reshape2::dcast(probe_assay, Target + Pool ~ Sample_ID, 
+  targetAssay <- reshape2::dcast(probe_assay, Target + Pool ~ Sample_ID, 
                       value.var = 'Count', fun.aggregate = ngeoMean, fill = 1)
   
-  if ( length(unique(gene_assay$Target)) != nrow(gene_assay) ) {
-    duplicatedTargets <- gene_assay$Target[which(duplicated(gene_assay$Target))]
-    warning(sprintf('Some genes are listed in multiple pools including %s', 
+  if ( length(unique(targetAssay$Target)) != nrow(targetAssay) ) {
+    duplicatedTargets <- targetAssay$Target[which(duplicated(targetAssay$Target))]
+    warning(sprintf('Some targets are listed in multiple pools including %s', 
             paste0(duplicatedTargets, collapse = ",")))
     for (duplicatedTarget in duplicatedTargets ){
-      gene_assay$Target[which(gene_assay$Target == duplicatedTarget)] <- 
-        sapply(which(gene_assay$Target == duplicatedTarget), 
-                      function(index) paste0(gene_assay[index, c("Target", "Pool")], 
+      targetAssay$Target[which(targetAssay$Target == duplicatedTarget)] <- 
+        sapply(which(targetAssay$Target == duplicatedTarget), 
+                      function(index) paste0(targetAssay[index, c("Target", "Pool")], 
                                              collapse = "_"))
     }
   }
   
-  rownames(gene_assay) <- gene_assay[, "Target"]
-  assay <- as.matrix(gene_assay[, -seq_len(2)])
+  rownames(targetAssay) <- targetAssay[, "Target"]
+  assay <- as.matrix(targetAssay[, -seq_len(2)])
   
   # Create featureData
-  feature <- gene_assay[, "Target", drop = FALSE]
+  feature <- targetAssay[, "Target", drop = FALSE]
   rownames(feature) <- feature[["Target"]]
   
   feature <- AnnotatedDataFrame(feature,

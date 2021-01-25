@@ -63,7 +63,7 @@ NanoStringGeomxSet(assayData,
   \item{assayData}{A \code{matrix} or \code{environment} containing the DCCs.}
   \item{phenoData}{An \code{\link{AnnotatedDataFrame}} containing the phenotypic
     data of areas of interest.}
-  \item{featureData}{An \code{\link{AnnotatedDataFrame}} containing gene information; gene name, accession number, functional groups, etc.}
+  \item{featureData}{An \code{\link{AnnotatedDataFrame}} containing target information; target name, accession number, functional groups, etc.}
   \item{experimentData}{An optional \code{\link{MIAME}} instance with meta-data
     about the experiment.}
   \item{annotation}{A \code{character} string for the PKC file(s).}

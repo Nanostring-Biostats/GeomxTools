@@ -71,10 +71,10 @@ function(object)
     if (any(numTargets == 0L)) {
       msg <- c(msg, "'signatures' vectors must be non-empty")
     } else {
-      genes <- names(unlist(unname(stats::weights(signatures(object)))))
-      if (is.null(genes) || any(nchar(genes) == 0L)) {
+      targets <- names(unlist(unname(stats::weights(signatures(object)))))
+      if (is.null(targets) || any(nchar(targets) == 0L)) {
         msg <- c(msg, "'signatures' vectors must be named")
-      } else if(!all(unique(genes) %in%
+      } else if(!all(unique(targets) %in%
                      c("(Intercept)", featureData(object)[["TargetName"]]))) {
         msg <-
           c(msg,

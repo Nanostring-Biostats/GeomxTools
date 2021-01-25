@@ -49,12 +49,12 @@ generate_pkc_lookup <- function(jsons_vec) {
     curr_module <- names(jsons_vec)[curr_idx]
     curr_json <- jsons_vec[[curr_idx]]
     for (targ in curr_json[["Targets"]]) {
-      curr_gene <- targ[["DisplayName"]]
+      curr_targ <- targ[["DisplayName"]]
       curr_code_class <- targ[["CodeClass"]]
       for (prb in targ[["Probes"]]) {
         curr_RTS_ID <- prb$RTS_ID
         lookup_df[nrow(lookup_df) + 1, ] <- 
-          list(curr_RTS_ID, curr_gene, curr_module, curr_code_class)
+          list(curr_RTS_ID, curr_targ, curr_module, curr_code_class)
       }
     }
   }
@@ -62,7 +62,7 @@ generate_pkc_lookup <- function(jsons_vec) {
 }
 
 generate_pkc_targ_notes <- function(jsons_vec, lookup_tab) {
-  # Create non-duplicated map from gene to pool and codeclass
+  # Create non-duplicated map from target to pool and codeclass
   sub_lookup <- unique(lookup_tab[, names(lookup_tab) != "RTS_ID"])
   #rownames(sub_lookup) <- sub_lookup[["Target"]]
   notes_df <- 
