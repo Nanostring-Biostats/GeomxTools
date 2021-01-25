@@ -38,7 +38,7 @@ setMethod("signatureScores", "NanoStringGeomxSet",
                             dimnames = list(NULL, colnames(object))))
             }
             exprs <- t(assayDataElement2(object, elt))
-            colnames(exprs) <- featureData(object)[["GeneName"]]
+            colnames(exprs) <- featureData(object)[["TargetName"]]
             sigFuncList <- signatureFuncs( object )
             linWeights <- stats::weights( signatures( object ) )[names( sigFuncList )[which( sigFuncList %in% "default" )]]
             nonLinFuncs <- sigFuncList[which( !( sigFuncList %in% "default" ) )]

@@ -13,7 +13,7 @@ function(file)
   target_notes <- generate_pkc_targ_notes(pkc_json_list, rnaid_lookup_df)
   # create negative column 
   rnaid_lookup_df$Negative <- 
-    rnaid_lookup_df$Gene %in% 
+    rnaid_lookup_df$Target %in% 
     target_notes[grep("Negative", target_notes$Codeclass), "TargetName"]
   # Remove codeclass column, only needed for target notes generation
   rnaid_lookup_df <- 
@@ -41,7 +41,7 @@ function(file)
 
 generate_pkc_lookup <- function(jsons_vec) {
   lookup_df <- data.frame(RTS_ID=character(), 
-                          Gene=character(), 
+                          Target=character(), 
                           Module=character(), 
                           Codeclass=character(),
                           stringsAsFactors=FALSE)
@@ -64,10 +64,10 @@ generate_pkc_lookup <- function(jsons_vec) {
 generate_pkc_targ_notes <- function(jsons_vec, lookup_tab) {
   # Create non-duplicated map from gene to pool and codeclass
   sub_lookup <- unique(lookup_tab[, names(lookup_tab) != "RTS_ID"])
-  #rownames(sub_lookup) <- sub_lookup[["Gene"]]
+  #rownames(sub_lookup) <- sub_lookup[["Target"]]
   notes_df <- 
-    data.frame(TargetName=sub_lookup[["Gene"]],
-               HUGOSymbol=sub_lookup[["Gene"]],
+    data.frame(TargetName=sub_lookup[["Target"]],
+               HUGOSymbol=sub_lookup[["Target"]],
                TargetGroup=rep("All Probes", length(rownames(sub_lookup))),
                AnalyteType=rep("RNA", nrow(sub_lookup)),
                Codeclass=sub_lookup[, "Codeclass"],

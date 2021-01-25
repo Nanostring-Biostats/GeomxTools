@@ -53,7 +53,7 @@ NanoStringGeomxSet(assayData,
                  experimentData=Biobase::MIAME(),
                  annotation=character(),
                  protocolData=Biobase::annotatedDataFrameFrom(assayData, byrow=FALSE),
-                 dimLabels=c("GeneName", "SampleID"),
+                 dimLabels=c("TargetName", "SampleID"),
                  signatures=SignatureSet(),
                  design=NULL,
                  \ldots)
