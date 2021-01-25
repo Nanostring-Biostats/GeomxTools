@@ -84,12 +84,12 @@ function(dccFiles,
     data[[index]]$Code_Summary <- countMat
   }
   
-  probe_assay <- lapply(seq_len(length(data)), function(x)
+  probeAssay <- lapply(seq_len(length(data)), function(x)
     data.frame(data[[x]][["Code_Summary"]],
                Sample_ID = names(data)[x]))
-  probe_assay <- do.call(rbind, probe_assay)
+  probeAssay <- do.call(rbind, probeAssay)
   
-  targetAssay <- reshape2::dcast(probe_assay, Target + Pool ~ Sample_ID, 
+  targetAssay <- reshape2::dcast(probeAssay, Target + Pool ~ Sample_ID, 
                       value.var = 'Count', fun.aggregate = ngeoMean, fill = 1)
   
   if ( length(unique(targetAssay$Target)) != nrow(targetAssay) ) {
@@ -125,7 +125,7 @@ function(dccFiles,
   
   # Create annotation
   annotation <- sort(sapply(strsplit(pkcFiles, "/"), function(x) x[length(x)]))
-  if(!identical(annotation, paste0(sort(unique(probe_assay[['Pool']])), ".pkc"))) {
+  if(!identical(annotation, paste0(sort(unique(probeAssay[['Pool']])), ".pkc"))) {
     stop("Name mismatch between pool and PKC files")
   }
 
