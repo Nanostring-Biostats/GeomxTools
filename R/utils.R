@@ -1,4 +1,36 @@
 ngeoMean <- function(v) {
-  v[v == 0] <- 1
-  return(EnvStats::geoMean(v, na.rm = TRUE))
+    v[v == 0] <- 1
+    return(EnvStats::geoMean(v, na.rm = TRUE))
+}
+
+aggregateCounts <- function(probeCounts) {
+    targCounts <- reshape2::dcast(probeCounts, Target + Pool ~ Sample_ID, 
+        value.var = 'Count', fun.aggregate = ngeoMean, fill = 1)
+
+    if (length(unique(targCounts$Target)) != nrow(targCounts)) {
+        duplicatedTargets <- 
+            targCounts$Target[which(duplicated(targCounts$Target))]
+        warning(
+            sprintf('Some targets are listed in multiple pools including %s', 
+            paste0(duplicatedTargets, collapse = ",")))
+        for (duplicatedTarget in duplicatedTargets) {
+            targCounts$Target[which(targCounts$Target == duplicatedTarget)] <- 
+                sapply(which(targCounts$Target == duplicatedTarget), 
+                    function(index) {
+                        paste0(targCounts[index, c("Target", "Pool")], 
+                            collapse = "_")
+                    })
+        }
+    }
+
+    #NEO modify this portion still
+    rownames(targetAssay) <- targetAssay[, "Target"]
+    assay <- as.matrix(targetAssay[, -seq_len(2)])
+  
+    # Create featureData
+    feature <- targetAssay[, "Target", drop = FALSE]
+    rownames(feature) <- feature[["Target"]]
+  
+    feature <- AnnotatedDataFrame(feature,
+                                  dimLabels = c("featureNames", "featureColumns"))
 }

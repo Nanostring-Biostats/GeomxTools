@@ -9,20 +9,20 @@ function(file)
                      return(base_pkc_name)
                    }))
   names(pkc_json_list) <- pkc_names
-  rnaid_lookup_df <- generate_pkc_lookup(pkc_json_list)
-  target_notes <- generate_pkc_targ_notes(pkc_json_list, rnaid_lookup_df)
+  rtsid_lookup_df <- generate_pkc_lookup(pkc_json_list)
+  target_notes <- generate_pkc_targ_notes(pkc_json_list, rtsid_lookup_df)
   # create negative column 
-  rnaid_lookup_df$Negative <- 
-    rnaid_lookup_df$Target %in% 
+  rtsid_lookup_df$Negative <- 
+    rtsid_lookup_df$Target %in% 
     target_notes[grep("Negative", target_notes$Codeclass), "TargetName"]
   # Remove codeclass column, only needed for target notes generation
-  rnaid_lookup_df <- 
-    rnaid_lookup_df[, !colnames(rnaid_lookup_df) %in% c("Codeclass", "PoolNum")]
+  rtsid_lookup_df <- 
+    rtsid_lookup_df[, !colnames(rtsid_lookup_df) %in% c("Codeclass", "PoolNum")]
   # change "RTS00" to "RNA" (only check the first characters, also need to 
   #   change from RNA to RTS00)
-  rnaid_lookup_df$RTS_ID <- gsub("RTS00", "RNA", rnaid_lookup_df[["RTS_ID"]])
+  rtsid_lookup_df$RTS_ID <- gsub("RTS00", "RNA", rtsid_lookup_df[["RTS_ID"]])
   # Coerce output to DataFrame
-  rnaid_lookup_df <- S4Vectors::DataFrame(rnaid_lookup_df)
+  rtsid_lookup_df <- S4Vectors::DataFrame(rtsid_lookup_df)
   
   # Extract header
   header <- list(PKCFileName = sapply(pkc_json_list, function(list) list[["Name"]]),
@@ -33,9 +33,9 @@ function(file)
                  MinNuclei = sapply(pkc_json_list, function(list) list[["MinNuclei"]])  
                  )
   
-  S4Vectors::metadata(rnaid_lookup_df) <- header
+  S4Vectors::metadata(rtsid_lookup_df) <- header
   
-  return(rnaid_lookup_df)
+  return(rtsid_lookup_df)
 }
 
 
