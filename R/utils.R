@@ -4,6 +4,19 @@ ngeoMean <- function(v) {
 }
 
 aggregateCounts <- function(probeCounts) {
+
+  for (index in seq_len(length(data))) {
+    countMat <- data[[index]]$Code_Summary
+    #NEO this should be a check and we should stop if not all targets found in pkc?
+    countMat <- countMat[which(rownames(countMat) %in% rownames(pkcData)), , drop = FALSE]
+    countMat$Target <- pkcData$Target[match(countMat$RTS_ID, 
+                                        pkcData$RTS_ID)]
+    
+    countMat$Pool <- pkcData$Module[match(countMat$RTS_ID, 
+                                          pkcData$RTS_ID)]
+    data[[index]]$Code_Summary <- countMat
+  }
+  
     targCounts <- reshape2::dcast(probeCounts, Target + Pool ~ Sample_ID, 
         value.var = 'Count', fun.aggregate = ngeoMean, fill = 1)
 

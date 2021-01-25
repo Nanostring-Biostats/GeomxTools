@@ -71,30 +71,19 @@ function(dccFiles,
     rownames(pkcData) <- pkcData[["RTS_ID"]]
     
   }
-  
-  for (index in seq_len(length(data))) {
-    countMat <- data[[index]]$Code_Summary
-    #NEO this should be a check and we should stop if not all targets found in pkc?
-    countMat <- countMat[which(rownames(countMat) %in% rownames(pkcData)), , drop = FALSE]
-    countMat$Target <- pkcData$Target[match(countMat$RTSID, 
-                                        pkcData$RTS_ID)]
-    
-    countMat$Pool <- pkcData$Module[match(countMat$RTSID, 
-                                          pkcData$RTS_ID)]
-    data[[index]]$Code_Summary <- countMat
-  }
-  
+
   probeAssay <- lapply(seq_len(length(data)), function(x)
     data.frame(data[[x]][["Code_Summary"]],
                Sample_ID = names(data)[x]))
   probeAssay <- do.call(rbind, probeAssay)
-  
+  probeAssay <- reshape2::dcast(probeAssay, RTS_ID ~ Sample_ID, 
+      value.var="Count", fill=0)
   rownames(probeAssay) <- probeAssay[, "RTS_ID"]
-  assay <- as.matrix(probeAssay[, -seq_len(2)])
+  assay <- as.matrix(probeAssay[, colnames(probeAssay) != "RTS_ID"])
   
   # Create featureData
-  feature <- targetAssay[, "Target", drop = FALSE]
-  rownames(feature) <- feature[["Target"]]
+  feature <- probeAssay[, "RTS_ID", drop = FALSE]
+  rownames(feature) <- feature[["RTS_ID"]]
   
   feature <- AnnotatedDataFrame(feature,
                                 dimLabels = c("featureNames", "featureColumns"))
