@@ -10,14 +10,13 @@ function(file)
                    }))
   names(pkc_json_list) <- pkc_names
   rtsid_lookup_df <- generate_pkc_lookup(pkc_json_list)
-  target_notes <- generate_pkc_targ_notes(pkc_json_list, rtsid_lookup_df)
+  # NEO Not used currently, need to merge with above call and function
+  #target_notes <- generate_pkc_targ_notes(pkc_json_list, rtsid_lookup_df)
   # create negative column 
   rtsid_lookup_df$Negative <- 
     rtsid_lookup_df$Target %in% 
     target_notes[grep("Negative", target_notes$Codeclass), "TargetName"]
-  # Remove codeclass column, only needed for target notes generation
-  rtsid_lookup_df <- 
-    rtsid_lookup_df[, !colnames(rtsid_lookup_df) %in% c("Codeclass", "PoolNum")]
+  rtsid_lookup_df$Codeclass <- NULL
   # change "RTS00" to "RNA" (only check the first characters, also need to 
   #   change from RNA to RTS00)
   rtsid_lookup_df$RTS_ID <- gsub("RTS00", "RNA", rtsid_lookup_df[["RTS_ID"]])

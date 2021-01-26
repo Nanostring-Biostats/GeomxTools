@@ -76,14 +76,14 @@ function(dccFiles,
     data.frame(data[[x]][["Code_Summary"]],
                Sample_ID = names(data)[x]))
   probeAssay <- do.call(rbind, probeAssay)
-  probeAssay <- reshape2::dcast(probeAssay, RTS_ID ~ Sample_ID, 
+  probeAssay[["Module"]] <- pkcData[probeAssay[["RTS_ID"]], "Module"]
+  probeAssay <- reshape2::dcast(probeAssay, RTS_ID + Module ~ Sample_ID, 
       value.var="Count", fill=0)
   rownames(probeAssay) <- probeAssay[, "RTS_ID"]
-  assay <- as.matrix(probeAssay[, colnames(probeAssay) != "RTS_ID"])
+  assay <- as.matrix(probeAssay[, names(data)])
   
   # Create featureData
-  feature <- probeAssay[, "RTS_ID", drop = FALSE]
-  rownames(feature) <- feature[["RTS_ID"]]
+  feature <- pkcData[rownames(assay), , drop = FALSE]
   
   feature <- AnnotatedDataFrame(feature,
                                 dimLabels = c("featureNames", "featureColumns"))
