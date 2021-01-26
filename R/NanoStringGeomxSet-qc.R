@@ -53,7 +53,7 @@ setProbeFlags <- function(object, qcCutoffs=DEFAULTS) {
     object <- setGlobalFlags(object=object, 
         cutoff=qcCutoffs[["globalOutlierRatio"]])
     return(object)
-})
+}
 
 setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
     object <- 
@@ -61,7 +61,7 @@ setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
     object <- 
         setHighCountFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
     return(object)
-})
+}
 
 #NEO these are exported so advanced users can use filters not part of default DA pipeline
 setSaturationFlags <- function(object, cutoff=DEFAULTS[["minSaturation"]]) {
