@@ -99,7 +99,7 @@ function(dccFiles,
   
   # Create annotation
   annotation <- sort(sapply(strsplit(pkcFiles, "/"), function(x) x[length(x)]))
-  if(!identical(annotation, paste0(sort(unique(probeAssay[['Pool']])), ".pkc"))) {
+  if(!identical(annotation, paste0(sort(unique(probeAssay[["Module"]])), ".pkc"))) {
     stop("Name mismatch between pool and PKC files")
   }
 

@@ -13,9 +13,7 @@ function(file)
   # NEO Not used currently, need to merge with above call and function
   #target_notes <- generate_pkc_targ_notes(pkc_json_list, rtsid_lookup_df)
   # create negative column 
-  rtsid_lookup_df$Negative <- 
-    rtsid_lookup_df$Target %in% 
-    target_notes[grep("Negative", target_notes$Codeclass), "TargetName"]
+  rtsid_lookup_df$Negative <- grepl("Negative", rtsid_lookup_df$Codeclass)
   rtsid_lookup_df$Codeclass <- NULL
   # change "RTS00" to "RNA" (only check the first characters, also need to 
   #   change from RNA to RTS00)
