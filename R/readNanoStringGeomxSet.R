@@ -118,8 +118,8 @@ function(dccFiles,
                            c(protocolDataColNames, experimentDataColNames))]
   
   annot_labelDescription <-  data.frame(labelDescription =
-                                           rep(NA_character_, length(protocolDataColNames)),
-                                         row.names = protocolDataColNames,
+                                           rep(NA_character_, length(protocolDataColNames) + 1L),
+                                         row.names = c(protocolDataColNames, "DeduplicatedReads"),
                                          stringsAsFactors = FALSE)
   
   protocol <- AnnotatedDataFrame(protocol,

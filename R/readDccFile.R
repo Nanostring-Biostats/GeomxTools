@@ -81,7 +81,7 @@ function(file)
     output[["Code_Summary"]] <- output[["Code_Summary"]][ok, , drop = FALSE]
   }
   rownames(output[["Code_Summary"]]) <- rn
-  output[["Code_Summary"]][, "DeduplicatedReads"] <- length(rn)
+  output[["NGS_Processing_Attributes"]][, "DeduplicatedReads"] <- length(rn)
 
   output
 }

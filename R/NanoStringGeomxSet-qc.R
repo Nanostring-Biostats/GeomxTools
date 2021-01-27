@@ -28,10 +28,11 @@ setMethod("setQCFlags",
         #NEO to add featureType accessor to the class plus validation
         object <- setAOIFlags(object=object, qcCutoffs=qcCutoffs)
         if (featType == "Probe") {
-            object <- setProbeFlags(object=object, qcCutoffs=qcCutoffs)
+        #    object <- setProbeFlags(object=object, qcCutoffs=qcCutoffs)
         } else if (featType == "Target") {
-            object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
+        #    object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
         }
+        return(object)
 })
 
 #NEO these should match the default calls in DA
@@ -66,15 +67,17 @@ setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
 #NEO these are exported so advanced users can use filters not part of default DA pipeline
 setSaturationFlags <- function(object, cutoff=DEFAULTS[["minSaturation"]]) {
     percentUnique <- 
-        sData(object)[["DeduplicatedReads"]] / sData(object)[["Aligned"]]
-    protocolData(object)[["QCFlags"]][, "Saturation"] <- 
-        percentUnique > cutoff
+        sData(object)["DeduplicatedReads"] / sData(object)["Aligned"]
+    percentUnique <- percentUnique > cutoff
+    colnames(percentUnique) <- "Saturation"
+    object<- appendSampleFlags(object, percentUnique)
     return(object)
 }
 
 setLowReadFlags <- function(object, cutoff=DEFAULTS[["minReads"]]) {
-    protocolData(object)[["QCFlags"]][, "LowReads"] <- 
-        sData(object)[["Raw"]] < cutoff
+    lowReads <- sData(object)["Raw"] < cutoff
+    colnames(lowReads) <- "LowReads"
+    object <- appendSampleFlags(object, lowReads)
     return(object)
 }
 
@@ -92,4 +95,25 @@ checkCutoffs <- function(qcCutoffs) {
         qcCutoffs <- append(qcCutoffs, 
             DEFAULTS[!(names(DEFAULTS) %in% names(qcCutoffs))])
     }
+    return(qcCutoffs)
+}
+
+appendSampleFlags <- function(object, currFlags) {
+    if("QCFlags" %in% varLabels(protocolData(object))) {
+        protocolData(object)[["QCFlags"]] <- 
+            cbind(protocolData(object)[["QCFlags"]], currFlags) 
+    } else {
+        protocolData(object)[["QCFlags"]] <- currFlags
+    }
+    return(object)
+}
+
+appendFeatureFlags <- function(object, currFlags) {
+    if("QCFlags" %in% varLabels(protocolData(object))) {
+        protocolData(object)[["QCFlags"]] <- 
+            cbind(protocolData(object)[["QCFlags"]], currFlags) 
+    } else {
+        protocolData(object)[["QCFlags"]] <- currFlags
+    }
+    return(object)
 }
