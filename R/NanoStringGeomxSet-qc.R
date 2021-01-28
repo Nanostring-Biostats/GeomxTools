@@ -47,8 +47,8 @@ setAOIFlags <- function(object, qcCutoffs=DEFAULTS) {
 setProbeFlags <- function(object, qcCutoffs=DEFAULTS) {
     object <- setProbeRatioFlags(object=object, 
         cutoff=qcCutoffs[["minProbeRatio"]])
-    #object <- setProbeCountFlags(object=object, 
-    #    cutoff=qcCutoffs[["minimumCount"]])
+    object <- setProbeCountFlags(object=object, 
+        cutoff=qcCutoffs[["minimumCount"]])
     #object <- setLocalFlags(object=object, 
     #    cutoff=qcCutoffs[["localOutlierAlpha"]])
     #object <- setGlobalFlags(object=object, 
@@ -56,6 +56,7 @@ setProbeFlags <- function(object, qcCutoffs=DEFAULTS) {
     return(object)
 }
 
+#NEO make sure that when collapsed count occurs feature data QCFlags is removed
 setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
     object <- 
         setLOQFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
@@ -81,7 +82,6 @@ setLowReadFlags <- function(object, cutoff=DEFAULTS[["minReads"]]) {
     return(object)
 }
 
-# NEO gene needs to be replaced with Target throughout
 setProbeRatioFlags <- 
     function(object=object, cutoff=qcCutoffs[["minProbeRatio"]]) {
         rawTargetCounts <- collapseCounts(object)
@@ -93,7 +93,18 @@ setProbeRatioFlags <-
         probeMeans <- apply(assayDataElement(object, elt="exprs"), 
             MARGIN=1, FUN=ngeoMean)
         probeRatioFlags <- (probeMeans / targetMeans) < cutoff
-        probeRatioFlags <- data.frame("RatioFlags"=probeRatioFlags)
+        probeRatioFlags <- data.frame("LowProbeRatio"=probeRatioFlags)
+        object <- appendFeatureFlags(object, probeRatioFlags)
+        return(object)
+    }
+ 
+setProbeCountFlags <- 
+    function(object=object, cutoff=qcCutoffs[["minimumCount"]]) {
+        probeCountFlags <- apply(assayDataElement(object, elt="exprs"), 
+            MARGIN=1, FUN=function(x, minCount){
+                all(x < minCount)
+            }, minCount=cutoff)
+        probeCountFlags <- data.frame("LowProbeCount"=probeCountFlags)
         object <- appendFeatureFlags(object, probeRatioFlags)
         return(object)
     }

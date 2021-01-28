@@ -3,6 +3,7 @@ ngeoMean <- function(v) {
     return(EnvStats::geoMean(v, na.rm = TRUE))
 }
 
+#NEO rewrite in data.tables for speed
 collapseCounts <- function(object) {
     probeCounts <- cbind(fData(object)[, c("Target", "Module")], 
         assayDataElement(object, elt="exprs"))
