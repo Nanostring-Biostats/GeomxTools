@@ -28,7 +28,7 @@ setMethod("setQCFlags",
         #NEO to add featureType accessor to the class plus validation
         object <- setAOIFlags(object=object, qcCutoffs=qcCutoffs)
         if (featType == "Probe") {
-        #    object <- setProbeFlags(object=object, qcCutoffs=qcCutoffs)
+            object <- setProbeFlags(object=object, qcCutoffs=qcCutoffs)
         } else if (featType == "Target") {
         #    object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
         }
@@ -47,12 +47,12 @@ setAOIFlags <- function(object, qcCutoffs=DEFAULTS) {
 setProbeFlags <- function(object, qcCutoffs=DEFAULTS) {
     object <- setProbeRatioFlags(object=object, 
         cutoff=qcCutoffs[["minProbeRatio"]])
-    object <- setProbeCountFlags(object=object, 
-        cutoff=qcCutoffs[["minimumCount"]])
-    object <- setLocalFlags(object=object, 
-        cutoff=qcCutoffs[["localOutlierAlpha"]])
-    object <- setGlobalFlags(object=object, 
-        cutoff=qcCutoffs[["globalOutlierRatio"]])
+    #object <- setProbeCountFlags(object=object, 
+    #    cutoff=qcCutoffs[["minimumCount"]])
+    #object <- setLocalFlags(object=object, 
+    #    cutoff=qcCutoffs[["localOutlierAlpha"]])
+    #object <- setGlobalFlags(object=object, 
+    #    cutoff=qcCutoffs[["globalOutlierRatio"]])
     return(object)
 }
 
@@ -82,13 +82,21 @@ setLowReadFlags <- function(object, cutoff=DEFAULTS[["minReads"]]) {
 }
 
 # NEO gene needs to be replaced with Target throughout
-#setProbeRatioFlags <- 
-#    function(object=object, cutoff=qcCutoffs[["minProbeRatio"]]) {
-#        #NEO make generic aggregate counts function so this can be called many times in QC or to generate new class
-#        gene_assay <- reshape2::dcast(probeAssay, Target + Module ~ Sample_ID, 
-#            value.var = 'Count', fun.aggregate = ngeoMean, fill = 1)
-#        targetMeans <- lapply(featureNames(object), assayDataElement(object, elt="exprs"))
-#    }
+setProbeRatioFlags <- 
+    function(object=object, cutoff=qcCutoffs[["minProbeRatio"]]) {
+        rawTargetCounts <- collapseCounts(object)
+        rawTargetCounts[["Mean"]] <- 
+            apply(rawTargetCounts[, sampleNames(object)], 
+                MARGIN=1, FUN=ngeoMean)
+        rownames(rawTargetCounts) <- rawTargetCounts[["Target"]]
+        targetMeans <- rawTargetCounts[fData(object)[["Target"]], "Mean"]
+        probeMeans <- apply(assayDataElement(object, elt="exprs"), 
+            MARGIN=1, FUN=ngeoMean)
+        probeRatioFlags <- (probeMeans / targetMeans) < cutoff
+        probeRatioFlags <- data.frame("RatioFlags"=probeRatioFlags)
+        object <- appendFeatureFlags(object, probeRatioFlags)
+        return(object)
+    }
 
 checkCutoffs <- function(qcCutoffs) {
     if (!all(names(DEFAULTS) %in% names(qcCutoffs))) {
@@ -109,11 +117,11 @@ appendSampleFlags <- function(object, currFlags) {
 }
 
 appendFeatureFlags <- function(object, currFlags) {
-    if("QCFlags" %in% varLabels(protocolData(object))) {
-        protocolData(object)[["QCFlags"]] <- 
-            cbind(protocolData(object)[["QCFlags"]], currFlags) 
+    if("QCFlags" %in% varLabels(featureData(object))) {
+        featureData(object)[["QCFlags"]] <- 
+            cbind(featureData(object)[["QCFlags"]], currFlags) 
     } else {
-        protocolData(object)[["QCFlags"]] <- currFlags
+        featureData(object)[["QCFlags"]] <- currFlags
     }
     return(object)
 }
