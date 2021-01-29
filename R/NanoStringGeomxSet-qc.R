@@ -49,8 +49,8 @@ setProbeFlags <- function(object, qcCutoffs=DEFAULTS) {
         cutoff=qcCutoffs[["minProbeRatio"]])
     object <- setProbeCountFlags(object=object, 
         cutoff=qcCutoffs[["minimumCount"]])
-    #object <- setLocalFlags(object=object, 
-    #    cutoff=qcCutoffs[["localOutlierAlpha"]])
+    object <- setLocalFlags(object=object, 
+        cutoff=qcCutoffs[["localOutlierAlpha"]])
     #object <- setGlobalFlags(object=object, 
     #    cutoff=qcCutoffs[["globalOutlierRatio"]])
     return(object)
@@ -83,7 +83,7 @@ setLowReadFlags <- function(object, cutoff=DEFAULTS[["minReads"]]) {
 }
 
 setProbeRatioFlags <- 
-    function(object=object, cutoff=qcCutoffs[["minProbeRatio"]]) {
+    function(object=object, cutoff=DEFAULTS[["minProbeRatio"]]) {
         rawTargetCounts <- collapseCounts(object)
         rawTargetCounts[["Mean"]] <- 
             apply(rawTargetCounts[, sampleNames(object)], 
@@ -99,15 +99,53 @@ setProbeRatioFlags <-
     }
  
 setProbeCountFlags <- 
-    function(object=object, cutoff=qcCutoffs[["minimumCount"]]) {
+    function(object=object, cutoff=DEFAULTS[["minimumCount"]]) {
         probeCountFlags <- apply(assayDataElement(object, elt="exprs"), 
             MARGIN=1, FUN=function(x, minCount){
                 all(x < minCount)
             }, minCount=cutoff)
         probeCountFlags <- data.frame("LowProbeCount"=probeCountFlags)
-        object <- appendFeatureFlags(object, probeRatioFlags)
+        object <- appendFeatureFlags(object, probeCountFlags)
         return(object)
     }
+
+#NEO opt speed mcl dt and 
+#time-wise does it makes sense to bypass anything with min flag
+#Yes can add and just match back by subsetting by true and and then marking by RTS
+#Update append to detect if less rows than object and match to flags and RTS
+setLocalFlags <- 
+    function(object=object, cutoff=DEFAULTS[["localOutlierAlpha"]]) {
+        #if ("LowProbeCount" %in% names(fData(object)[["QCFlags"]])) {
+          #  subObj <- object[!fData(object)[["QCFlags"]][["LowProbeRatio"]], ]
+            probeCounts <- 
+                setDT(cbind(fData(object)[, c("RTS_ID", "Target", "Module")], 
+                    assayDataElement(object, elt="exprs")))
+            probeCounts <- melt(probeCounts, 
+                id.vars=c("RTS_ID", "Target", "Module"), 
+                variable.name="Sample_ID", 
+                value.name="Count", variable.factor=FALSE)
+            probeCounts[, Count:=logt(Count)]
+            probeCounts[, "LowLocalOutlier"] <- FALSE
+            probeCounts[, "HighLocalOutlier"] <- FALSE
+            probeCounts <- probeCounts[, grubbsFlag(.SD, alpha=cutoff), 
+                by=.(Target, Module, Sample_ID)]
+            lowFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), stringsAsFactor=FALSE)
+            highFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), stringsAsFactor=FALSE)
+            rownames(lowFlags) <- lowFlags[["RTS_ID"]]
+            rownames(highFlags) <- highFlags[["RTS_ID"]]
+            lowFlags <- lowFlags[, colnames(lowFlags) != "RTS_ID"]
+            highFlags <- highFlags[, colnames(highFlags) != "RTS_ID"]
+            outlierFlags <- data.frame(LowLocalOutlier=lowFlags, HighLocalOutlier=highFlags)
+            object <- appendFeatureFlags(object, outlierFlags)
+        #} #else {
+        #    stop(paste("It is recommended to flag targets with overall", 
+        #        "low counts (i.e. background-level expression)", 
+        #        "prior to checking for outliers.\n", "Rerun outlier testing",
+        #        "after running setProbeCountFlags."))
+        #}
+        return(object)
+    }
+
 
 checkCutoffs <- function(qcCutoffs) {
     if (!all(names(DEFAULTS) %in% names(qcCutoffs))) {
@@ -135,4 +173,31 @@ appendFeatureFlags <- function(object, currFlags) {
         featureData(object)[["QCFlags"]] <- currFlags
     }
     return(object)
+}
+
+# grubbs.flag
+# helper function to remove outliers using Grubbs' test given the controlled type I error alpha
+# modified from https://stackoverflow.com/questions/22837099/how-to-repeat-the-grubbs-test-and-flag-the-outliers
+# INPUT
+#   x = named vector
+#   alpha = indicator of the expected Type I erorr frequency
+#   logt = boolean to log 10 transform data prior to outlier test
+#   min_count = integer of minimum expected counts for testing
+# OUTPUT
+#   vector of TRUE / FALSE For flagged or not flagged
+grubbsFlag <- function(countDT, alpha=0.01) {
+    if (dim(countDT)[1] < 3 | all(countDT[, Count] == countDT[1][, Count])) {
+        return(countDT)
+    }
+    grubbsResult <- outliers::grubbs.test(countDT[, Count], two.sided=TRUE)
+    if (grubbsResult$p.value < alpha) {
+        if (grepl("lowest", tolower(grubbsResult$alternative))) {
+            countDT[Count == min(Count), "LowLocalOutlier"] <- TRUE
+        } else {
+            countDT[Count == max(Count), "HighLocalOutlier"] <- TRUE
+        }
+    } else {
+        return(countDT)
+    }
+    return(countDT)
 }
