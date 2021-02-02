@@ -51,8 +51,8 @@ setProbeFlags <- function(object, qcCutoffs=DEFAULTS) {
         cutoff=qcCutoffs[["minimumCount"]])
     object <- setLocalFlags(object=object, 
         cutoff=qcCutoffs[["localOutlierAlpha"]])
-    #object <- setGlobalFlags(object=object, 
-    #    cutoff=qcCutoffs[["globalOutlierRatio"]])
+    object <- setGlobalFlags(object=object, 
+        cutoff=qcCutoffs[["globalOutlierRatio"]])
     return(object)
 }
 
@@ -109,7 +109,7 @@ setProbeCountFlags <-
         return(object)
     }
 
-#NEO opt speed mcl dt and 
+#NEO
 #time-wise does it makes sense to bypass anything with min flag
 #Yes can add and just match back by subsetting by true and and then marking by RTS
 #Update append to detect if less rows than object and match to flags and RTS
@@ -146,6 +146,19 @@ setLocalFlags <-
         return(object)
     }
 
+setGlobalFlags <- 
+    function(object=object, cutoff=DEFAULTS[["globalOutlierRatio"]]) {
+        lowFlagRatio <- 
+            apply(fData(object)[["QCFlags"]][, grepl("LowLocalOutlier", 
+                colnames(fData(object)[["QCFlags"]]))], 1, mean )
+        highFlagRatio <- 
+            apply(fData(object)[["QCFlags"]][, grepl("HighLocalOutlier", 
+                colnames(fData(object)[["QCFlags"]]))], 1, mean )
+        outlierRatio <- lowFlagRatio > cutoff | highFlagRatio > cutoff
+        globalFlags <- data.frame("GlobalOutlier"=outlierRatio)
+        object <- appendFeatureFlags(object, globalFlags)
+        return(object)
+    }
 
 checkCutoffs <- function(qcCutoffs) {
     if (!all(names(DEFAULTS) %in% names(qcCutoffs))) {
