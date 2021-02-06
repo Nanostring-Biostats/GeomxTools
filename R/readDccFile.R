@@ -82,5 +82,5 @@ function(file)
   }
   rownames(output[["Code_Summary"]]) <- rn
 
-  output
+  return( output )
 }

@@ -153,11 +153,11 @@ function(dccFiles,
                                  dimLabels = c("sampleNames", "sampleColumns"))
 
   # Create NanoStringGeomxSet
-  NanoStringGeomxSet(assayData = assay,
-                   phenoData = pheno,
-                   featureData = feature,
-                   experimentData = experiment,
-                   annotation = annotation,
-                   protocolData = protocol,
-                   check = FALSE)
+  return( NanoStringGeomxSet(assayData = assay,
+                             phenoData = pheno,
+                             featureData = feature,
+                             experimentData = experiment,
+                             annotation = annotation,
+                             protocolData = protocol,
+                             check = FALSE) )
 }

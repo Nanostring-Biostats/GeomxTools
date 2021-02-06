@@ -90,5 +90,9 @@ function(object)
       msg <- c(msg, "'design' must reference columns from 'phenoData'")
     }
   }
-  if (is.null(msg)) TRUE else msg
+  if (is.null(msg)) {
+    return(TRUE)
+  } else {
+    return(msg)
+  }
 })

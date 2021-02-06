@@ -9,7 +9,7 @@ setGeneric("signatures<-", signature = c("object", "value"),
 setReplaceMethod("signatures", c("NanoStringGeomxSet", "SignatureSet"),
                  function(object, value) {
                    object@signatures <- value
-                   object
+                   return(object)
                  })
 
 # signatureScores Accessor and Replacer
@@ -22,9 +22,9 @@ setReplaceMethod("signatures", c("NanoStringGeomxSet", "SignatureSet"),
              }
              if (all(names(wts) %in% colnames(X))) {
                X <- X[, names(wts), drop = FALSE]
-               (X %*% wts)[, 1L]
+               return( (X %*% wts)[, 1L] )
              } else {
-               structure(rep.int(NA_real_, nrow(X)), names = rownames(X))
+               return( structure(rep.int(NA_real_, nrow(X)), names = rownames(X)) )
              }
            }))
 }
@@ -63,7 +63,7 @@ setGeneric( "signatureGroups" , signature = "object" ,
             function (object , ... ) standardGeneric( "signatureGroups" ) )
 setMethod("signatureGroups", "NanoStringGeomxSet",
           function( object ) {
-            groups( object@signatures )
+            return( groups( object@signatures ) )
           } )
 
 setGeneric("setSignatureGroups<-", signature = c("object", "value"),
@@ -83,7 +83,7 @@ setGeneric( "signatureFuncs" , signature = "object" ,
             function (object , ... ) standardGeneric( "signatureFuncs" ) )
 setMethod("signatureFuncs", "NanoStringGeomxSet",
           function( object ) {
-            getSigFuncs( object@signatures )
+            return( getSigFuncs( object@signatures ) )
           } )
 
 setGeneric("setSignatureFuncs<-", signature = c("object", "value"),
