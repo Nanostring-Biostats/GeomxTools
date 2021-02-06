@@ -63,13 +63,9 @@ function(dccFiles,
 
     pkcHeader <- S4Vectors::metadata(pkcData)
     pkcHeader[["PKCFileDate"]] <- as.character(pkcHeader[["PKCFileDate"]])
-
-    #chang RNA to RTS00
-    pkcData$RTS_ID <- gsub("RNA", "RTS00", pkcData$RTS_ID)
     
     pkcData <- as.data.frame(pkcData)
     rownames(pkcData) <- pkcData[["RTS_ID"]]
-    
   }
   
   for (index in seq_len(length(data))) {
@@ -82,14 +78,13 @@ function(dccFiles,
                                           pkcData$RTS_ID)]
     data[[index]]$Code_Summary <- countMat
   }
-  
+
   probe_assay <- lapply(seq_len(length(data)), function(x)
     data.frame(data[[x]][["Code_Summary"]],
                Sample_ID = names(data)[x]))
   probe_assay <- do.call(rbind, probe_assay)
-  
   gene_assay <- reshape2::dcast(probe_assay, Gene + Pool ~ Sample_ID, 
-                      value.var = 'Count', fun.aggregate = ngeoMean, fill = NA)
+                      value.var = 'Count', fun.aggregate = ngeoMean, fill = NULL)
   
   if ( length(unique(gene_assay$Gene)) != nrow(gene_assay) ) {
     duplicatedGenes <- gene_assay$Gene[which(duplicated(gene_assay$Gene))]
