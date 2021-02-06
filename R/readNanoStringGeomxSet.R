@@ -71,7 +71,7 @@ function(dccFiles,
   for (index in seq_len(length(data))) {
     countMat <- data[[index]]$Code_Summary
     countMat <- countMat[which(rownames(countMat) %in% rownames(pkcData)), , drop = FALSE]
-    countMat$Gene <- pkcData$Gene[match(countMat$RNAID, 
+    countMat$GeneName <- pkcData$Gene[match(countMat$RNAID, 
                                         pkcData$RTS_ID)]
     
     countMat$Pool <- pkcData$Module[match(countMat$RNAID, 
@@ -83,27 +83,27 @@ function(dccFiles,
     data.frame(data[[x]][["Code_Summary"]],
                Sample_ID = names(data)[x]))
   probe_assay <- do.call(rbind, probe_assay)
-  gene_assay <- reshape2::dcast(probe_assay, Gene + Pool ~ Sample_ID, 
-                      value.var = 'Count', fun.aggregate = ngeoMean, fill = NULL)
+  gene_assay <- reshape2::dcast(probe_assay, GeneName + Pool ~ Sample_ID, 
+                      value.var = 'Count', fun.aggregate = ngeoMean, fill = 1)
   
-  if ( length(unique(gene_assay$Gene)) != nrow(gene_assay) ) {
-    duplicatedGenes <- gene_assay$Gene[which(duplicated(gene_assay$Gene))]
+  if ( length(unique(gene_assay$GeneName)) != nrow(gene_assay) ) {
+    duplicatedGenes <- gene_assay$GeneName[which(duplicated(gene_assay$GeneName))]
     warning(sprintf('Some genes are listed in multiple pools including %s', 
             paste0(duplicatedGenes, collapse = ",")))
     for (duplicatedGene in duplicatedGenes ){
-      gene_assay$Gene[which(gene_assay$Gene == duplicatedGene)] <- 
-        sapply(which(gene_assay$Gene == duplicatedGene), 
-                      function(index) paste0(gene_assay[index, c("Gene", "Pool")], 
+      gene_assay$GeneName[which(gene_assay$GeneName == duplicatedGene)] <- 
+        sapply(which(gene_assay$GeneName == duplicatedGene), 
+                      function(index) paste0(gene_assay[index, c("GeneName", "Pool")], 
                                              collapse = "_"))
     }
   }
   
-  rownames(gene_assay) <- gene_assay[, "Gene"]
+  rownames(gene_assay) <- gene_assay[, "GeneName"]
   assay <- as.matrix(gene_assay[, -seq_len(2)])
   
   # Create featureData
-  feature <- gene_assay[, "Gene", drop = FALSE]
-  rownames(feature) <- feature[["Gene"]]
+  feature <- gene_assay[, "GeneName", drop = FALSE]
+  rownames(feature) <- feature[["GeneName"]]
   
   feature <- AnnotatedDataFrame(feature,
                                 dimLabels = c("featureNames", "featureColumns"))
@@ -141,7 +141,6 @@ function(dccFiles,
                                            rep(NA_character_, length(protocolDataColNames)),
                                          row.names = protocolDataColNames,
                                          stringsAsFactors = FALSE)
-  
   protocol <- AnnotatedDataFrame(protocol,
                                  rbind(.dccMetadata[["protocolData"]], 
                                        annot_labelDescription),
