@@ -1,11 +1,3 @@
-assayDataElement2 <- function(object, elt)
-{
-  if (elt %in% Biobase::assayDataElementNames(object))
-    return( Biobase::assayDataElement(object, elt) )
-  else
-    stop("'elt' not present in assayData(object)")
-}
-
 # Show method
 setMethod("show", signature = "NanoStringGeomxSet",
           function(object) {
