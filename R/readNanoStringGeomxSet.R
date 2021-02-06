@@ -89,7 +89,7 @@ function(dccFiles,
   probe_assay <- do.call(rbind, probe_assay)
   
   gene_assay <- reshape2::dcast(probe_assay, Gene + Pool ~ Sample_ID, 
-                      value.var = 'Count', fun.aggregate = ngeoMean, fill = 1)
+                      value.var = 'Count', fun.aggregate = ngeoMean, fill = NA)
   
   if ( length(unique(gene_assay$Gene)) != nrow(gene_assay) ) {
     duplicatedGenes <- gene_assay$Gene[which(duplicated(gene_assay$Gene))]
