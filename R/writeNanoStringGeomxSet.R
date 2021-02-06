@@ -35,7 +35,6 @@ writeNanoStringGeomxSet <- function(x, dir = getwd()) {
     # wait for the implementation from uncollapsing probes
     #write.csv(cbind(features, Count = exprs(x)[, i]), file = con, quote = FALSE, row.names = FALSE)
     writeLines("</Code_Summary>\n", con)
-    writeLines("<Messages>\n</Messages>\n", con)
     close(con)
   }
   invisible(file.path(dir, sampleNames(x)))
