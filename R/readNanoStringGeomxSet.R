@@ -67,44 +67,21 @@ function(dccFiles,
     pkcData <- as.data.frame(pkcData)
     rownames(pkcData) <- pkcData[["RTS_ID"]]
   }
-  
-  for (index in seq_len(length(data))) {
-    countMat <- data[[index]]$Code_Summary
-    countMat <- countMat[which(rownames(countMat) %in% rownames(pkcData)), , drop = FALSE]
-    countMat$GeneName <- pkcData$Gene[match(countMat$RNAID, 
-                                        pkcData$RTS_ID)]
-    
-    countMat$Pool <- pkcData$Module[match(countMat$RNAID, 
-                                          pkcData$RTS_ID)]
-    data[[index]]$Code_Summary <- countMat
-  }
 
-  probe_assay <- lapply(seq_len(length(data)), function(x)
+  probeAssay <- lapply(seq_len(length(data)), function(x)
     data.frame(data[[x]][["Code_Summary"]],
                Sample_ID = names(data)[x]))
-  probe_assay <- do.call(rbind, probe_assay)
-  gene_assay <- reshape2::dcast(probe_assay, GeneName + Pool ~ Sample_ID, 
-                      value.var = 'Count', fun.aggregate = ngeoMean, fill = 1)
-  
-  if ( length(unique(gene_assay$GeneName)) != nrow(gene_assay) ) {
-    duplicatedGenes <- gene_assay$GeneName[which(duplicated(gene_assay$GeneName))]
-    warning(sprintf('Some genes are listed in multiple pools including %s', 
-            paste0(duplicatedGenes, collapse = ",")))
-    for (duplicatedGene in duplicatedGenes ){
-      gene_assay$GeneName[which(gene_assay$GeneName == duplicatedGene)] <- 
-        sapply(which(gene_assay$GeneName == duplicatedGene), 
-                      function(index) paste0(gene_assay[index, c("GeneName", "Pool")], 
-                                             collapse = "_"))
-    }
-  }
-  
-  rownames(gene_assay) <- gene_assay[, "GeneName"]
-  assay <- as.matrix(gene_assay[, -seq_len(2)])
+  probeAssay <- do.call(rbind, probeAssay)
+  probeAssay[["Module"]] <- pkcData[probeAssay[["RTS_ID"]], "Module"]
+  probeAssay <- reshape2::dcast(probeAssay, RTS_ID + Module ~ Sample_ID, 
+      value.var="Count", fill=0)
+  rownames(probeAssay) <- probeAssay[, "RTS_ID"]
+  assay <- as.matrix(probeAssay[, names(data)])
   
   # Create featureData
-  feature <- gene_assay[, "GeneName", drop = FALSE]
-  rownames(feature) <- feature[["GeneName"]]
-  
+  feature <- pkcData[rownames(assay), , drop = FALSE]
+  # change the colnames of feature data to match with dimLables
+  colnames(feature)[which(colnames(feature)=="Target")] <- "TargetName"
   feature <- AnnotatedDataFrame(feature,
                                 dimLabels = c("featureNames", "featureColumns"))
 
@@ -119,7 +96,7 @@ function(dccFiles,
   
   # Create annotation
   annotation <- sort(sapply(strsplit(pkcFiles, "/"), function(x) x[length(x)]))
-  if(!identical(annotation, paste0(sort(unique(probe_assay[['Pool']])), ".pkc"))) {
+  if(!identical(annotation, paste0(sort(unique(probeAssay[["Module"]])), ".pkc"))) {
     stop("Name mismatch between pool and PKC files")
   }
 

@@ -67,14 +67,14 @@ function(file)
   names(output[["Scan_Attributes"]])[names(output[["Scan_Attributes"]]) == "ID"] <- "SampleID"
   
   # Convert Code_Summary to data.frame object
-  output[["Code_Summary"]] <- paste0("RNAID,Count\n", 
+  output[["Code_Summary"]] <- paste0("RTS_ID,Count\n", 
                                      paste(output[["Code_Summary"]], collapse = "\n"))
   output[["Code_Summary"]] <-
     utils::read.csv(textConnection(output[["Code_Summary"]]),
-             colClasses = c(RNAID = "character", Count = "numeric"))
+             colClasses = c(RTS_ID = "character", Count = "numeric"))
   output[["Code_Summary"]][["Count"]] <-
     as.integer(round(output[["Code_Summary"]][["Count"]]))
-  rn <- output[["Code_Summary"]][["RNAID"]]
+  rn <- output[["Code_Summary"]][["RTS_ID"]]
   if ((ndups <- anyDuplicated(rn)) > 0L) {
     warning(sprintf("removed %d rows from \"Code_Summary\" due to duplicate rownames",
                     ndups))

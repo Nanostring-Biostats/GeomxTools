@@ -24,7 +24,7 @@ function(object)
   }
   if (dim(object)[["Features"]] > 0L) {
     # featureData
-    featureDataColNames <- c("GeneName")
+    featureDataColNames <- c("TargetName")
     if (!all(featureDataColNames %in% varLabels(featureData(object)))) {
       msg <-
         c(msg,
@@ -41,8 +41,8 @@ function(object)
   }
   if (prod(dim(object)) > 0L) {
     # assayData
-    if (!.validPositiveNumber(exprs(object))) {
-      msg <- c(msg, "'exprs' does not contain positive values")
+    if (!.validNonNegativeNumber(exprs(object))) {
+      msg <- c(msg, "'exprs' does not contain non-negative values")
     }
     # dimLabels
     if (length(dimLabels(object)) != 2L) {
@@ -64,21 +64,21 @@ function(object)
         "'fvarLabels', 'svarLabels', 'assayDataElementNames', \"signatures\", and \"design\" must be unique")
   }
   if (length(signatures(object)) > 0L) {
-    numGenes <- lengths(signatures(object))
-    if (is.null(names(numGenes)) || any(nchar(names(numGenes)) == 0L)) {
+    numTargets <- lengths(signatures(object))
+    if (is.null(names(numTargets)) || any(nchar(names(numTargets)) == 0L)) {
       msg <- c(msg, "'signatures' must be a named NumericList")
     }
-    if (any(numGenes == 0L)) {
+    if (any(numTargets == 0L)) {
       msg <- c(msg, "'signatures' vectors must be non-empty")
     } else {
-      genes <- names(unlist(unname(stats::weights(signatures(object)))))
-      if (is.null(genes) || any(nchar(genes) == 0L)) {
+      targets <- names(unlist(unname(stats::weights(signatures(object)))))
+      if (is.null(targets) || any(nchar(targets) == 0L)) {
         msg <- c(msg, "'signatures' vectors must be named")
-      } else if(!all(unique(genes) %in%
-                     c("(Intercept)", featureData(object)[["GeneName"]]))) {
+      } else if(!all(unique(targets) %in%
+                     c("(Intercept)", featureData(object)[["TargetName"]]))) {
         msg <-
           c(msg,
-            "'signatures' vectors must be named with values from 'featureData' \"GeneName\"")
+            "'signatures' vectors must be named with values from 'featureData' \"TargetName\"")
       }
     }
   }
