@@ -3,6 +3,7 @@ writeNanoStringGeomxSet <- function(x, dir = getwd()) {
   validObject(x)
   if (!dir.exists(dir)) 
     dir.create(dir)
+  features <- pData(featureData(x))[, c("RTS_ID")]
   header <- "<Header>\nFileVersion,%s\nSoftwareVersion,%s\nDate,%s\n</Header>\n"
   ScanAttr <- paste0("<Scan_Attributes>\nID,%s\nPlate_ID,%s\nWell,%s\n</Scan_Attributes>\n")
   laneAttr <- paste0("<NGS_Processing_Attributes>\nSeqSetId,%s\ntamperedIni,%s\ntrimGaloreOpts,%s\n", 
@@ -32,9 +33,11 @@ writeNanoStringGeomxSet <- function(x, dir = getwd()) {
                        protocolRow[["rtsQ30"]]), 
                con)
     writeLines("<Code_Summary>", con)
-    # wait for the implementation from uncollapsing probes
-    #write.csv(cbind(features, Count = exprs(x)[, i]), file = con, quote = FALSE, row.names = FALSE)
+    write.table(cbind(features[which(exprs(x)[, i]>0)], 
+                      Count = exprs(x)[which(exprs(x)[, i]>0), i]), file = con, quote = FALSE, 
+                sep = ",", row.names = FALSE, col.names = FALSE)
     writeLines("</Code_Summary>\n", con)
+    writeLines("SOMEHASH100000000000", con)
     close(con)
   }
   invisible(file.path(dir, sampleNames(x)))
