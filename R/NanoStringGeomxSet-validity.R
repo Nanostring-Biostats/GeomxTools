@@ -24,7 +24,7 @@ function(object)
   }
   if (dim(object)[["Features"]] > 0L) {
     # featureData
-    featureDataColNames <- c("Gene")
+    featureDataColNames <- c("GeneName")
     if (!all(featureDataColNames %in% varLabels(featureData(object)))) {
       msg <-
         c(msg,
@@ -34,8 +34,8 @@ function(object)
   }
   if (sum(dim(object)) > 0L) {
     # annotation
-    if (length(annotation(object)) != 1L || is.na(annotation(object)) ||
-        !nzchar(annotation(object))) {
+    if (length(annotation(object)) == 0L || any(is.na(annotation(object))) ||
+        any(!nzchar(annotation(object))) ) {
       msg <- c(msg, "'annotation' must contain the PKC")
     }
   }
