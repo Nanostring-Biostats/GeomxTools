@@ -61,7 +61,7 @@ setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
     object <- 
         setLOQFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
     object <- 
-        setHighCountFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
+        setHighCountFlags(object=object, cutoff=qcCutoffs[["highCountCutoff"]])
     return(object)
 }
 
@@ -156,6 +156,13 @@ setGlobalFlags <-
                 colnames(fData(object)[["QCFlags"]]))], 1, mean )
         outlierRatio <- lowFlagRatio > cutoff | highFlagRatio > cutoff
         globalFlags <- data.frame("GlobalOutlier"=outlierRatio)
+        object <- appendFeatureFlags(object, globalFlags)
+        return(object)
+    }
+
+setLOQFlags <- 
+    function(object=object, cutoff=DEFAULTS[["loqCutoff"]]) {
+        #NEO need negative values for LOQ
         object <- appendFeatureFlags(object, globalFlags)
         return(object)
     }
