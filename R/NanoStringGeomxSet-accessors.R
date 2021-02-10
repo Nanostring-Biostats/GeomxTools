@@ -55,5 +55,14 @@ setReplaceMethod("design", c("NanoStringGeomxSet", "NULL"),
                    object
                  })
 
-
+setMethod("featureType", "NanoStringGeomxSet", function(object) object@featureType)
+setReplaceMethod("featureType", c("NanoStringGeomxSet", "character"),
+                 function(object, value) {
+                   if (value %in% c("Probe", "Target")) {
+                       object@featureType <- value
+                   } else {
+                       stop("featureType must be 'Probe' or 'Target'")
+                   }
+                   return(object)
+                 })
 
