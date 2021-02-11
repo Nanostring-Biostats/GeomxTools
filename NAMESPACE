@@ -26,7 +26,10 @@ exportClasses(NanoStringGeomxSet)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 generics
 
-
+export(sData, svarLabels, dimLabels, "dimLabels<-",
+       featureType, "featureType<-",
+       signatures, "signatures<-", signatureScores,
+       design, "design<-", signatureGroups)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 methods
