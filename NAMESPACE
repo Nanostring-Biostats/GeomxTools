@@ -33,6 +33,7 @@ exportClasses(NanoStringGeomxSet)
 
 exportMethods(show,
               sData, svarLabels, dimLabels, "dimLabels<-",
+              featureType, "featureType<-",
               signatures, "signatures<-", signatureScores,
               design, "design<-", signatureGroups)
 
