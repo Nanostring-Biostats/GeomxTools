@@ -5,7 +5,7 @@ writeNanoStringGeomxSet <- function(x, dir = getwd()) {
     dir.create(dir)
   features <- pData(featureData(x))[, c("RTS_ID")]
   header <- "<Header>\nFileVersion,%s\nSoftwareVersion,%s\nDate,%s\n</Header>\n"
-  ScanAttr <- paste0("<Scan_Attributes>\nID,%s\nPlate_ID,%s\nWell,%s\n</Scan_Attributes>\n")
+  scanAttr <- paste0("<Scan_Attributes>\nID,%s\nPlate_ID,%s\nWell,%s\n</Scan_Attributes>\n")
   laneAttr <- paste0("<NGS_Processing_Attributes>\nSeqSetId,%s\ntamperedIni,%s\ntrimGaloreOpts,%s\n", 
                      "flash2Opts,%s\numiExtractOpts,%s\nbowtie2Opts,%s\n", 
                      "umiDedupOpts,%s\nRaw,%d\nTrimmed,%d\n", 
@@ -21,7 +21,7 @@ writeNanoStringGeomxSet <- function(x, dir = getwd()) {
     writeLines(sprintf(header, protocolRow[["FileVersion"]], protocolRow[["SoftwareVersion"]],
                        protocolRow[["Date"]]), 
                  con)
-    writeLines(sprintf(ScanAttr, protocolRow[["SampleID"]], protocolRow[["Plate_ID"]], 
+    writeLines(sprintf(scanAttr, protocolRow[["SampleID"]], protocolRow[["Plate_ID"]], 
                        protocolRow[["Well"]]), con)
 
     writeLines(sprintf(laneAttr, protocolRow[["SeqSetId"]], protocolRow[["tamperedIni"]], 

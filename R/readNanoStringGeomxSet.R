@@ -63,6 +63,8 @@ function(dccFiles,
 
     pkcHeader <- S4Vectors::metadata(pkcData)
     pkcHeader[["PKCFileDate"]] <- as.character(pkcHeader[["PKCFileDate"]])
+
+    pkcData$RTS_ID <- gsub("RNA", "RTS00", pkcData$RTS_ID)
     
     pkcData <- as.data.frame(pkcData)
     rownames(pkcData) <- pkcData[["RTS_ID"]]
