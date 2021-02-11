@@ -64,12 +64,10 @@ function(dccFiles,
     pkcHeader <- S4Vectors::metadata(pkcData)
     pkcHeader[["PKCFileDate"]] <- as.character(pkcHeader[["PKCFileDate"]])
 
-    #chang RNA to RTS00
     pkcData$RTS_ID <- gsub("RNA", "RTS00", pkcData$RTS_ID)
     
     pkcData <- as.data.frame(pkcData)
     rownames(pkcData) <- pkcData[["RTS_ID"]]
-    
   }
 
   probeAssay <- lapply(seq_len(length(data)), function(x)
@@ -84,7 +82,8 @@ function(dccFiles,
   
   # Create featureData
   feature <- pkcData[rownames(assay), , drop = FALSE]
-  
+  # change the colnames of feature data to match with dimLables
+  colnames(feature)[which(colnames(feature)=="Target")] <- "TargetName"
   feature <- AnnotatedDataFrame(feature,
                                 dimLabels = c("featureNames", "featureColumns"))
 
@@ -121,18 +120,17 @@ function(dccFiles,
                                            rep(NA_character_, length(protocolDataColNames)),
                                          row.names = protocolDataColNames,
                                          stringsAsFactors = FALSE)
-  
   protocol <- AnnotatedDataFrame(protocol,
                                  rbind(.dccMetadata[["protocolData"]], 
                                        annot_labelDescription),
                                  dimLabels = c("sampleNames", "sampleColumns"))
 
   # Create NanoStringGeomxSet
-  NanoStringGeomxSet(assayData = assay,
-                   phenoData = pheno,
-                   featureData = feature,
-                   experimentData = experiment,
-                   annotation = annotation,
-                   protocolData = protocol,
-                   check = FALSE)
+  return( NanoStringGeomxSet(assayData = assay,
+                             phenoData = pheno,
+                             featureData = feature,
+                             experimentData = experiment,
+                             annotation = annotation,
+                             protocolData = protocol,
+                             check = FALSE) )
 }

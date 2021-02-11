@@ -42,7 +42,8 @@ exportMethods(show,
 
 export(readNanoStringGeomxSet,
        readDccFile,
-       readPKCFile)
+       readPKCFile,
+       writeNanoStringGeomxSet)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S3 methods

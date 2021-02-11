@@ -24,7 +24,7 @@ function(object)
   }
   if (dim(object)[["Features"]] > 0L) {
     # featureData
-    featureDataColNames <- c("Target")
+    featureDataColNames <- c("TargetName")
     if (!all(featureDataColNames %in% varLabels(featureData(object)))) {
       msg <-
         c(msg,
@@ -34,15 +34,15 @@ function(object)
   }
   if (sum(dim(object)) > 0L) {
     # annotation
-    if (length(annotation(object)) != 1L || is.na(annotation(object)) ||
-        !nzchar(annotation(object))) {
+    if (length(annotation(object)) == 0L || any(is.na(annotation(object))) ||
+        any(!nzchar(annotation(object))) ) {
       msg <- c(msg, "'annotation' must contain the PKC")
     }
   }
   if (prod(dim(object)) > 0L) {
     # assayData
-    if (!.validPositiveNumber(exprs(object))) {
-      msg <- c(msg, "'exprs' does not contain positive values")
+    if (!.validNonNegativeNumber(exprs(object))) {
+      msg <- c(msg, "'exprs' does not contain non-negative values")
     }
     # dimLabels
     if (length(dimLabels(object)) != 2L) {
@@ -90,5 +90,9 @@ function(object)
       msg <- c(msg, "'design' must reference columns from 'phenoData'")
     }
   }
-  if (is.null(msg)) TRUE else msg
+  if (is.null(msg)) {
+    return(TRUE)
+  } else {
+    return(msg)
+  }
 })

@@ -19,6 +19,7 @@ Collate: DccMetadata.R
          readDccFile.R
          readPKCFile.R
          readNanoStringGeomxSet.R
+         writeNanoStringGeomxSet.R
          utils.R
 biocViews: GeneExpression, Transcription, CellBasedAssays, DataImport, 
            Transcriptomics, Proteomics, mRNAMicroarray, 
