@@ -2,7 +2,7 @@ setClassUnion("formulaOrNULL", c("formula", "NULL"))
 
 # Class definition
 setClass("NanoStringGeomxSet",
-         contains = "ExpressionSet",
+         contains = "NanoStringRccSet",
          slots = c(dimLabels = "character",
                    signatures = "SignatureSet",
                    design = "formulaOrNULL"),
