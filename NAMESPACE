@@ -2,6 +2,7 @@
 ### Imports
 import(S4Vectors)
 import(Biobase)
+import(data.table)
 importClassesFrom(NanoStringNCTools, SignatureSet)
 importClassesFrom(S4Vectors,DataFrame)
 importFrom(NanoStringNCTools, SignatureSet)
@@ -14,6 +15,7 @@ importFrom(stats, as.formula)
 importFrom(stats, weights)
 importFrom(methods, callGeneric)
 importFrom(methods, callNextMethod)
+importFrom(outliers, grubbs.test)
 importFrom(BiocGenerics, design)
 importFrom(BiocGenerics, "design<-")
 
