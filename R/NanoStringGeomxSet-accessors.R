@@ -48,7 +48,7 @@ setReplaceMethod("design", c("NanoStringGeomxSet", "NULL"),
                  })
 
 setGeneric("featureType", signature = "object",
-           function(object) standardGeneric("featureType"))
+           function(object, ...) standardGeneric("featureType"))
 setMethod("featureType", "NanoStringGeomxSet", function(object) object@featureType)
 setReplaceMethod("featureType", c("NanoStringGeomxSet", "character"),
                  function(object, value) {
