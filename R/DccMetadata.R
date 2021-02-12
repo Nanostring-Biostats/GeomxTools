@@ -55,6 +55,8 @@
           unname(head(.dccMetadata[["schema"]], 3L)))[, "labelDescription",
                                                       drop = FALSE]
 
+rownames(.dccMetadata[["protocolData"]])[rownames(.dccMetadata[["protocolData"]]) == "ID"] <- "SampleID"
+
 
 .codeClassMetadata <-
   c("CodeClass,IsControl,Analyte",

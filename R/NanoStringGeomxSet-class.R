@@ -2,26 +2,30 @@ setClassUnion("formulaOrNULL", c("formula", "NULL"))
 
 # Class definition
 setClass("NanoStringGeomxSet",
-         contains = "ExpressionSet",
+         contains = "NanoStringRccSet",
          slots = c(dimLabels = "character",
                    signatures = "SignatureSet",
-                   design = "formulaOrNULL"),
+                   design = "formulaOrNULL",
+                   featureType = "character"),
          prototype = prototype(
-           new("VersionedBiobase",
-               versions = c(classVersion("ExpressionSet"),
-                            NanoStringGeomxSet = "1.0.0")),
-           signatures = SignatureSet(),
-           design = NULL))
+             new("VersionedBiobase",
+                 versions = c(classVersion("ExpressionSet"),
+                              NanoStringGeomxSet = "1.0.0")),
+             signatures = SignatureSet(),
+             design = NULL,
+             featureType = "Probe"))
 
 # Show method
 setMethod("show", signature = "NanoStringGeomxSet",
 function(object) {
-  methods::callNextMethod(object)
-  cat("signature: ")
-  if (length(signatures(object)) == 0L)
-    cat("none\n")
-  else
-    cat("use 'signatures(object)'")
+    methods::callNextMethod(object)
+    cat("feature: ")
+    cat(featureType(object))
+    cat("signature: ")
+    if (length(signatures(object)) == 0L)
+        cat("none\n")
+    else
+        cat("use 'signatures(object)'")
 })
 
 # Constructors
@@ -35,8 +39,9 @@ function(assayData,
          dimLabels = c("TargetName", "SampleID"),
          signatures = SignatureSet(),
          design = NULL,
+         featureType = "Probe",
          ...)
-  standardGeneric("NanoStringGeomxSet"),
+    standardGeneric("NanoStringGeomxSet"),
 signature = "assayData")
 
 setMethod("NanoStringGeomxSet", "missing",
@@ -49,6 +54,7 @@ function(assayData,
          dimLabels = c("TargetName", "SampleID"),
          signatures = SignatureSet(),
          design = NULL,
+         featureType = "Probe",
          ...)
 {
   assayData <- assayDataNew(exprs = matrix(integer(), nrow = 0L, ncol = 0L))
@@ -56,6 +62,7 @@ function(assayData,
               featureData = featureData, experimentData = experimentData,
               annotation = annotation, protocolData = protocolData,
               dimLabels = dimLabels, signatures = signatures, design = design,
+              featureType = featureType,
               ...)
 })
 
@@ -69,6 +76,7 @@ function(assayData,
          dimLabels = c("TargetName", "SampleID"),
          signatures = SignatureSet(),
          design = NULL,
+         featureType = "Probe",
          ...)
 {
   new2("NanoStringGeomxSet",
@@ -81,6 +89,7 @@ function(assayData,
        dimLabels = dimLabels,
        signatures = signatures,
        design = design,
+       featureType = featureType,
        ...)
 })
 
@@ -94,6 +103,7 @@ function(assayData,
          dimLabels = c("TargetName", "SampleID"),
          signatures = SignatureSet(),
          design = NULL,
+         featureType = "Probe",
          ...)
 {
   assayData <- assayDataNew(exprs = assayData)
@@ -101,6 +111,7 @@ function(assayData,
               featureData = featureData, experimentData = experimentData,
               annotation = annotation, protocolData = protocolData,
               dimLabels = dimLabels, signatures = signatures, design = design,
+              featureType = featureType,
               ...)
 })
 
@@ -114,6 +125,7 @@ function(assayData,
          dimLabels = c("TargetName", "SampleID"),
          signatures = SignatureSet(),
          design = NULL,
+         featureType = "Probe",
          ...)
 {
   methods::callGeneric(assayData = copyEnv(assayData(assayData)),
@@ -125,6 +137,7 @@ function(assayData,
               dimLabels = dimLabels,
               signatures = signatures,
               design = design,
+              featureType = featureType,
               ...)
 })
 
@@ -138,6 +151,7 @@ function(assayData,
          dimLabels = c("TargetName", "SampleID"),
          signatures = SignatureSet(),
          design = NULL,
+         featureType = "Probe",
          ...)
 {
   methods::callGeneric(assayData = copyEnv(assayData(assayData)),
@@ -149,6 +163,7 @@ function(assayData,
               dimLabels = dimLabels(assayData),
               signatures = signatures(assayData),
               design = design(assayData),
+              featureType = featureType,
               ...)
 })
 

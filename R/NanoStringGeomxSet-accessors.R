@@ -1,11 +1,3 @@
-assayDataElement2 <- function(object, elt)
-{
-  if (elt %in% Biobase::assayDataElementNames(object))
-    Biobase::assayDataElement(object, elt)
-  else
-    stop("'elt' not present in assayData(object)")
-}
-
 # Show method
 setMethod("show", signature = "NanoStringGeomxSet",
           function(object) {
@@ -34,7 +26,7 @@ setMethod("dimLabels", "NanoStringGeomxSet", function(object) object@dimLabels)
 setReplaceMethod("dimLabels", c("NanoStringGeomxSet", "character"),
                  function(object, value) {
                    object@dimLabels <- value
-                   object
+                   return(object)
                  })
 
 # design Accessor and Replacer
@@ -42,18 +34,31 @@ setMethod("design", "NanoStringGeomxSet", function(object) object@design)
 setReplaceMethod("design", c("NanoStringGeomxSet", "formula"),
                  function(object, value) {
                    object@design <- value
-                   object
+                   return(object)
                  })
 setReplaceMethod("design", c("NanoStringGeomxSet", "ANY"),
                  function(object, value) {
                    object@design <- stats::as.formula(value)
-                   object
+                   return(object)
                  })
 setReplaceMethod("design", c("NanoStringGeomxSet", "NULL"),
                  function(object, value) {
                    object@design <- NULL
-                   object
+                   return(object)
                  })
 
-
+setGeneric("featureType", signature = "object",
+           function(object) standardGeneric("featureType"))
+setMethod("featureType", "NanoStringGeomxSet", function(object) object@featureType)
+setGeneric("featureType<-", signature = c("object", "value"), 
+           function(object, value) standardGeneric("featureType<-"))
+setReplaceMethod("featureType", c("NanoStringGeomxSet", "character"),
+                 function(object, value) {
+                   if (value %in% c("Probe", "Target")) {
+                       object@featureType <- value
+                   } else {
+                       stop("featureType must be 'Probe' or 'Target'")
+                   }
+                   return(object)
+                 })
 

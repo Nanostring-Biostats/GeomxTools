@@ -63,6 +63,9 @@ function(file)
   output[["NGS_Processing_Attributes"]][, cols] <-
     lapply(output[["NGS_Processing_Attributes"]][, cols], as.integer)
 
+  # Coerce the column name ID to be SampleID
+  names(output[["Scan_Attributes"]])[names(output[["Scan_Attributes"]]) == "ID"] <- "SampleID"
+  
   # Convert Code_Summary to data.frame object
   output[["Code_Summary"]] <- paste0("RTS_ID,Count\n", 
                                      paste(output[["Code_Summary"]], collapse = "\n"))
@@ -83,5 +86,5 @@ function(file)
   rownames(output[["Code_Summary"]]) <- rn
   output[["NGS_Processing_Attributes"]][, "DeduplicatedReads"] <- length(rn)
 
-  output
+  return( output )
 }
