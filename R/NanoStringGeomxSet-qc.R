@@ -127,7 +127,7 @@ setLocalFlags <-
             probeCounts[, Count:=logt(Count)]
             probeCounts[, "LowLocalOutlier"] <- FALSE
             probeCounts[, "HighLocalOutlier"] <- FALSE
-            probeCounts <- probeCounts[, grubbsFlag(.SD, alpha=cutoff), 
+            probeCounts <- probeCounts[, suppressWarnings(grubbsFlag(.SD, alpha=cutoff)), 
                 by=.(TargetName, Module, Sample_ID)]
             lowFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), stringsAsFactor=FALSE)
             highFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), stringsAsFactor=FALSE)
