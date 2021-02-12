@@ -58,10 +58,11 @@ function(object)
   }
   if (any(duplicated(c(fvarLabels(object), svarLabels(object),
                        assayDataElementNames(object),
-                       "signatures", "design")))) {
+                       "signatures", "design", featureType(object))))) {
     msg <-
       c(msg,
-        "'fvarLabels', 'svarLabels', 'assayDataElementNames', \"signatures\", and \"design\" must be unique")
+        "'fvarLabels', 'svarLabels', 'assayDataElementNames', \"signatures\",
+        \"design\", and 'featureType' must be unique")
   }
   if (length(signatures(object)) > 0L) {
     numTargets <- lengths(signatures(object))
@@ -95,4 +96,10 @@ function(object)
   } else {
     return(msg)
   }
+  if (!is.null(featureType(object))) {
+    if (!featureType(object) %in% c("Probe", "Target")) {
+      msg <- c(msg, "'featureType' must be either 'Probe' or 'Target'")
+    }
+  }
+  if (is.null(msg)) TRUE else msg
 })
