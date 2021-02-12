@@ -21,11 +21,6 @@ function(object) {
     methods::callNextMethod(object)
     cat("feature: ")
     cat(featureType(object))
-    cat("signature: ")
-    if (length(signatures(object)) == 0L)
-        cat("none\n")
-    else
-        cat("use 'signatures(object)'")
 })
 
 # Constructors
