@@ -14,7 +14,6 @@ function(file)
   #target_notes <- generate_pkc_targ_notes(pkc_json_list, rtsid_lookup_df)
   # create negative column 
   rtsid_lookup_df$Negative <- grepl("Negative", rtsid_lookup_df$Codeclass)
-  rtsid_lookup_df$Codeclass <- NULL
   rtsid_lookup_df$RTS_ID <- gsub("RTS00", "RNA", rtsid_lookup_df[["RTS_ID"]])
   # Coerce output to DataFrame
   rtsid_lookup_df <- S4Vectors::DataFrame(rtsid_lookup_df)
