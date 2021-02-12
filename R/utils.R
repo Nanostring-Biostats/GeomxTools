@@ -12,9 +12,9 @@ log10t <- function(x, thresh = 0.5) {
 
 #NEO rewrite in data.tables for speed
 collapseCounts <- function(object) {
-    probeCounts <- cbind(fData(object)[, c("Target", "Module")], 
+    probeCounts <- cbind(fData(object)[, c("TargetName", "Module")], 
         assayDataElement(object, elt="exprs"))
-    collapsedCounts <- aggregate(formula=. ~ Target + Module, 
+    collapsedCounts <- aggregate(formula=. ~ TargetName + Module, 
         data=probeCounts, FUN=ngeoMean)
     return(collapsedCounts)
 }

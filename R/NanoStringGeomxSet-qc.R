@@ -88,8 +88,8 @@ setProbeRatioFlags <-
         rawTargetCounts[["Mean"]] <- 
             apply(rawTargetCounts[, sampleNames(object)], 
                 MARGIN=1, FUN=ngeoMean)
-        rownames(rawTargetCounts) <- rawTargetCounts[["Target"]]
-        targetMeans <- rawTargetCounts[fData(object)[["Target"]], "Mean"]
+        rownames(rawTargetCounts) <- rawTargetCounts[["TargetName"]]
+        targetMeans <- rawTargetCounts[fData(object)[["TargetName"]], "Mean"]
         probeMeans <- apply(assayDataElement(object, elt="exprs"), 
             MARGIN=1, FUN=ngeoMean)
         probeRatioFlags <- (probeMeans / targetMeans) < cutoff
@@ -118,17 +118,17 @@ setLocalFlags <-
         #if ("LowProbeCount" %in% names(fData(object)[["QCFlags"]])) {
           #  subObj <- object[!fData(object)[["QCFlags"]][["LowProbeRatio"]], ]
             probeCounts <- 
-                setDT(cbind(fData(object)[, c("RTS_ID", "Target", "Module")], 
+                setDT(cbind(fData(object)[, c("RTS_ID", "TargetName", "Module")], 
                     assayDataElement(object, elt="exprs")))
             probeCounts <- melt(probeCounts, 
-                id.vars=c("RTS_ID", "Target", "Module"), 
+                id.vars=c("RTS_ID", "TargetName", "Module"), 
                 variable.name="Sample_ID", 
                 value.name="Count", variable.factor=FALSE)
             probeCounts[, Count:=logt(Count)]
             probeCounts[, "LowLocalOutlier"] <- FALSE
             probeCounts[, "HighLocalOutlier"] <- FALSE
             probeCounts <- probeCounts[, grubbsFlag(.SD, alpha=cutoff), 
-                by=.(Target, Module, Sample_ID)]
+                by=.(TargetName, Module, Sample_ID)]
             lowFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), stringsAsFactor=FALSE)
             highFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), stringsAsFactor=FALSE)
             rownames(lowFlags) <- lowFlags[["RTS_ID"]]
