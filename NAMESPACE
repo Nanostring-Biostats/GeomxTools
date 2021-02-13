@@ -28,7 +28,7 @@ exportClasses(NanoStringGeomxSet)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 generics
 
-export(sData, svarLabels, dimLabels, "dimLabels<-",
+export(NanoStringGeomxSet, sData, svarLabels, dimLabels, "dimLabels<-",
        featureType, "featureType<-",
        signatures, "signatures<-", signatureScores,
        design, "design<-", signatureGroups)
@@ -36,7 +36,7 @@ export(sData, svarLabels, dimLabels, "dimLabels<-",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 methods
 
-exportMethods(show,
+exportMethods(NanoStringGeomxSet, show,
               sData, svarLabels, dimLabels, "dimLabels<-",
               featureType, "featureType<-",
               signatures, "signatures<-", signatureScores,
@@ -49,7 +49,8 @@ exportMethods(show,
 export(readNanoStringGeomxSet,
        readDccFile,
        readPKCFile,
-       writeNanoStringGeomxSet)
+       writeNanoStringGeomxSet,
+       ngeoMean)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S3 methods
