@@ -50,6 +50,7 @@ export(readNanoStringGeomxSet,
        readDccFile,
        readPKCFile,
        writeNanoStringGeomxSet,
+       aggregateCounts,
        ngeoMean)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

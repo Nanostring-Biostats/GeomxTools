@@ -1,5 +1,15 @@
-
-
+#' Aggregate probe counts to target level for feature data
+#' 
+#' @param object name of the NanoStringGeomxSet object to aggregate
+#' @param FUN function to use for count aggregation
+#' 
+#' @return a NanoStringGeomxSet object with targets as features
+#' 
+#' @examples
+#' targetGeomxSet <- aggregateCounts(demoData)
+#' 
+#' @export
+#' 
 aggregateCounts <- function(object, FUN=ngeoMean) {
     targetCounts <- do.call(rbind, esBy(object, GROUP = "TargetName", 
         FUN=function(x) {esApply(x, 2, FUN)}, simplify=FALSE))
@@ -23,5 +33,3 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
         check = FALSE)
     return(targetObject)
 }
-
-
