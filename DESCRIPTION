@@ -17,6 +17,7 @@ Collate: DccMetadata.R
          NanoStringGeomxSet-accessors.R
          NanoStringGeomxSet-qc.R
          NanoStringGeomxSet-autoplot.R
+         NanoStringGeomxSet-aggregate.R
          NanoStringGeomxSet-signatures.R
          readDccFile.R
          readPKCFile.R
