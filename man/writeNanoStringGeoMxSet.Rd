@@ -1,20 +1,20 @@
-\name{writeNanoStringGeomxSet}
-\alias{writeNanoStringGeomxSet}
-\concept{NanoStringGeomxSet}
+\name{writeNanoStringGeoMxSet}
+\alias{writeNanoStringGeoMxSet}
+\concept{NanoStringGeoMxSet}
 
-\title{write 'NanoStringGeomxSet'}
+\title{write 'NanoStringGeoMxSet'}
 
 \description{
-  Take an instance of class \code{\linkS4class{NanoStringGeomxSet}} and write
+  Take an instance of class \code{\linkS4class{NanoStringGeoMxSet}} and write
   NanoString GeoMx Digital Count Conversion (DCC) data.
 }
 
 \usage{
-writeNanoStringGeomxSet(x, dir = getwd())
+writeNanoStringGeoMxSet(x, dir = getwd())
 }
 
 \arguments{
-  \item{x}{A NanoStringGeomxSet object.}
+  \item{x}{A NanoStringGeoMxSet object.}
   \item{dir}{A directory path to save all the DCC files.}
 }
 
@@ -22,7 +22,7 @@ writeNanoStringGeomxSet(x, dir = getwd())
 \author{Zhi Yang & Nicole Ortogero}
 
 \seealso{
-\code{\link{NanoStringGeomxSet}}
+\code{\link{NanoStringGeoMxSet}}
 }
 
 \examples{
@@ -35,7 +35,7 @@ sampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
 dccFileColumn <- "Sample_ID"
 
-dccSet <- readNanoStringGeomxSet(dccFiles=dccFiles,
+dccSet <- readNanoStringGeoMxSet(dccFiles=dccFiles,
                                pkcFiles=pkc,
                                phenoDataFile=sampleAnnotationFile,
                                phenoDataSheet="CW005",
@@ -47,7 +47,7 @@ dccSet <- readNanoStringGeomxSet(dccFiles=dccFiles,
                                phenoDataColPrefix="")
 
 # All data
-writeNanoStringGeomxSet(dccSet)
+writeNanoStringGeoMxSet(dccSet)
 
 }
 

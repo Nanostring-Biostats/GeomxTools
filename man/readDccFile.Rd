@@ -25,7 +25,7 @@ readDccFile(file)
 
 \author{Zhi Yang & Nicole Ortogero}
 
-\seealso{\code{\link{readNanoStringGeomxSet}}}
+\seealso{\code{\link{readNanoStringGeoMxSet}}}
 
 \examples{
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",

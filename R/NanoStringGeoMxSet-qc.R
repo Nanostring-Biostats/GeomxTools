@@ -7,7 +7,7 @@ DEFAULTS <- list(minSaturation=0.7, minReads=10000, minProbeRatio=0.1,
 #' 
 #' @param object name of the object class to perform QC on
 #' \enumerate{
-#'     \item{NanoStringGeomxSet, use the NanoStringGeomxSet class}
+#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 #' }
 #' @param dataDim the dimension of the object to QC on
 #' \enumerate{
@@ -22,7 +22,7 @@ DEFAULTS <- list(minSaturation=0.7, minReads=10000, minProbeRatio=0.1,
 #' 
 #NEO set default cutoffs as in DA and make sure set to NULL and check for NULL if not a normal DA cutoff
 setMethod("setQCFlags",
-    signature(object="NanoStringGeomxSet"),
+    signature(object="NanoStringGeoMxSet"),
     function(object, qcCutoffs=DEFAULTS, featType="Probe", ...) {
         qcCutoffs <- checkCutoffs(qcCutoffs)
         #NEO to add featureType accessor to the class plus validation
