@@ -23,12 +23,12 @@ importFrom(BiocGenerics, "design<-")
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
 
-exportClasses(NanoStringGeomxSet)
+exportClasses(NanoStringGeoMxSet)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 generics
 
-export(NanoStringGeomxSet, sData, svarLabels, dimLabels, "dimLabels<-",
+export(NanoStringGeoMxSet, sData, svarLabels, dimLabels, "dimLabels<-",
        featureType, "featureType<-",
        signatures, "signatures<-", signatureScores,
        design, "design<-", signatureGroups)
@@ -36,7 +36,7 @@ export(NanoStringGeomxSet, sData, svarLabels, dimLabels, "dimLabels<-",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 methods
 
-exportMethods(NanoStringGeomxSet, show,
+exportMethods(NanoStringGeoMxSet, show,
               sData, svarLabels, dimLabels, "dimLabels<-",
               featureType, "featureType<-",
               signatures, "signatures<-", signatureScores,
@@ -46,10 +46,10 @@ exportMethods(NanoStringGeomxSet, show,
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export non-generic functions
 
-export(readNanoStringGeomxSet,
+export(readNanoStringGeoMxSet,
        readDccFile,
        readPKCFile,
-       writeNanoStringGeomxSet,
+       writeNanoStringGeoMxSet,
        aggregateCounts,
        ngeoMean)
 

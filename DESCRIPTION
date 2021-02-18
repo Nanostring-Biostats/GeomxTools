@@ -12,17 +12,17 @@ Imports: Biobase, S4Vectors, rjson, readxl, EnvStats, reshape2, methods,
 Suggests: knitr
 License: Artistic-2.0
 Collate: DccMetadata.R
-         NanoStringGeomxSet-class.R
-         NanoStringGeomxSet-validity.R
-         NanoStringGeomxSet-accessors.R
-         NanoStringGeomxSet-qc.R
-         NanoStringGeomxSet-autoplot.R
-         NanoStringGeomxSet-aggregate.R
-         NanoStringGeomxSet-signatures.R
+         NanoStringGeoMxSet-class.R
+         NanoStringGeoMxSet-validity.R
+         NanoStringGeoMxSet-accessors.R
+         NanoStringGeoMxSet-qc.R
+         NanoStringGeoMxSet-autoplot.R
+         NanoStringGeoMxSet-aggregate.R
+         NanoStringGeoMxSet-signatures.R
          readDccFile.R
          readPKCFile.R
-         readNanoStringGeomxSet.R
-         writeNanoStringGeomxSet.R
+         readNanoStringGeoMxSet.R
+         writeNanoStringGeoMxSet.R
          utils.R
 biocViews: GeneExpression, Transcription, CellBasedAssays, DataImport, 
            Transcriptomics, Proteomics, mRNAMicroarray, 

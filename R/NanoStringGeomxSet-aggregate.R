@@ -1,12 +1,12 @@
 #' Aggregate probe counts to target level for feature data
 #' 
-#' @param object name of the NanoStringGeomxSet object to aggregate
+#' @param object name of the NanoStringGeoMxSet object to aggregate
 #' @param FUN function to use for count aggregation
 #' 
-#' @return a NanoStringGeomxSet object with targets as features
+#' @return a NanoStringGeoMxSet object with targets as features
 #' 
 #' @examples
-#' targetGeomxSet <- aggregateCounts(demoData)
+#' targetGeoMxSet <- aggregateCounts(demoData)
 #' 
 #' @export
 #' 
@@ -22,7 +22,7 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
     targetFeats <- 
          AnnotatedDataFrame(targetFeats[rownames(targetCounts), ], 
                             dimLabels = c("featureNames", "featureColumns"))
-    targetObject <- NanoStringGeomxSet(
+    targetObject <- NanoStringGeoMxSet(
         assayData = targetCounts,
         phenoData = phenoData(object),
         featureData = targetFeats,

@@ -1,16 +1,16 @@
-\name{readNanoStringGeomxSet}
-\alias{readNanoStringGeomxSet}
-\concept{NanoStringGeomxSet}
+\name{readNanoStringGeoMxSet}
+\alias{readNanoStringGeoMxSet}
+\concept{NanoStringGeoMxSet}
 
-\title{Read 'NanoStringGeomxSet'}
+\title{Read 'NanoStringGeoMxSet'}
 
 \description{
-  Create an instance of class \code{\linkS4class{NanoStringGeomxSet}} by reading
+  Create an instance of class \code{\linkS4class{NanoStringGeoMxSet}} by reading
   data from NanoString GeoMx Digital Count Conversion (DCC) data.
 }
 
 \usage{
-readNanoStringGeomxSet(dccFiles, pkcFiles, phenoDataFile, 
+readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile, 
                      phenoDataSheet, phenoDataDccColName = "Sample_ID",
                      phenoDataColPrefix = "", protocolDataColNames = c("slide name"),
                      experimentDataColNames = c("panel"))
@@ -34,13 +34,13 @@ readNanoStringGeomxSet(dccFiles, pkcFiles, phenoDataFile,
 }
 
 \value{
-  An instance of the \code{\linkS4class{NanoStringGeomxSet}} class.
+  An instance of the \code{\linkS4class{NanoStringGeoMxSet}} class.
 }
 
 \author{Zhi Yang & Nicole Ortogero}
 
 \seealso{
-\code{\link{NanoStringGeomxSet}}
+\code{\link{NanoStringGeoMxSet}}
 }
 
 \examples{
@@ -53,7 +53,7 @@ sampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
 dccFileColumn <- "Sample_ID"
 
-dccSet <- readNanoStringGeomxSet(dccFiles=dccFiles,
+dccSet <- readNanoStringGeoMxSet(dccFiles=dccFiles,
                                pkcFiles=pkc,
                                phenoDataFile=sampleAnnotationFile,
                                phenoDataSheet="CW005",
@@ -65,13 +65,13 @@ dccSet <- readNanoStringGeomxSet(dccFiles=dccFiles,
                                phenoDataColPrefix="")
 
 # All data
-dccSet <- readNanoStringGeomxSet(dccFiles, pkcFile = pkc,
+dccSet <- readNanoStringGeoMxSet(dccFiles, pkcFile = pkc,
                                  phenoDataFile = sampleAnnotationFile,
                                  phenoDataSheet="CW005")
 varLabels(dccSet)
 
 # All data with phenoData prefix
-dccSetPhenoPrefix <- readNanoStringGeomxSet(dccFiles, 
+dccSetPhenoPrefix <- readNanoStringGeoMxSet(dccFiles, 
                                 pkcFile = pkc, 
                                 phenoDataFile = sampleAnnotationFile,
                                 phenoDataSheet="CW005", 

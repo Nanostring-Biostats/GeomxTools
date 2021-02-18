@@ -1,16 +1,16 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# GeomxTools
+# GeoMxTools
 
 ## Overview
 
-The GeomxTools is a package that contains tools for analyzing data from
+The GeoMxTools is a package that contains tools for analyzing data from
 NanoString GeoMx Digital Spatial Profiler (DSP). It provides functions
 to read, perform quality control (QC) and normalization on Nanostring
 DCC and PKC files generated from the NanoString GeoMx DSP.
 
-It contains the definition of the NanoStringGeomxSet class which
+It contains the definition of the NanoStringGeoMxSet class which
 inherits from Biobase’s ExpressionSet class and NanoStringRCCSet class.
 
 ## Installation
@@ -35,7 +35,7 @@ devtools::install_github("Nanostring-Biostats/GeomxTools",
 
 ## Documentation
 
-To learn how to start using GeomxTools, view documentation for the
+To learn how to start using GeoMxTools, view documentation for the
 version of this package installed in your system, start R and enter:
 
 ``` r

@@ -1,7 +1,7 @@
 setClassUnion("formulaOrNULL", c("formula", "NULL"))
 
 # Class definition
-setClass("NanoStringGeomxSet",
+setClass("NanoStringGeoMxSet",
          contains = "NanoStringRccSet",
          slots = c(dimLabels = "character",
                    signatures = "SignatureSet",
@@ -10,13 +10,13 @@ setClass("NanoStringGeomxSet",
          prototype = prototype(
              new("VersionedBiobase",
                  versions = c(classVersion("ExpressionSet"),
-                              NanoStringGeomxSet = "1.0.0")),
+                              NanoStringGeoMxSet = "1.0.0")),
              signatures = SignatureSet(),
              design = NULL,
              featureType = "Probe"))
 
 # Show method
-setMethod("show", signature = "NanoStringGeomxSet",
+setMethod("show", signature = "NanoStringGeoMxSet",
 function(object) {
     methods::callNextMethod(object)
     cat("feature: ")
@@ -24,7 +24,7 @@ function(object) {
 })
 
 # Constructors
-setGeneric("NanoStringGeomxSet",
+setGeneric("NanoStringGeoMxSet",
 function(assayData,
          phenoData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = Biobase::annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -36,10 +36,10 @@ function(assayData,
          design = NULL,
          featureType = "Probe",
          ...)
-    standardGeneric("NanoStringGeomxSet"),
+    standardGeneric("NanoStringGeoMxSet"),
 signature = "assayData")
 
-setMethod("NanoStringGeomxSet", "missing",
+setMethod("NanoStringGeoMxSet", "missing",
 function(assayData,
          phenoData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = Biobase::annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -61,7 +61,7 @@ function(assayData,
               ...)
 })
 
-setMethod("NanoStringGeomxSet", "environment",
+setMethod("NanoStringGeoMxSet", "environment",
 function(assayData,
          phenoData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = Biobase::annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -74,7 +74,7 @@ function(assayData,
          featureType = "Probe",
          ...)
 {
-  new2("NanoStringGeomxSet",
+  new2("NanoStringGeoMxSet",
        assayData = assayData,
        phenoData = phenoData,
        featureData = featureData,
@@ -88,7 +88,7 @@ function(assayData,
        ...)
 })
 
-setMethod("NanoStringGeomxSet", "matrix",
+setMethod("NanoStringGeoMxSet", "matrix",
 function(assayData,
          phenoData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = Biobase::annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -110,7 +110,7 @@ function(assayData,
               ...)
 })
 
-setMethod("NanoStringGeomxSet", "ExpressionSet",
+setMethod("NanoStringGeoMxSet", "ExpressionSet",
 function(assayData,
          phenoData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = Biobase::annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -136,7 +136,7 @@ function(assayData,
               ...)
 })
 
-setMethod("NanoStringGeomxSet", "NanoStringGeomxSet",
+setMethod("NanoStringGeoMxSet", "NanoStringGeoMxSet",
 function(assayData,
          phenoData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = Biobase::annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -163,5 +163,5 @@ function(assayData,
 })
 
 # Coersion
-setAs("ExpressionSet", "NanoStringGeomxSet",
-      function(from) NanoStringGeomxSet(from))
+setAs("ExpressionSet", "NanoStringGeoMxSet",
+      function(from) NanoStringGeoMxSet(from))

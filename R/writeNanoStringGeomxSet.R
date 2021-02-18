@@ -1,5 +1,5 @@
-writeNanoStringGeomxSet <- function(x, dir = getwd()) {
-  stopifnot(is(x, "NanoStringGeomxSet"))
+writeNanoStringGeoMxSet <- function(x, dir = getwd()) {
+  stopifnot(is(x, "NanoStringGeoMxSet"))
   validObject(x)
   if (!dir.exists(dir)) 
     dir.create(dir)
