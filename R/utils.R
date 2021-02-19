@@ -1,6 +1,11 @@
-ngeoMean <- function(v) {
+ ngeoMean <- function(v) {
     v[v == 0] <- 1
     return(EnvStats::geoMean(v, na.rm = TRUE))
+}
+
+ngeoSD <- function(v) {
+  v[v == 0] <- 1
+  return(geoSD(v, na.rm=T))
 }
 
 log10t <- function(x, thresh = 0.5) {
