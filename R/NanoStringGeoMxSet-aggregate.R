@@ -53,7 +53,7 @@ summarizeNegatives <-
     function(object, functionList=c()) {
         functionList <- 
             append(c(NegGeoMean=ngeoMean, NegGeoSD=ngeoSD), functionList)
-        negObject <- negativeControlSubset(object)
+        negObject <- object[fData(object)[, "Negative"], ]
         summaryList <- 
             lapply(functionList, function(x) {
                 esApply(negObject, MARGIN=2, FUN=x)})
