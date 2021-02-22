@@ -3,6 +3,15 @@ function(file)
 {
   # Read data from Reporter Code Count (RCC) file
   lines <- trimws(readLines(file))
+  
+  if(lines[3] == "SoftwareVersion,\"GeoMx_NGS_Pipeline_ 2.0.0\""){
+    lines[3] <- "SoftwareVersion,0.02"
+  }else{
+    # removing unused dnd program lines
+    trimGalore <- grep("trimGalore", lines)
+    Raw <- grep("Raw", lines)
+    lines <- lines[-c(trimGalore:(Raw - 1))]
+  }
 
   # Split data by tags
   tags <- names(.dccMetadata[["schema"]])
@@ -44,8 +53,8 @@ function(file)
 
   # Extract FileVersion for internal checks
   fileVersion <- output[["Header"]][1L, "FileVersion"]
-  if (!(numeric_version(fileVersion) %in% numeric_version(c("0.01"))))
-    stop("\"FileVersion\" in Header section must be 0.01")
+  if (!(numeric_version(fileVersion) %in% numeric_version(c("0.01", "0.02"))))
+    stop("\"FileVersion\" in Header section must be 0.01 or 0.02")
 
   # Check single row attributes
   for (section in c("Header", "Scan_Attributes", "NGS_Processing_Attributes")) {
@@ -61,7 +70,7 @@ function(file)
   # Coerce numeric data in Lane Attributes
   cols <- c( "Raw", "Trimmed", "Stitched", "Aligned", "umiQ30", "rtsQ30" )
   output[["NGS_Processing_Attributes"]][, cols] <-
-    lapply(output[["NGS_Processing_Attributes"]][, cols], as.integer)
+    lapply(output[["NGS_Processing_Attributes"]][, cols], as.numeric)
 
   # Coerce the column name ID to be SampleID
   names(output[["Scan_Attributes"]])[names(output[["Scan_Attributes"]]) == "ID"] <- "SampleID"
