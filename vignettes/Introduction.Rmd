@@ -1,10 +1,10 @@
 ---
-title: "Introduction to the NanoStringGeomxSet Class"
+title: "Introduction to the NanoStringGeoMxSet Class"
 author: "David Henderson, Patrick Aboyoun, Nicole Ortogero, Zhi Yang, Jason Reeves, Kara Gorman, Rona Vitancol, Thomas Smith, Maddy Griswold"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction to the NanoStringGeomxSet Class}
+  %\VignetteIndexEntry{Introduction to the NanoStringGeoMxSet Class}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -21,20 +21,20 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-The NanoStringGeomxSet was inherited from Biobase's ExpressionSet class. The NanoStringGeomxSet class was designed to encapsulate data and corresponding methods for NanoString DCC files generated from the NanoString GeoMx 
+The NanoStringGeoMxSet was inherited from Biobase's ExpressionSet class. The NanoStringGeoMxSet class was designed to encapsulate data and corresponding methods for NanoString DCC files generated from the NanoString GeoMx 
 Digital Spatial Profiling (DSP) platform.
 
 
 ## Loading Packages
 
-Loading the NanoStringNCTools and GeomxTools packages allow users access to the GeomxSet class and corresponding methods.
+Loading the NanoStringNCTools and GeoMxTools packages allow users access to the GeoMxSet class and corresponding methods.
 
 ```{r, message=FALSE, warning=FALSE}
 library(NanoStringNCTools)
 library(GeomxTools)
 ```
 
-## Building a NanoStringGeomxSet from .DCC files 
+## Building a NanoStringGeoMxSet from .DCC files 
 
 ```{r}
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
@@ -44,7 +44,7 @@ PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
 SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
 demoData <-
-  suppressWarnings(readNanoStringGeomxSet(dccFiles = DCCFiles,
+  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
                                           pkcFiles = PKCFiles,
                                           phenoDataFile = SampleAnnotationFile,
                                           phenoDataSheet = "CW005",
@@ -62,9 +62,9 @@ demoData
 ```
 
 
-## Accessing and Assigning NanoStringGeomxSet Data Members
+## Accessing and Assigning NanoStringGeoMxSet Data Members
 
-Alongside the accessors associated with the ExpressionSet class, NanoStringGeomxSet objects have unique additional assignment and accessor methods faciliting common ways to view DSP data and associated labels.
+Alongside the accessors associated with the ExpressionSet class, NanoStringGeoMxSet objects have unique additional assignment and accessor methods faciliting common ways to view DSP data and associated labels.
 
 ```{r}
 head( pData( demoData ), 2 )
@@ -73,7 +73,7 @@ svarLabels( demoData )
 head( sData(demoData), 2 )
 ```
 
-Design information can be assigned to the NanoStringGeomxSet object, as well as feature and sample labels to use for NanoStringGeomxSet plotting methods.
+Design information can be assigned to the NanoStringGeoMxSet object, as well as feature and sample labels to use for NanoStringGeoMxSet plotting methods.
 
 ```{r}
 design( demoData ) <- ~ `segments`
