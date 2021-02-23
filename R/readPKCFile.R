@@ -15,8 +15,9 @@ function(file)
   rtsid_lookup_df$RTS_ID <- gsub("RTS00", "RNA", rtsid_lookup_df[["RTS_ID"]])
   # Coerce output to DataFrame
   rtsid_lookup_df <- S4Vectors::DataFrame(rtsid_lookup_df)
-  # Check for duplicacy in RTS_ID among pkc files 
+  # Check for duplicacy in RTS_ID among pkc files. If yes, relabel them
   if ( any(duplicated(rtsid_lookup_df[['RTS_ID']])) ){
+    warning("Duplicate RTS ID are found in PKC files.")
     rtsid_lookup_df[['RTS_ID']] <- make.unique(rtsid_lookup_df[['RTS_ID']])
   }
   # Extract header
