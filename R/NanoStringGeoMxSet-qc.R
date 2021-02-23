@@ -7,7 +7,7 @@ DEFAULTS <- list(minSaturation=0.7, minReads=10000, minProbeRatio=0.1,
 #' 
 #' @param object name of the object class to perform QC on
 #' \enumerate{
-#'     \item{NanoStringGeomxSet, use the NanoStringGeomxSet class}
+#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 #' }
 #' @param dataDim the dimension of the object to QC on
 #' \enumerate{
@@ -22,15 +22,17 @@ DEFAULTS <- list(minSaturation=0.7, minReads=10000, minProbeRatio=0.1,
 #' 
 #NEO set default cutoffs as in DA and make sure set to NULL and check for NULL if not a normal DA cutoff
 setMethod("setQCFlags",
-    signature(object="NanoStringGeomxSet"),
-    function(object, qcCutoffs=DEFAULTS, featType="Probe", ...) {
+    signature(object="NanoStringGeoMxSet"),
+    function(object, qcCutoffs=DEFAULTS, ...) {
         qcCutoffs <- checkCutoffs(qcCutoffs)
         #NEO to add featureType accessor to the class plus validation
         object <- setAOIFlags(object=object, qcCutoffs=qcCutoffs)
-        if (featType == "Probe") {
+        if (featureType(object) == "Probe") {
             object <- setProbeFlags(object=object, qcCutoffs=qcCutoffs)
-        } else if (featType == "Target") {
-        #    object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
+        } else if (featureType(object) == "Target") {
+        #   object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
+        } else {
+            valid(Object(x))
         }
         return(object)
 })
@@ -163,7 +165,17 @@ setGlobalFlags <-
 setLOQFlags <- 
     function(object=object, cutoff=DEFAULTS[["loqCutoff"]]) {
         #NEO need negative values for LOQ
-        object <- appendFeatureFlags(object, globalFlags)
+        if (featureType(object) == "Target") {
+            negativeObject <- negativeControlSubset(object)
+            LOQs <- esApply(negativeObject, MARGIN=2, FUN=function(x) {
+                ngeoMean(x) * ngeoSD(x) ^ cutoff})
+            LOQFlags <- esApply(object, MARGIN=1, FUN=function(x) {
+                x > LOQs})
+            object <- appendFeatureFlags(object, LOQFlags)
+        } else {
+            warning(paste("Incorrect feature type.",
+                "Feature type should be Target."))
+        }
         return(object)
     }
 

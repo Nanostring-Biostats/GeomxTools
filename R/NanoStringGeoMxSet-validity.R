@@ -1,4 +1,4 @@
-setValidity2("NanoStringGeomxSet",
+setValidity2("NanoStringGeoMxSet",
 function(object)
 {
   msg <- NULL

@@ -1,12 +1,12 @@
 # signatures Accessor and Replacer
 setGeneric("signatures", signature = "object",
            function(object) standardGeneric("signatures"))
-setMethod("signatures", "NanoStringGeomxSet",
+setMethod("signatures", "NanoStringGeoMxSet",
           function(object) object@signatures)
 
 setGeneric("signatures<-", signature = c("object", "value"),
            function(object, value) standardGeneric("signatures<-"))
-setReplaceMethod("signatures", c("NanoStringGeomxSet", "SignatureSet"),
+setReplaceMethod("signatures", c("NanoStringGeoMxSet", "SignatureSet"),
                  function(object, value) {
                    object@signatures <- value
                    return(object)
@@ -14,7 +14,7 @@ setReplaceMethod("signatures", c("NanoStringGeomxSet", "SignatureSet"),
 
 setGeneric("signatureScores", signature = "object",
            function(object, ...) standardGeneric("signatureScores"))
-setMethod("signatureScores", "NanoStringGeomxSet",
+setMethod("signatureScores", "NanoStringGeoMxSet",
           function(object, elt = "exprs") {
             if (length(signatures(object)) == 0L) {
               return(matrix(numeric(), nrow = 0L, ncol = ncol(object),
@@ -44,19 +44,19 @@ setMethod("signatureScores", "NanoStringGeomxSet",
 
 setGeneric( "signatureGroups" , signature = "object" ,
             function (object , ... ) standardGeneric( "signatureGroups" ) )
-setMethod("signatureGroups", "NanoStringGeomxSet",
+setMethod("signatureGroups", "NanoStringGeoMxSet",
           function( object ) {
             return( groups( object@signatures ) )
           } )
 
 setGeneric("setSignatureGroups<-", signature = c("object", "value"),
            function(object, value) standardGeneric("setSignatureGroups<-"))
-setReplaceMethod("setSignatureGroups", c("NanoStringGeomxSet", "factor"),
+setReplaceMethod("setSignatureGroups", c("NanoStringGeoMxSet", "factor"),
                  function(object, value) {
                    groups( object@signatures ) <- value
                    return( object )
                  })
-setReplaceMethod("setSignatureGroups", c("NanoStringGeomxSet", "character"),
+setReplaceMethod("setSignatureGroups", c("NanoStringGeoMxSet", "character"),
                  function(object, value) {
                    groups( object@signatures ) <- value
                    return( object )
@@ -64,14 +64,14 @@ setReplaceMethod("setSignatureGroups", c("NanoStringGeomxSet", "character"),
 
 setGeneric( "signatureFuncs" , signature = "object" ,
             function (object , ... ) standardGeneric( "signatureFuncs" ) )
-setMethod("signatureFuncs", "NanoStringGeomxSet",
+setMethod("signatureFuncs", "NanoStringGeoMxSet",
           function( object ) {
             return( getSigFuncs( object@signatures ) )
           } )
 
 setGeneric("setSignatureFuncs<-", signature = c("object", "value"),
            function(object, value) standardGeneric("setSignatureFuncs<-"))
-setReplaceMethod("setSignatureFuncs", c("NanoStringGeomxSet", "character"),
+setReplaceMethod("setSignatureFuncs", c("NanoStringGeoMxSet", "character"),
                  function(object, value) {
                    setSigFuncs( object@signatures ) <- value
                    return( object )
