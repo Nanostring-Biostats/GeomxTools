@@ -13,7 +13,7 @@ function(file)
   # NEO Not used currently, need to merge with above call and function
   #target_notes <- generate_pkc_targ_notes(pkc_json_list, rtsid_lookup_df)
   # create negative column 
-  rtsid_lookup_df$Negative <- grepl("Negative", rtsid_lookup_df$Codeclass)
+  rtsid_lookup_df$Negative <- grepl("Negative", rtsid_lookup_df$CodeClass)
   rtsid_lookup_df$RTS_ID <- gsub("RNA", "RTS00", rtsid_lookup_df[["RTS_ID"]])
   # Coerce output to DataFrame
   rtsid_lookup_df <- S4Vectors::DataFrame(rtsid_lookup_df)
@@ -37,7 +37,8 @@ generate_pkc_lookup <- function(jsons_vec) {
   lookup_df <- data.frame(RTS_ID=character(), 
                           Target=character(), 
                           Module=character(), 
-                          Codeclass=character(),
+                          CodeClass=character(), 
+                          ProbeID=character(),
                           stringsAsFactors=FALSE)
   for (curr_idx in seq_len(length(jsons_vec))) {
     curr_module <- names(jsons_vec)[curr_idx]
@@ -47,8 +48,9 @@ generate_pkc_lookup <- function(jsons_vec) {
       curr_code_class <- targ[["CodeClass"]]
       for (prb in targ[["Probes"]]) {
         curr_RTS_ID <- prb$RTS_ID
+        curr_probe_ID <- prb$ProbeID
         lookup_df[nrow(lookup_df) + 1, ] <- 
-          list(curr_RTS_ID, curr_targ, curr_module, curr_code_class)
+          list(curr_RTS_ID, curr_targ, curr_module, curr_code_class, curr_probe_ID)
       }
     }
   }
@@ -64,7 +66,7 @@ generate_pkc_targ_notes <- function(jsons_vec, lookup_tab) {
                HUGOSymbol=sub_lookup[["Target"]],
                TargetGroup=rep("All Probes", length(rownames(sub_lookup))),
                AnalyteType=rep("RNA", nrow(sub_lookup)),
-               Codeclass=sub_lookup[, "Codeclass"],
+               Codeclass=sub_lookup[, "CodeClass"],
                Pooling=sub_lookup[, "Module"],
                stringsAsFactors=FALSE)
   for (curr_idx in seq_len(length(jsons_vec))) {
