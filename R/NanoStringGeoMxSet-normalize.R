@@ -20,17 +20,21 @@ setMethod("normalize", "NanoStringGeoMxSet",
                 "hk" = {hkNorm(object, data_type=data_type)})
         })
 
-quantileNorm <- function(object, data_type, fromElt = "exprs" , toElt = "q_norm") 
+quantileNorm <- function(object, data_type, fromElt = "exprs" , toElt = "q_norm", desiredQuantile = .75) 
 { 
    #object<-checkQCFlags(object)
    ## Get quantile of counts for each sample
-   qs <- apply(exprs(object), 2, function(x) quantile(x,.75))
-   pData(object)[["qnormFactors"]] <- qs/ngeoMean(qs) 
-   assayDataElement(object, toElt, validate=TRUE) <- sweep(assayDataElement(object, fromElt), 2L, qs/ngeoMean(qs), FUN = "*")
+   qs <- apply(exprs(object), 2, function(x) quantile(x,desiredQuantile))
+   ## Save the normfactors for desired quantile
+   if (toElt != "q_norm")
+       pData(object)[[paste(toElt, "qFactors", sep= "_")]] <- qs/ngeoMean(qs) 
+   else
+       pData(object)[["qnormFactors"]] <- qs/ngeoMean(qs) 
+   assayDataElement(object, toElt, validate=TRUE) <- sweep(assayDataElement(object, fromElt), 2L, qs/ngeoMean(qs), FUN = "/")
    return(object)
 } 
- 
- negNorm <- function(object, data_type, fromElt = "exprs" , toElt = "neg_norm") 
+
+negNorm <- function(object, data_type, fromElt = "exprs" , toElt = "neg_norm") 
 { 
      if (!featureType(object) == "Target")
      {
@@ -41,7 +45,7 @@ quantileNorm <- function(object, data_type, fromElt = "exprs" , toElt = "q_norm"
          negsubset <- subset(object, subset = Codeclass %in% c("Negative01", "Negative"))
          negs <- apply(exprs(negsubset), 2, function(x) ngeoMean(x))
          pData(object)[["negnormFactors"]] <- negs/ngeoMean(negs)
-         assayDataElement(object, toElt) <- sweep(assayDataElement(object, fromElt), 2L, negs/ngeoMean(negs), FUN = "*")
+         assayDataElement(object, toElt) <- sweep(assayDataElement(object, fromElt), 2L, negs/ngeoMean(negs), FUN = "/")
          return(object)
      }
 } 
@@ -59,7 +63,7 @@ hkNorm <- function(object, data_type, fromElt = "exprs" , toElt = "hk_norm")
     hksubset <- subset(object, subset = TargetName %in% housekeepers)
     hks <- apply(exprs(hksubset), 2, function(x) ngeoMean(x))
     pData(object)[["hknormFactors"]] <- hks/ngeoMean(hks)
-    assayDataElement(object, toElt) <- sweep(assayDataElement(object, fromElt), 2L, hks/ngeoMean(hks), FUN = "*")
+    assayDataElement(object, toElt) <- sweep(assayDataElement(object, fromElt), 2L, hks/ngeoMean(hks), FUN = "/")
     return(object)
     }
 } 
