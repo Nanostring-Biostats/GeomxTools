@@ -19,6 +19,7 @@ Collate: DccMetadata.R
          NanoStringGeoMxSet-autoplot.R
          NanoStringGeoMxSet-aggregate.R
          NanoStringGeoMxSet-signatures.R
+         NanoStringGeoMxSet-normalize.R
          readDccFile.R
          readPKCFile.R
          readNanoStringGeoMxSet.R
