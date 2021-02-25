@@ -31,7 +31,8 @@ exportClasses(NanoStringGeoMxSet)
 export(NanoStringGeoMxSet, sData, svarLabels, dimLabels, "dimLabels<-",
        featureType, "featureType<-",
        signatures, "signatures<-", signatureScores,
-       design, "design<-", signatureGroups)
+       design, "design<-", signatureGroups,
+       checkQCFlags)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 methods
@@ -40,7 +41,8 @@ exportMethods(NanoStringGeoMxSet, show,
               sData, svarLabels, dimLabels, "dimLabels<-",
               featureType, "featureType<-",
               signatures, "signatures<-", signatureScores,
-              design, "design<-", signatureGroups)
+              design, "design<-", signatureGroups, 
+              checkQCFlags)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
