@@ -41,3 +41,9 @@ version of this package installed in your system, start R and enter:
 ``` r
 browseVignettes("GeomxTools")
 ```
+
+## Branches
+The master branch is the stable version of the Bioconductor package.
+
+The dev branch is under active development and no guarantee is made on
+usability at any given time.

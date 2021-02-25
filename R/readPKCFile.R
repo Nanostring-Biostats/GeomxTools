@@ -10,8 +10,6 @@ function(file)
                    }))
   names(pkc_json_list) <- pkc_names
   rtsid_lookup_df <- generate_pkc_lookup(pkc_json_list)
-  # NEO Not used currently, need to merge with above call and function
-  #target_notes <- generate_pkc_targ_notes(pkc_json_list, rtsid_lookup_df)
   # create negative column 
   rtsid_lookup_df$Negative <- grepl("Negative", rtsid_lookup_df$CodeClass)
   rtsid_lookup_df$RTS_ID <- gsub("RNA", "RTS00", rtsid_lookup_df[["RTS_ID"]])
@@ -45,7 +43,7 @@ generate_pkc_lookup <- function(jsons_vec) {
     curr_json <- jsons_vec[[curr_idx]]
     for (targ in curr_json[["Targets"]]) {
       curr_targ <- targ[["DisplayName"]]
-      curr_code_class <- targ[["CodeClass"]]
+      curr_code_class <- gsub("\\d+$", "", targ[["CodeClass"]])
       for (prb in targ[["Probes"]]) {
         curr_RTS_ID <- prb$RTS_ID
         curr_probe_ID <- prb$ProbeID
