@@ -64,7 +64,7 @@ generate_pkc_targ_notes <- function(jsons_vec, lookup_tab) {
                HUGOSymbol=sub_lookup[["Target"]],
                TargetGroup=rep("All Probes", length(rownames(sub_lookup))),
                AnalyteType=rep("RNA", nrow(sub_lookup)),
-               Codeclass=sub_lookup[, "CodeClass"],
+               CodeClass=sub_lookup[, "CodeClass"],
                Pooling=sub_lookup[, "Module"],
                stringsAsFactors=FALSE)
   for (curr_idx in seq_len(length(jsons_vec))) {
