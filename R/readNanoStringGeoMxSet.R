@@ -74,6 +74,11 @@ function(dccFiles,
     data.frame(data[[x]][["Code_Summary"]],
                Sample_ID = names(data)[x]))
   probeAssay <- do.call(rbind, probeAssay)
+  zeroProbes <- setdiff(rownames(pkcData), unique(probeAssay[["RTS_ID"]]))
+  zeroProbeAssay <- data.frame(RTS_ID=pkcData[zeroProbes, "RTS_ID"], 
+    Count=rep(0, length(zeroProbes)),
+    Sample_ID=rep(probeAssay[1, "Sample_ID"], length(zeroProbes)))
+  probeAssay <- rbind(probeAssay, zeroProbeAssay)
   probeAssay[["Module"]] <- pkcData[probeAssay[["RTS_ID"]], "Module"]
   probeAssay <- reshape2::dcast(probeAssay, RTS_ID + Module ~ Sample_ID, 
       value.var="Count", fill=0)
