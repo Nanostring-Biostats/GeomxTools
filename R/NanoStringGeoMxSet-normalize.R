@@ -1,3 +1,5 @@
+HOUSEKEEPERS <- c('C1orf43','GPI','OAZ1','POLR2A','PSMB2','RAB7A',
+                                    'SDHA','SNRPD3','TBC1D10B','TPM4','TUBB','UBB')
 #' normalize
 #' @description normalize GeoMxSet using different normalization methods
 #' @param object name of the object class to perform normalization on
@@ -11,30 +13,35 @@
 #' norm_object <- normalize(demoData)
  
 setMethod("normalize", "NanoStringGeoMxSet",
-    function(object, norm_method=c("quant", "neg", "hk"), data_type=c("RNA", "protein"), 
-             fromElt = "exprs", toElt = "exprs_norm", ...) 
+    function(object, norm_method=c("quant", "neg", "hk"), 
+             data_type=c("RNA", "protein"), fromElt = "exprs", toElt = "exprs_norm", 
+             housekeepers = HOUSEKEEPERS, ...) 
         {
         norm_method <- match.arg(norm_method)
-            switch(norm_method, "quant" = {quantileNorm(object, data_type=data_type)}, 
-                "neg" = {negNorm(object, data_type=data_type)}, 
-                "hk" = {hkNorm(object, data_type=data_type)})
+            switch(norm_method, 
+                "quant" = {quantileNorm(object, data_type=data_type, 
+                                        toElt = toElt , fromElt = fromElt, ...)}, 
+                "neg" = {negNorm(object, data_type=data_type,
+                                 toElt = toElt, fromElt = fromElt, ...)}, 
+                "hk" = {hkNorm(object, data_type=data_type, 
+                               toElt = toElt, fromElt = fromElt,
+                               housekeepers = housekeepers, ...)})
         })
 
-quantileNorm <- function(object, data_type, fromElt = "exprs" , toElt = "q_norm", desiredQuantile = .75) 
+quantileNorm <- function(object, data_type, desiredQuantile = .75, toElt, fromElt) 
 { 
-   #object<-checkQCFlags(object)
    ## Get quantile of counts for each sample
    qs <- apply(exprs(object), 2, function(x) quantile(x,desiredQuantile))
    ## Save the normfactors for desired quantile
-   if (toElt != "q_norm")
+   if (toElt != "exprs_norm")
        pData(object)[[paste(toElt, "qFactors", sep= "_")]] <- qs/ngeoMean(qs) 
    else
-       pData(object)[["qnormFactors"]] <- qs/ngeoMean(qs) 
+       pData(object)[["normFactors"]] <- qs/ngeoMean(qs) 
    assayDataElement(object, toElt, validate=TRUE) <- sweep(assayDataElement(object, fromElt), 2L, qs/ngeoMean(qs), FUN = "/")
    return(object)
 } 
 
-negNorm <- function(object, data_type, fromElt = "exprs" , toElt = "neg_norm") 
+negNorm <- function(object, data_type, toElt, fromElt) 
 { 
      if (!featureType(object) == "Target")
      {
@@ -44,16 +51,18 @@ negNorm <- function(object, data_type, fromElt = "exprs" , toElt = "neg_norm")
      {  
          negsubset <- subset(object, subset = Codeclass %in% c("Negative01", "Negative"))
          negs <- apply(exprs(negsubset), 2, function(x) ngeoMean(x))
-         pData(object)[["negnormFactors"]] <- negs/ngeoMean(negs)
+         ## Save the normfactors in desired pData element
+         if (toElt != "exprs_norm")
+             pData(object)[[paste(toElt, "negFactors", sep= "_")]] <- negs/ngeoMean(negs)
+         else     
+             pData(object)[["normFactors"]] <- negs/ngeoMean(negs)
          assayDataElement(object, toElt) <- sweep(assayDataElement(object, fromElt), 2L, negs/ngeoMean(negs), FUN = "/")
          return(object)
      }
 } 
 
-hkNorm <- function(object, data_type, fromElt = "exprs" , toElt = "hk_norm") 
+hkNorm <- function(object, data_type, toElt, fromElt, housekeepers) 
 { 
-    housekeepers <- c('C1orf43','GPI','OAZ1','POLR2A','PSMB2','RAB7A',
-                    'SDHA','SNRPD3','TBC1D10B','TPM4','TUBB','UBB')
     if (!featureType(object) == "Target")
     {
     stop ("Housekeeping normalization is for collapsed data set.  
@@ -62,7 +71,11 @@ hkNorm <- function(object, data_type, fromElt = "exprs" , toElt = "hk_norm")
     {  
     hksubset <- subset(object, subset = TargetName %in% housekeepers)
     hks <- apply(exprs(hksubset), 2, function(x) ngeoMean(x))
-    pData(object)[["hknormFactors"]] <- hks/ngeoMean(hks)
+    ## Save the normfactors in desired pData element
+    if (toElt != "exprs_norm")
+        pData(object)[[paste(toElt, "hkFactors", sep= "_")]] <- hks/ngeoMean(hks)
+    else
+        pData(object)[["hknormFactors"]] <- hks/ngeoMean(hks)
     assayDataElement(object, toElt) <- sweep(assayDataElement(object, fromElt), 2L, hks/ngeoMean(hks), FUN = "/")
     return(object)
     }
