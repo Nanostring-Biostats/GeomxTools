@@ -13,7 +13,7 @@ HOUSEKEEPERS <- c('C1orf43','GPI','OAZ1','POLR2A','PSMB2','RAB7A',
 #' norm_object <- normalize(demoData)
  
 setMethod("normalize", "NanoStringGeoMxSet",
-    function(object, norm_method=c("quant", "neg", "hk"), 
+    function(object, norm_method=c("quant", "neg", "hk", "subtractBackground"), 
              data_type=c("RNA", "protein"), fromElt = "exprs", toElt = "exprs_norm", 
              housekeepers = HOUSEKEEPERS, ...) 
         {
@@ -25,7 +25,11 @@ setMethod("normalize", "NanoStringGeoMxSet",
                                  toElt = toElt, fromElt = fromElt, ...)}, 
                 "hk" = {hkNorm(object, data_type=data_type, 
                                toElt = toElt, fromElt = fromElt,
-                               housekeepers = housekeepers, ...)})
+                               housekeepers = housekeepers, ...)}, 
+                "subtractBackground" = {subtractBackground(object, data_type=data_type, 
+                                                           toElt = toElt, 
+                                                           fromElt = fromElt,...)}
+                )
         })
 
 quantileNorm <- function(object, data_type, desiredQuantile = .75, toElt, fromElt) 
@@ -80,6 +84,22 @@ hkNorm <- function(object, data_type, toElt, fromElt, housekeepers)
     return(object)
     }
 } 
+
+
+#subtract background
+subtractBackground <- function(object, data_type, toElt, fromElt) 
+{
+    if (!featureType(object) == "Target")
+    {
+        negsubset <- subset(object, subset = Codeclass %in% c("Negative01", "Negative"))
+        negs <- apply(exprs(negsubset), 2, function(x) ngeoMean(x))
+        assayDataElement( object, toElt ) <- 
+            t(assayDataApply( object, MARGIN=1L, FUN=`-`, t(negs) , elt=fromElt )) 
+    } else
+    assayDataElement( object, toElt ) <- 
+    t(assayDataApply( object, MARGIN=1L, FUN=`-`, t(exprs(object)["Negative Probe", ]) , elt=fromElt ))
+    return(object)
+}
 
 #' Check QC Flags in the GeoMxSet and removes the probe or sample from the object
 #' @rdname checkQCFlags
