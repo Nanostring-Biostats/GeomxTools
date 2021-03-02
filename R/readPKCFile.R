@@ -15,11 +15,6 @@ function(file)
   rtsid_lookup_df$RTS_ID <- gsub("RTS00", "RNA", rtsid_lookup_df[["RTS_ID"]])
   # Coerce output to DataFrame
   rtsid_lookup_df <- S4Vectors::DataFrame(rtsid_lookup_df)
-  # Check for duplicacy in RTS_ID among pkc files. If yes, relabel them
-  if ( any(duplicated(rtsid_lookup_df[['RTS_ID']])) ){
-    warning("Duplicate RTS ID are found in PKC files.")
-    rtsid_lookup_df[['RTS_ID']] <- make.unique(rtsid_lookup_df[['RTS_ID']])
-  }
   # Extract header
   header <- list(PKCFileName = sapply(pkc_json_list, function(list) list[["Name"]]),
                  PKCFileVersion = sapply(pkc_json_list, function(list) list[["Version"]]),
@@ -47,6 +42,11 @@ generate_pkc_lookup <- function(jsons_vec) {
     for (targ in curr_json[["Targets"]]) {
       curr_targ <- targ[["DisplayName"]]
       curr_code_class <- gsub("\\d+$", "", targ[["CodeClass"]])
+      # Check for duplicacy in RTS_ID among pkc files. If yes, relabel them
+      if ( any(duplicated(targ[["Probes"]])) ) {
+        warning("Duplicate RTS ID are found in PKC files.")
+        targ[["Probes"]] <- make.unique(targ[["Probes"]])
+      }
       for (prb in targ[["Probes"]]) {
         curr_RTS_ID <- prb$RTS_ID
         lookup_df[nrow(lookup_df) + 1, ] <- 
