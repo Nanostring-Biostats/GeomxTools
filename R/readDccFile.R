@@ -93,7 +93,7 @@ function(file)
     output[["Code_Summary"]] <- output[["Code_Summary"]][ok, , drop = FALSE]
   }
   rownames(output[["Code_Summary"]]) <- rn
-  output[["NGS_Processing_Attributes"]][, "DeduplicatedReads"] <- length(rn)
+  output[["NGS_Processing_Attributes"]][, "DeduplicatedReads"] <- sum(output[["Code_Summary"]][["Count"]])
 
   return( output )
 }
