@@ -4,14 +4,16 @@ function(file)
   # Read data from Reporter Code Count (RCC) file
   lines <- trimws(readLines(file))
   
-  if(lines[3] == "SoftwareVersion,\"GeoMx_NGS_Pipeline_ 2.0.0\""){
-    lines[3] <- "SoftwareVersion,0.02"
-  }else{
-    # removing unused dnd program lines
-    trimGalore <- grep("trimGalore", lines)
+  # removing unused dnd program lines and reformat
+  trimGalore <- grep("trimGalore", lines)
+  if (length(trimGalore) > 0) {
     Raw <- grep("Raw", lines)
     lines <- lines[-c(trimGalore:(Raw - 1))]
   }
+  lines <- gsub("SoftwareVersion,\"GeoMx_NGS_Pipeline_ ", "SoftwareVersion,", lines)
+  lines <- gsub("SoftwareVersion,\"GeoMx_NGS_Pipeline_", "SoftwareVersion,", lines)
+  lines[grepl("SoftwareVersion", lines)] <- 
+    gsub("\"", "", lines[grepl("SoftwareVersion", lines)])
 
   # Split data by tags
   tags <- names(.dccMetadata[["schema"]])
