@@ -12,6 +12,7 @@ function(file)
   }
   lines <- gsub("SoftwareVersion,\"GeoMx_NGS_Pipeline_ ", "SoftwareVersion,", lines)
   lines <- gsub("SoftwareVersion,\"GeoMx_NGS_Pipeline_", "SoftwareVersion,", lines)
+  lines <- gsub("SoftwareVersion,\"DRAGEN_GeoMx_", "SoftwareVersion,", lines)
   lines[grepl("SoftwareVersion", lines)] <- 
     gsub("\"", "", lines[grepl("SoftwareVersion", lines)])
 
