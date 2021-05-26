@@ -30,7 +30,7 @@ BiocManager::install("GeomxTools")
 # Or the development version from GitHub
 # install.packages("devtools")
 devtools::install_github("Nanostring-Biostats/GeomxTools", 
-                         build_vignettes = TRUE)
+                         build_vignettes = TRUE, ref = "dev")
 ```
 
 ## Documentation
