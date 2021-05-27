@@ -26,7 +26,6 @@
                                NA_character_,
                                NA_character_,
                                NA_character_,
-                               NA_character_,
                                NA_character_),
                            minVersion = numeric_version(c(rep("0.01", 8L))),
                            row.names =
