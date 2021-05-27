@@ -27,7 +27,7 @@
                                NA_character_,
                                NA_character_,
                                NA_character_),
-                           minVersion = numeric_version(c(rep("0.01", 8L))),
+                           minVersion = numeric_version(c(rep("0.01", 7L))),
                            row.names =
                              c("SeqSetId", "Raw", "Trimmed", 
                                "Stitched", "Aligned", "umiQ30", "rtsQ30"),
