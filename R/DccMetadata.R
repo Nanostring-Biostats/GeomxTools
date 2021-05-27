@@ -30,7 +30,7 @@
                                NA_character_),
                            minVersion = numeric_version(c(rep("0.01", 8L))),
                            row.names =
-                             c("SeqSetId", "tamperedIni", "Raw", "Trimmed", 
+                             c("SeqSetId", "Raw", "Trimmed", 
                                "Stitched", "Aligned", "umiQ30", "rtsQ30"),
                            stringsAsFactors = FALSE),
               "Code_Summary" =
