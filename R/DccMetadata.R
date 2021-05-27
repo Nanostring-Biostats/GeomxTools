@@ -84,11 +84,12 @@ function(x, fileVersion,
   section <- match.arg(section)
   schema <- .dccMetadata[["schema"]][[section]]
   expectedNames <- row.names(schema)[schema[,"minVersion"] <= fileVersion]
-  if (identical(colnames(x), expectedNames))
+  if (all(expectedNames %in% colnames(x))) {
     TRUE
-  else
+  } else {
     sprintf("<%s> section must contain %s", section,
             paste0("\"", expectedNames, "\"", collapse = ", "))
+  }
 }
 
 
