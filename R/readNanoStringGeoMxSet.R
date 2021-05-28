@@ -120,11 +120,15 @@ function(dccFiles,
   
   pheno <- pheno[, setdiff(colnames(pheno@data), 
                            c(protocolDataColNames, experimentDataColNames))]
-  
-  annot_labelDescription <-  data.frame(labelDescription =
-                                           rep(NA_character_, length(protocolDataColNames) + 1L),
-                                         row.names = c(protocolDataColNames, "DeduplicatedReads"),
-                                         stringsAsFactors = FALSE)
+
+  annot_labelDescription <-  
+    data.frame(
+      labelDescription=rep(NA_character_, length(protocolDataColNames) + 1L),
+      row.names = c(protocolDataColNames, "DeduplicatedReads"),
+      stringsAsFactors = FALSE)
+  protocol <- 
+    protocol[, names(protocol) %in% c(rownames(.dccMetadata[["protocolData"]]),
+                                      rownames(annot_labelDescription))]
   protocol <- AnnotatedDataFrame(protocol,
                                  rbind(.dccMetadata[["protocolData"]], 
                                        annot_labelDescription),
