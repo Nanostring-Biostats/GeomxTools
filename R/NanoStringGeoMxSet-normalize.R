@@ -42,7 +42,7 @@ negNorm <- function(object, data_type, fromElt = "exprs" , toElt = "neg_norm")
             Run function aggregateCounts() to collapse the probes to targets.\n")
      } else
      {  
-         negsubset <- subset(object, subset = Codeclass %in% c("Negative01", "Negative"))
+         negsubset <- subset(object, subset = CodeClass %in% c("Negative01", "Negative"))
          negs <- apply(exprs(negsubset), 2, function(x) ngeoMean(x))
          pData(object)[["negnormFactors"]] <- negs/ngeoMean(negs)
          assayDataElement(object, toElt) <- sweep(assayDataElement(object, fromElt), 2L, negs/ngeoMean(negs), FUN = "/")
