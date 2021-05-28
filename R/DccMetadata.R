@@ -26,11 +26,10 @@
                                NA_character_,
                                NA_character_,
                                NA_character_,
-                               NA_character_,
                                NA_character_),
-                           minVersion = numeric_version(c(rep("0.01", 8L))),
+                           minVersion = numeric_version(c(rep("0.01", 7L))),
                            row.names =
-                             c("SeqSetId", "tamperedIni", "Raw", "Trimmed", 
+                             c("SeqSetId", "Raw", "Trimmed", 
                                "Stitched", "Aligned", "umiQ30", "rtsQ30"),
                            stringsAsFactors = FALSE),
               "Code_Summary" =
@@ -85,11 +84,12 @@ function(x, fileVersion,
   section <- match.arg(section)
   schema <- .dccMetadata[["schema"]][[section]]
   expectedNames <- row.names(schema)[schema[,"minVersion"] <= fileVersion]
-  if (identical(colnames(x), expectedNames))
+  if (all(expectedNames %in% colnames(x))) {
     TRUE
-  else
+  } else {
     sprintf("<%s> section must contain %s", section,
             paste0("\"", expectedNames, "\"", collapse = ", "))
+  }
 }
 
 
