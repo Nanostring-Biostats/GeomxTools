@@ -15,7 +15,7 @@ function(dccFiles,
   zeroRead <- which(sapply(seq_len(length(data)), 
                            function(x) nrow(data[[x]]$Code_Summary))==0)
   if(length(zeroRead) > 0){
-    warning("The following DCC files are removed: ", names(data)[zeroRead])
+    warning("The following DCC files are removed as they contain zero counts: ", names(data)[zeroRead])
     data <- data[-zeroRead]
     dccFiles <- dccFiles[-zeroRead]
   }
@@ -116,7 +116,8 @@ function(dccFiles,
             }))
   
   protocol <- data.frame(protocol, 
-                         pheno@data[, which(colnames(pheno@data) %in% protocolDataColNames)])
+                         pheno@data[, which(colnames(pheno@data) %in% protocolDataColNames)],
+                         check.names = FALSE)
   
   pheno <- pheno[, setdiff(colnames(pheno@data), 
                            c(protocolDataColNames, experimentDataColNames))]
