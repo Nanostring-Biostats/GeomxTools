@@ -1,5 +1,6 @@
-DEFAULTS <- list(minSaturation=0.7, minReads=10000, minProbeRatio=0.1, 
-    minimumCount=10, localOutlierAlpha=0.01, globalOutlierRatio=0.2, 
+DEFAULTS <- list(minSegmentReads=1000, percentTrimmed=80, percentStitched=80, 
+    percentAligned=80, percentSaturation=50, minNegativeCount=10, 
+    maxNTCCount=60, minProbeRatio=0.1, localOutlierAlpha=0.01, globalOutlierRatio=0.2, 
     loqCutoff=1.0, highCountCutoff=10000)
 
 #NEO to fix the rox comments with new stuff
@@ -25,8 +26,8 @@ setMethod("setQCFlags",
     signature(object="NanoStringGeoMxSet"),
     function(object, qcCutoffs=DEFAULTS, ...) {
         qcCutoffs <- checkCutoffs(qcCutoffs)
-        #NEO to add featureType accessor to the class plus validation
-        object <- setAOIFlags(object=object, qcCutoffs=qcCutoffs)
+        object <- setSeqQCFlags(object=object, qcCutoffs=qcCutoffs)
+        object <- setBackgroundQCFlags(object=object, qcCutoffs=qcCutoffs)
         if (featureType(object) == "Probe") {
             object <- setProbeFlags(object=object, qcCutoffs=qcCutoffs)
         } else if (featureType(object) == "Target") {
@@ -37,12 +38,135 @@ setMethod("setQCFlags",
         return(object)
 })
 
-#NEO these should match the default calls in DA
-setAOIFlags <- function(object, qcCutoffs=DEFAULTS) {
-    object <- setSaturationFlags(object=object, 
-        cutoff=qcCutoffs[["minSaturation"]])
+#' Add sequencing QC flags to NanoStringGeoMxSet object protocol data
+#' 
+#' @param object name of the NanoStringGeoMxSet object to perform QC on
+#' @param qcCutoffs a list of qc cutoffs to use
+#' \enumerate{
+#'     \item{minSegmentReads, 
+#'          numeric to flag segments with less than this number of reads}
+#'     \item{percentAligned, 
+#'          numeric to flag segments with less than this percent of aligned reads}
+#'     \item{percentSaturation, 
+#'          numeric to flag segments with less than this percent of 
+#'          sequencing saturation}
+#' }
+#' @return \code{NanoStringGeoMxSet} object with \code{QCFlags} data frame 
+#'             appended to \code{protocolData}
+#' 
+#' @examples
+#' setSignalQCFlags(demoData, 
+#'                  qcCutoffs=list(minSegmentReads=1000, 
+#'                                 percentAligned=80, 
+#'                                 percentSaturation=50))
+#' 
+#' @export
+#' 
+setSeqQCFlags <- function(object, qcCutoffs=DEFAULTS) {
     object <- setLowReadFlags(object=object, 
-        cutoff=qcCutoffs[["minReads"]])
+        cutoff=qcCutoffs[["minSegmentReads"]])
+    object <- setTrimmedFlags(object=object, 
+        cutoff=qcCutoffs[["percentTrimmed"]])
+    object <- setStitchedFlags(object=object, 
+        cutoff=qcCutoffs[["percentStitched"]])
+    object <- setAlignedFlags(object=object, 
+        cutoff=qcCutoffs[["percentAligned"]])
+    object <- setSaturationFlags(object=object, 
+        cutoff=qcCutoffs[["percentSaturation"]])
+    return(object)
+}
+
+setLowReadFlags <- function(object, cutoff=DEFAULTS[["minSegmentReads"]]) {
+    lowReads <- sData(object)["Raw"] < cutoff
+    colnames(lowReads) <- "LowReads"
+    object <- appendSampleFlags(object, lowReads)
+    return(object)
+}
+
+setTrimmedFlags <- function(object, cutoff=DEFAULTS[["percentTrimmed"]]) {
+    percentTrim <- 100 * (sData(object)["Trimmed"] / sData(object)["Raw"])
+    percentTrim <- percentTrim < cutoff
+    colnames(percentTrim) <- "LowTrimmed"
+    object<- appendSampleFlags(object, percentTrim)
+    return(object)
+}
+
+setStitchedFlags <- function(object, cutoff=DEFAULTS[["percentStitched"]]) {
+    percentStitch <- 100 * (sData(object)["Stitched"] / sData(object)["Raw"])
+    percentStitch <- percentStitch < cutoff
+    colnames(percentStitch) <- "LowStitched"
+    object<- appendSampleFlags(object, percentStitch)
+    return(object)
+}
+
+setAlignedFlags <- function(object, cutoff=DEFAULTS[["percentAligned"]]) {
+    percentAlign <- 100 * (sData(object)["Aligned"] / sData(object)["Raw"])
+    percentAlign <- percentAlign < cutoff
+    colnames(percentAlign) <- "LowAligned"
+    object<- appendSampleFlags(object, percentAlign)
+    return(object)
+}
+
+setSaturationFlags <- function(object, cutoff=DEFAULTS[["percentSaturation"]]) {
+    percentSaturated <- 
+        1 - sData(object)["DeduplicatedReads"] / sData(object)["Aligned"]
+    percentSaturated <- percentSaturated < cutoff
+    colnames(percentSaturated) <- "LowSaturation"
+    object<- appendSampleFlags(object, percentSaturated)
+    return(object)
+}
+
+
+#' Add background QC flags to NanoStringGeoMxSet object protocol data
+#' 
+#' @param object name of the NanoStringGeoMxSet object to perform QC on
+#' @param qcCutoffs a list of qc cutoffs to use
+#' \enumerate{
+#'     \item{minNegativeCount, 
+#'          numeric to flag segments with less than this number of counts}
+#'     \item{maxNTCCount, 
+#'          numeric to flag segments with more than this number of NTC counts}
+#' }
+#' @return \code{NanoStringGeoMxSet} object with \code{QCFlags} data frame 
+#'             appended to \code{protocolData}
+#' 
+#' @examples
+#' setSignalQCFlags(demoData, 
+#'                  qcCutoffs=list(minSegmentReads=1000, 
+#'                                 percentAligned=80, 
+#'                                 percentSaturation=50))
+#' 
+#' @export
+#' 
+setBackgroundQCFlags <- function(object, qcCutoffs=DEFAULTS) {
+    object <- setLowNegFlags(object=object, 
+        cutoff=qcCutoffs[["minNegativeCount"]])
+    object <- setHighNTCFlags(object=object, 
+        cutoff=qcCutoffs[["maxNTCCount"]])
+    return(object)
+}
+
+setLowNegFlags <- function(object, cutoff=DEFAULTS[["minNegativeCount"]]) {
+    negativeGeoMeans <- 
+        esBy(negativeControlSubset(object), 
+           GROUP="Module", 
+           FUN=function( x ) { 
+               assayDataApply( x, MARGIN = 2, FUN=ngeoMean, elt="exprs" ) 
+           }) 
+    lowNegs <- data.frame("lowNegatives"=apply(negativeGeoMeans < cutoff, 1, sum) > 0)
+    object <- appendSampleFlags(object, lowNegs)
+    return(object)
+}
+
+setHighNTCFlags <- function(object, cutoff=DEFAULTS[["maxNTCCount"]]) {
+    negativeGeoMeans <- 
+        esBy(negativeControlSubset(object), 
+           GROUP="Module", 
+           FUN=function( x ) { 
+               assayDataApply( x, MARGIN = 2, FUN=ngeoMean, elt="exprs" ) 
+           }) 
+    lowNegs <- data.frame("lowNegatives"=apply(negativeGeoMeans < cutoff, 1, sum) > 0)
+    object <- appendSampleFlags(object, lowNegs)
     return(object)
 }
 
@@ -64,23 +188,6 @@ setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
         setLOQFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
     object <- 
         setHighCountFlags(object=object, cutoff=qcCutoffs[["highCountCutoff"]])
-    return(object)
-}
-
-#NEO these are exported so advanced users can use filters not part of default DA pipeline
-setSaturationFlags <- function(object, cutoff=DEFAULTS[["minSaturation"]]) {
-    percentUnique <- 
-        sData(object)["DeduplicatedReads"] / sData(object)["Aligned"]
-    percentUnique <- percentUnique > cutoff
-    colnames(percentUnique) <- "Saturation"
-    object<- appendSampleFlags(object, percentUnique)
-    return(object)
-}
-
-setLowReadFlags <- function(object, cutoff=DEFAULTS[["minReads"]]) {
-    lowReads <- sData(object)["Raw"] < cutoff
-    colnames(lowReads) <- "LowReads"
-    object <- appendSampleFlags(object, lowReads)
     return(object)
 }
 
@@ -177,7 +284,7 @@ setLOQFlags <-
                 "Feature type should be Target."))
         }
         return(object)
-    }
+}
 
 checkCutoffs <- function(qcCutoffs) {
     if (!all(names(DEFAULTS) %in% names(qcCutoffs))) {
@@ -190,7 +297,7 @@ checkCutoffs <- function(qcCutoffs) {
 appendSampleFlags <- function(object, currFlags) {
     if("QCFlags" %in% varLabels(protocolData(object))) {
         protocolData(object)[["QCFlags"]] <- 
-            cbind(protocolData(object)[["QCFlags"]], currFlags) 
+            cbind(protocolData(object)[["QCFlags"]], currFlags)
     } else {
         protocolData(object)[["QCFlags"]] <- currFlags
     }
