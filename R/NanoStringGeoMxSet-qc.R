@@ -1,6 +1,7 @@
 DEFAULTS <- list(minSegmentReads=1000, percentTrimmed=80, percentStitched=80, 
     percentAligned=80, percentSaturation=50, minNegativeCount=10, 
-    maxNTCCount=60, minProbeRatio=0.1, localOutlierAlpha=0.01, globalOutlierRatio=0.2, 
+    maxNTCCount=60, minNuclei=16000, minArea=20, minProbeCount=10, 
+    minProbeRatio=0.1, localOutlierAlpha=0.01, globalOutlierRatio=0.2, 
     loqCutoff=1.0, highCountCutoff=10000)
 
 #NEO to fix the rox comments with new stuff
@@ -28,8 +29,9 @@ setMethod("setQCFlags",
         qcCutoffs <- checkCutoffs(qcCutoffs)
         object <- setSeqQCFlags(object=object, qcCutoffs=qcCutoffs)
         object <- setBackgroundQCFlags(object=object, qcCutoffs=qcCutoffs)
+        object <- setGeoMxQCFlags(object=object, qcCutoffs=qcCutoffs)
         if (featureType(object) == "Probe") {
-            object <- setProbeFlags(object=object, qcCutoffs=qcCutoffs)
+            object <- setBioProbeFlags(object=object, qcCutoffs=qcCutoffs)
         } else if (featureType(object) == "Target") {
         #   object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
         } else {
@@ -44,12 +46,12 @@ setMethod("setQCFlags",
 #' @param qcCutoffs a list of qc cutoffs to use
 #' \enumerate{
 #'     \item{minSegmentReads, 
-#'          numeric to flag segments with less than this number of reads}
+#'           numeric to flag segments with less than this number of reads}
 #'     \item{percentAligned, 
-#'          numeric to flag segments with less than this percent of aligned reads}
+#'           numeric to flag segments with less than this percent of aligned reads}
 #'     \item{percentSaturation, 
-#'          numeric to flag segments with less than this percent of 
-#'          sequencing saturation}
+#'           numeric to flag segments with less than this percent of 
+#'           sequencing saturation}
 #' }
 #' @return \code{NanoStringGeoMxSet} object with \code{QCFlags} data frame 
 #'             appended to \code{protocolData}
@@ -63,6 +65,7 @@ setMethod("setQCFlags",
 #' @export
 #' 
 setSeqQCFlags <- function(object, qcCutoffs=DEFAULTS) {
+    qcCutoffs <- checkCutoffs(qcCutoffs)
     object <- setLowReadFlags(object=object, 
         cutoff=qcCutoffs[["minSegmentReads"]])
     object <- setTrimmedFlags(object=object, 
@@ -123,22 +126,22 @@ setSaturationFlags <- function(object, cutoff=DEFAULTS[["percentSaturation"]]) {
 #' @param qcCutoffs a list of qc cutoffs to use
 #' \enumerate{
 #'     \item{minNegativeCount, 
-#'          numeric to flag segments with less than this number of counts}
+#'           numeric to flag segments with less than this number of counts}
 #'     \item{maxNTCCount, 
-#'          numeric to flag segments with more than this number of NTC counts}
+#'           numeric to flag segments with more than this number of NTC counts}
 #' }
 #' @return \code{NanoStringGeoMxSet} object with \code{QCFlags} data frame 
 #'             appended to \code{protocolData}
 #' 
 #' @examples
 #' setSignalQCFlags(demoData, 
-#'                  qcCutoffs=list(minSegmentReads=1000, 
-#'                                 percentAligned=80, 
-#'                                 percentSaturation=50))
+#'                  qcCutoffs=list(minNegativeCount=10, 
+#'                                 maxNTCCount=60))
 #' 
 #' @export
 #' 
 setBackgroundQCFlags <- function(object, qcCutoffs=DEFAULTS) {
+    qcCutoffs <- checkCutoffs(qcCutoffs)
     object <- setLowNegFlags(object=object, 
         cutoff=qcCutoffs[["minNegativeCount"]])
     object <- setHighNTCFlags(object=object, 
@@ -149,32 +152,95 @@ setBackgroundQCFlags <- function(object, qcCutoffs=DEFAULTS) {
 setLowNegFlags <- function(object, cutoff=DEFAULTS[["minNegativeCount"]]) {
     negativeGeoMeans <- 
         esBy(negativeControlSubset(object), 
-           GROUP="Module", 
-           FUN=function( x ) { 
-               assayDataApply( x, MARGIN = 2, FUN=ngeoMean, elt="exprs" ) 
-           }) 
-    lowNegs <- data.frame("lowNegatives"=apply(negativeGeoMeans < cutoff, 1, sum) > 0)
+             GROUP="Module", 
+             FUN=function( x ) { 
+                 assayDataApply( x, MARGIN = 2, FUN=ngeoMean, elt="exprs" ) 
+             }) 
+    lowNegs <- 
+        data.frame("lowNegatives"=apply(negativeGeoMeans < cutoff, 1, sum) > 0)
     object <- appendSampleFlags(object, lowNegs)
     return(object)
 }
 
 setHighNTCFlags <- function(object, cutoff=DEFAULTS[["maxNTCCount"]]) {
-    negativeGeoMeans <- 
-        esBy(negativeControlSubset(object), 
-           GROUP="Module", 
-           FUN=function( x ) { 
-               assayDataApply( x, MARGIN = 2, FUN=ngeoMean, elt="exprs" ) 
-           }) 
-    lowNegs <- data.frame("lowNegatives"=apply(negativeGeoMeans < cutoff, 1, sum) > 0)
-    object <- appendSampleFlags(object, lowNegs)
+    highNTC <- sData(object)["NTC"] > cutoff
+    colnames(highNTC) <- "highNTC"
+    object <- appendSampleFlags(object, highNTC)
     return(object)
 }
 
-setProbeFlags <- function(object, qcCutoffs=DEFAULTS) {
+#' Add GeoMx segment QC flags to NanoStringGeoMxSet object protocol data
+#' 
+#' @param object name of the NanoStringGeoMxSet object to perform QC on
+#' @param qcCutoffs a list of qc cutoffs to use
+#' \enumerate{
+#'     \item{minNuclei, 
+#'           numeric to flag segments with less than this number of nuclei}
+#'     \item{minArea, 
+#'           numeric to flag segments with less than this um^2 area}
+#' }
+#' @return \code{NanoStringGeoMxSet} object with \code{QCFlags} data frame 
+#'         appended to \code{protocolData}
+#' 
+#' @examples
+#' setGeoMxQCFlags(demoData, 
+#'                  qcCutoffs=list(minNuclei=16000, 
+#'                                 minArea=20))
+#' 
+#' @export
+#' 
+setGeoMxQCFlags <- function(object, qcCutoffs=DEFAULTS) {
+    qcCutoffs <- checkCutoffs(qcCutoffs)
+    object <- setNucleiFlags(object=object, 
+        cutoff=qcCutoffs[["minNuclei"]])
+    object <- setAreaFlags(object=object, 
+        cutoff=qcCutoffs[["minArea"]])
+    return(object)
+}
+
+setNucleiFlags <- function(object, cutoff=DEFAULTS[["minNuclei"]]) {
+    if (!is.null(sData(object)["nuclei"])) {
+        lowNuclei <- sData(object)["nuclei"] < cutoff
+        colnames(lowNuclei) <- "lowNuclei"
+        object <- appendSampleFlags(object, lowNuclei)
+    }
+    return(object)
+}
+
+setAreaFlags <- function(object, cutoff=DEFAULTS[["minArea"]]) {
+    lowArea <- sData(object)["area"] < cutoff
+    colnames(lowArea) <- "lowArea"
+    object <- appendSampleFlags(object, lowArea)
+    return(object)
+}
+
+#' Add probe QC flags to NanoStringGeoMxSet object feature data
+#' 
+#' @param object name of the NanoStringGeoMxSet object to perform QC on
+#' @param qcCutoffs a list of qc cutoffs to use
+#' \enumerate{
+#'     \item{minProbeRatio, 
+#'           numeric between 0 and 1 to flag probes that have 
+#'           (geomean probe in all segments) / (geomean probes within target)
+#'           less than or equal to this ratio}
+#'     \item{maxGrubbsOutlierRatio, 
+#'           numeric to flag probes that fail Grubb's test in 
+#'           greater than or equal this percent of segments}
+#' }
+#' @return \code{NanoStringGeoMxSet} object with \code{QCFlags} data frame 
+#'         appended to \code{protocolData}
+#' 
+#' @examples
+#' setBioProbeQCFlags(demoData, 
+#'                    qcCutoffs=list(minProbeRatio=0.1,
+#'                                   maxGrubbsOutlierRatio=20))
+#' 
+#' @export
+#' 
+setBioProbeQCFlags <- function(object, qcCutoffs=DEFAULTS) {
+    qcCutoffs <- checkCutoffs(qcCutoffs)
     object <- setProbeRatioFlags(object=object, 
         cutoff=qcCutoffs[["minProbeRatio"]])
-    object <- setProbeCountFlags(object=object, 
-        cutoff=qcCutoffs[["minimumCount"]])
     object <- setLocalFlags(object=object, 
         cutoff=qcCutoffs[["localOutlierAlpha"]])
     object <- setGlobalFlags(object=object, 
@@ -182,50 +248,37 @@ setProbeFlags <- function(object, qcCutoffs=DEFAULTS) {
     return(object)
 }
 
-#NEO make sure that when collapsed count occurs feature data QCFlags is removed
-setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
-    object <- 
-        setLOQFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
-    object <- 
-        setHighCountFlags(object=object, cutoff=qcCutoffs[["highCountCutoff"]])
+setProbeRatioFlags <- function(object=object, 
+                               cutoff=DEFAULTS[["minProbeRatio"]]) {
+    rawTargetCounts <- collapseCounts(object)
+    rawTargetCounts[["Mean"]] <- 
+        apply(rawTargetCounts[, sampleNames(object)], 
+            MARGIN=1, FUN=ngeoMean)
+    rownames(rawTargetCounts) <- rawTargetCounts[["TargetName"]]
+    targetMeans <- rawTargetCounts[fData(object)[["TargetName"]], "Mean"]
+    probeMeans <- apply(assayDataElement(object, elt="exprs"), 
+        MARGIN=1, FUN=ngeoMean)
+    probeRatioFlags <- (probeMeans / targetMeans) < cutoff
+    probeRatioFlags <- data.frame("LowProbeRatio"=probeRatioFlags)
+    object <- appendFeatureFlags(object, probeRatioFlags)
     return(object)
 }
-
-setProbeRatioFlags <- 
-    function(object=object, cutoff=DEFAULTS[["minProbeRatio"]]) {
-        rawTargetCounts <- collapseCounts(object)
-        rawTargetCounts[["Mean"]] <- 
-            apply(rawTargetCounts[, sampleNames(object)], 
-                MARGIN=1, FUN=ngeoMean)
-        rownames(rawTargetCounts) <- rawTargetCounts[["TargetName"]]
-        targetMeans <- rawTargetCounts[fData(object)[["TargetName"]], "Mean"]
-        probeMeans <- apply(assayDataElement(object, elt="exprs"), 
-            MARGIN=1, FUN=ngeoMean)
-        probeRatioFlags <- (probeMeans / targetMeans) < cutoff
-        probeRatioFlags <- data.frame("LowProbeRatio"=probeRatioFlags)
-        object <- appendFeatureFlags(object, probeRatioFlags)
-        return(object)
-    }
- 
-setProbeCountFlags <- 
-    function(object=object, cutoff=DEFAULTS[["minimumCount"]]) {
-        probeCountFlags <- apply(assayDataElement(object, elt="exprs"), 
-            MARGIN=1, FUN=function(x, minCount){
-                all(x < minCount)
-            }, minCount=cutoff)
-        probeCountFlags <- data.frame("LowProbeCount"=probeCountFlags)
-        object <- appendFeatureFlags(object, probeCountFlags)
-        return(object)
-    }
 
 #NEO
 #time-wise does it makes sense to bypass anything with min flag
 #Yes can add and just match back by subsetting by true and and then marking by RTS
 #Update append to detect if less rows than object and match to flags and RTS
-setLocalFlags <- 
-    function(object=object, cutoff=DEFAULTS[["localOutlierAlpha"]]) {
-        #if ("LowProbeCount" %in% names(fData(object)[["QCFlags"]])) {
-          #  subObj <- object[!fData(object)[["QCFlags"]][["LowProbeRatio"]], ]
+setHighLowLocalFlags <- function(object=object, 
+                                 cutoff=DEFAULTS[["localOutlierAlpha"]], 
+                                 minCount=cutoff=DEFAULTS[["minProbeCount"]]) {
+        multiProbeTargs <- 
+            which(with(object, table(TargetName, Module)) > 3, arr.ind=TRUE)
+        subsetted <- unique(fData(demoData)[["TargetName"]])[]
+        probeCountFlags <- apply(assayDataElement(object, elt="exprs"), 
+            MARGIN=1, FUN=function(x, minCount){
+                all(x < minCount)
+            }, minCount=minCount)
+
             probeCounts <- 
                 setDT(cbind(fData(object)[, c("RTS_ID", "TargetName", "Module")], 
                     assayDataElement(object, elt="exprs")))
@@ -253,7 +306,7 @@ setLocalFlags <-
         #        "after running setProbeCountFlags."))
         #}
         return(object)
-    }
+}
 
 setGlobalFlags <- 
     function(object=object, cutoff=DEFAULTS[["globalOutlierRatio"]]) {
@@ -267,7 +320,7 @@ setGlobalFlags <-
         globalFlags <- data.frame("GlobalOutlier"=outlierRatio)
         object <- appendFeatureFlags(object, globalFlags)
         return(object)
-    }
+}
 
 setLOQFlags <- 
     function(object=object, cutoff=DEFAULTS[["loqCutoff"]]) {
@@ -286,7 +339,19 @@ setLOQFlags <-
         return(object)
 }
 
+#NEO make sure that when collapsed count occurs feature data QCFlags is removed
+setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
+    object <- 
+        setLOQFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
+    object <- 
+        setHighCountFlags(object=object, cutoff=qcCutoffs[["highCountCutoff"]])
+    return(object)
+}
+
 checkCutoffs <- function(qcCutoffs) {
+    if (!all(is.numeric(qcCutoffs)) {
+        stop("qcCutoffs must be numeric values")
+    }
     if (!all(names(DEFAULTS) %in% names(qcCutoffs))) {
         qcCutoffs <- append(qcCutoffs, 
             DEFAULTS[!(names(DEFAULTS) %in% names(qcCutoffs))])
@@ -295,7 +360,7 @@ checkCutoffs <- function(qcCutoffs) {
 }
 
 appendSampleFlags <- function(object, currFlags) {
-    if("QCFlags" %in% varLabels(protocolData(object))) {
+    if ("QCFlags" %in% varLabels(protocolData(object))) {
         protocolData(object)[["QCFlags"]] <- 
             cbind(protocolData(object)[["QCFlags"]], currFlags)
     } else {
@@ -305,7 +370,7 @@ appendSampleFlags <- function(object, currFlags) {
 }
 
 appendFeatureFlags <- function(object, currFlags) {
-    if("QCFlags" %in% varLabels(featureData(object))) {
+    if ("QCFlags" %in% varLabels(featureData(object))) {
         featureData(object)[["QCFlags"]] <- 
             cbind(featureData(object)[["QCFlags"]], currFlags) 
     } else {
@@ -344,4 +409,52 @@ grubbsFlag <- function(countDT, alpha=0.01) {
 
 removeFlagProbes <- function(object, removeFlagCols=NULL) {
     
+}
+
+#NEO
+#time-wise does it makes sense to bypass anything with min flag
+#Yes can add and just match back by subsetting by true and and then marking by RTS
+#Update append to detect if less rows than object and match to flags and RTS
+setHighLowLocalFlags <- 
+    function(object=object, cutoff=DEFAULTS[["localOutlierAlpha"]]) {
+        #if ("LowProbeCount" %in% names(fData(object)[["QCFlags"]])) {
+          #  subObj <- object[!fData(object)[["QCFlags"]][["LowProbeRatio"]], ]
+            probeCounts <- 
+                setDT(cbind(fData(object)[, c("RTS_ID", "TargetName", "Module")], 
+                    assayDataElement(object, elt="exprs")))
+            probeCounts <- melt(probeCounts, 
+                id.vars=c("RTS_ID", "TargetName", "Module"), 
+                variable.name="Sample_ID", 
+                value.name="Count", variable.factor=FALSE)
+            probeCounts[, Count:=logt(Count)]
+            probeCounts[, "LowLocalOutlier"] <- FALSE
+            probeCounts[, "HighLocalOutlier"] <- FALSE
+            probeCounts <- probeCounts[, suppressWarnings(grubbsFlag(.SD, alpha=cutoff)), 
+                by=.(TargetName, Module, Sample_ID)]
+            lowFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), stringsAsFactor=FALSE)
+            highFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), stringsAsFactor=FALSE)
+            rownames(lowFlags) <- lowFlags[["RTS_ID"]]
+            rownames(highFlags) <- highFlags[["RTS_ID"]]
+            lowFlags <- lowFlags[, colnames(lowFlags) != "RTS_ID"]
+            highFlags <- highFlags[, colnames(highFlags) != "RTS_ID"]
+            outlierFlags <- data.frame(LowLocalOutlier=lowFlags, HighLocalOutlier=highFlags)
+            object <- appendFeatureFlags(object, outlierFlags)
+        #} #else {
+        #    stop(paste("It is recommended to flag targets with overall", 
+        #        "low counts (i.e. background-level expression)", 
+        #        "prior to checking for outliers.\n", "Rerun outlier testing",
+        #        "after running setProbeCountFlags."))
+        #}
+        return(object)
+}
+
+setProbeCountFlags <- 
+    function(object=object, cutoff=DEFAULTS[["minProbeCount"]]) {
+        probeCountFlags <- apply(assayDataElement(object, elt="exprs"), 
+            MARGIN=1, FUN=function(x, minCount){
+                all(x < minCount)
+            }, minCount=cutoff)
+        probeCountFlags <- data.frame("LowProbeCount"=probeCountFlags)
+        object <- appendFeatureFlags(object, probeCountFlags)
+        return(object)
 }
