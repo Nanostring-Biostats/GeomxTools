@@ -241,7 +241,7 @@ setBioProbeQCFlags <- function(object, qcCutoffs=DEFAULTS) {
     qcCutoffs <- checkCutoffs(qcCutoffs)
     object <- setProbeRatioFlags(object=object, 
         cutoff=qcCutoffs[["minProbeRatio"]])
-    object <- setLocalFlags(object=object, 
+    object <- setGrubbsLocalFlags(object=object, 
         cutoff=qcCutoffs[["localOutlierAlpha"]])
     object <- setGlobalFlags(object=object, 
         cutoff=qcCutoffs[["globalOutlierRatio"]])
@@ -268,44 +268,52 @@ setProbeRatioFlags <- function(object=object,
 #time-wise does it makes sense to bypass anything with min flag
 #Yes can add and just match back by subsetting by true and and then marking by RTS
 #Update append to detect if less rows than object and match to flags and RTS
-setHighLowLocalFlags <- function(object=object, 
+setGrubbsLocalFlags <- function(object=object, 
                                  cutoff=DEFAULTS[["localOutlierAlpha"]], 
                                  minCount=cutoff=DEFAULTS[["minProbeCount"]]) {
-        multiProbeTargs <- 
-            which(with(object, table(TargetName, Module)) > 3, arr.ind=TRUE)
-        subsetted <- unique(fData(demoData)[["TargetName"]])[]
-        probeCountFlags <- apply(assayDataElement(object, elt="exprs"), 
-            MARGIN=1, FUN=function(x, minCount){
-                all(x < minCount)
-            }, minCount=minCount)
+    multiProbeTable <- with(object, table(TargetName, Module)) >= 3
+    indices <- which(multiProbeTable, arr.ind=TRUE)
+    targs <- rownames(multiProbeTable)[as.vector(indices[, "TargetName"])]
+    mods <- colnames(multiProbeTable)[as.vector(indices[, "Module"])]
+    multiProbeList <- 
+        unlist(lapply(seq_along(targs), function(x){
+            featureNames(subset(object, 
+                subset=TargetName == targs[x] & Module == mods[x]))
+        }))
+    multiObject <- object[multiProbeList, ]
 
-            probeCounts <- 
-                setDT(cbind(fData(object)[, c("RTS_ID", "TargetName", "Module")], 
-                    assayDataElement(object, elt="exprs")))
-            probeCounts <- melt(probeCounts, 
-                id.vars=c("RTS_ID", "TargetName", "Module"), 
-                variable.name="Sample_ID", 
-                value.name="Count", variable.factor=FALSE)
-            probeCounts[, Count:=logt(Count)]
-            probeCounts[, "LowLocalOutlier"] <- FALSE
-            probeCounts[, "HighLocalOutlier"] <- FALSE
-            probeCounts <- probeCounts[, suppressWarnings(grubbsFlag(.SD, alpha=cutoff)), 
-                by=.(TargetName, Module, Sample_ID)]
-            lowFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), stringsAsFactor=FALSE)
-            highFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), stringsAsFactor=FALSE)
-            rownames(lowFlags) <- lowFlags[["RTS_ID"]]
-            rownames(highFlags) <- highFlags[["RTS_ID"]]
-            lowFlags <- lowFlags[, colnames(lowFlags) != "RTS_ID"]
-            highFlags <- highFlags[, colnames(highFlags) != "RTS_ID"]
-            outlierFlags <- data.frame(LowLocalOutlier=lowFlags, HighLocalOutlier=highFlags)
-            object <- appendFeatureFlags(object, outlierFlags)
-        #} #else {
-        #    stop(paste("It is recommended to flag targets with overall", 
-        #        "low counts (i.e. background-level expression)", 
-        #        "prior to checking for outliers.\n", "Rerun outlier testing",
-        #        "after running setProbeCountFlags."))
-        #}
-        return(object)
+    probeCountFlags <- apply(assayDataElement(object, elt="exprs"), 
+        MARGIN=1, FUN=function(x, minCount){
+            all(x < minCount)
+        }, minCount=minCount)
+
+        probeCounts <- 
+            setDT(cbind(fData(object)[, c("RTS_ID", "TargetName", "Module")], 
+                assayDataElement(object, elt="exprs")))
+        probeCounts <- melt(probeCounts, 
+            id.vars=c("RTS_ID", "TargetName", "Module"), 
+            variable.name="Sample_ID", 
+            value.name="Count", variable.factor=FALSE)
+        probeCounts[, Count:=logt(Count)]
+        probeCounts[, "LowLocalOutlier"] <- FALSE
+        probeCounts[, "HighLocalOutlier"] <- FALSE
+        probeCounts <- probeCounts[, suppressWarnings(grubbsFlag(.SD, alpha=cutoff)), 
+            by=.(TargetName, Module, Sample_ID)]
+        lowFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), stringsAsFactor=FALSE)
+        highFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), stringsAsFactor=FALSE)
+        rownames(lowFlags) <- lowFlags[["RTS_ID"]]
+        rownames(highFlags) <- highFlags[["RTS_ID"]]
+        lowFlags <- lowFlags[, colnames(lowFlags) != "RTS_ID"]
+        highFlags <- highFlags[, colnames(highFlags) != "RTS_ID"]
+        outlierFlags <- data.frame(LowLocalOutlier=lowFlags, HighLocalOutlier=highFlags)
+        object <- appendFeatureFlags(object, outlierFlags)
+    #} #else {
+    #    stop(paste("It is recommended to flag targets with overall", 
+    #        "low counts (i.e. background-level expression)", 
+    #        "prior to checking for outliers.\n", "Rerun outlier testing",
+    #        "after running setProbeCountFlags."))
+    #}
+    return(object)
 }
 
 setGlobalFlags <- 
