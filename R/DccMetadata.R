@@ -21,12 +21,12 @@
               "NGS_Processing_Attributes" =
                 data.frame(labelDescription =
                              c(NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_),
+                               NA_integer_,
+                               NA_integer_,
+                               NA_integer_,
+                               NA_integer_,
+                               NA_real_,
+                               NA_real_),
                            minVersion = numeric_version(c(rep("0.01", 7L))),
                            row.names =
                              c("SeqSetId", "Raw", "Trimmed", 
@@ -34,7 +34,7 @@
                            stringsAsFactors = FALSE),
               "Code_Summary" =
                 data.frame(labelDescription =
-                             c(NA_character_, NA_character_),
+                             c(NA_character_, NA_integer_),
                            minVersion = numeric_version(c(rep("0.01", 2L))),
                            row.names = c("RTS_ID", "Count"),
                            stringsAsFactors = FALSE)
