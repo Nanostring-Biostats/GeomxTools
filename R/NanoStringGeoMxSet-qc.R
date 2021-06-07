@@ -357,7 +357,7 @@ setGrubbsFlags <- function(object=object,
 }
 
 checkCutoffs <- function(qcCutoffs) {
-    if (!all(is.numeric(qcCutoffs)) {
+    if (!all(is.numeric(qcCutoffs))) {
         stop("qcCutoffs must be numeric values")
     }
     if (!all(names(DEFAULTS) %in% names(qcCutoffs))) {
