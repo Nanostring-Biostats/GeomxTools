@@ -163,9 +163,11 @@ setLowNegFlags <- function(object, cutoff=DEFAULTS[["minNegativeCount"]]) {
 }
 
 setHighNTCFlags <- function(object, cutoff=DEFAULTS[["maxNTCCount"]]) {
-    highNTC <- sData(object)["NTC"] > cutoff
-    colnames(highNTC) <- "highNTC"
-    object <- appendSampleFlags(object, highNTC)
+    if (!is.null(sData(object)[["NTC"]])) {
+        highNTC <- sData(object)["NTC"] > cutoff
+        colnames(highNTC) <- "highNTC"
+        object <- appendSampleFlags(object, highNTC)
+    }
     return(object)
 }
 
@@ -199,7 +201,7 @@ setGeoMxQCFlags <- function(object, qcCutoffs=DEFAULTS) {
 }
 
 setNucleiFlags <- function(object, cutoff=DEFAULTS[["minNuclei"]]) {
-    if (!is.null(sData(object)["nuclei"])) {
+    if (!is.null(sData(object)[["nuclei"]])) {
         lowNuclei <- sData(object)["nuclei"] < cutoff
         colnames(lowNuclei) <- "lowNuclei"
         object <- appendSampleFlags(object, lowNuclei)
@@ -208,9 +210,11 @@ setNucleiFlags <- function(object, cutoff=DEFAULTS[["minNuclei"]]) {
 }
 
 setAreaFlags <- function(object, cutoff=DEFAULTS[["minArea"]]) {
-    lowArea <- sData(object)["area"] < cutoff
-    colnames(lowArea) <- "lowArea"
-    object <- appendSampleFlags(object, lowArea)
+    if (!is.null(sData(object)[["area"]])) {
+        lowArea <- sData(object)["area"] < cutoff
+        colnames(lowArea) <- "lowArea"
+        object <- appendSampleFlags(object, lowArea)
+    }
     return(object)
 }
 
@@ -241,13 +245,14 @@ setBioProbeQCFlags <- function(object, qcCutoffs=DEFAULTS) {
     qcCutoffs <- checkCutoffs(qcCutoffs)
     object <- setProbeRatioFlags(object=object, 
         cutoff=qcCutoffs[["minProbeRatio"]])
-    object <- setGrubbsFlags(cutoff=qcCutoffs[["outlierTestAlpha"]], 
+    object <- setGrubbsFlags(object=object,
                              minCount=qcCutoffs[["minProbeCount"]],
+                             cutoff=qcCutoffs[["outlierTestAlpha"]],
                              percFail=qcCutoffs[["percentFailGrubbs"]])
     return(object)
 }
 
-setProbeRatioFlags <- function(object=object, 
+setProbeRatioFlags <- function(object, 
                                cutoff=DEFAULTS[["minProbeRatio"]]) {
     rawTargetCounts <- collapseCounts(object)
     rawTargetCounts[["Mean"]] <- 
@@ -263,10 +268,10 @@ setProbeRatioFlags <- function(object=object,
     return(object)
 }
 
-setGrubbsFlags <- function(object=object, 
-                                 cutoff=DEFAULTS[["outlierTestAlpha"]], 
-                                 minCount=DEFAULTS[["minProbeCount"]],
-                                 percFail=DEFAULTS[["percentFailGrubbs"]]) {
+setGrubbsFlags <- function(object, 
+                           cutoff=DEFAULTS[["outlierTestAlpha"]], 
+                           minCount=DEFAULTS[["minProbeCount"]],
+                           percFail=DEFAULTS[["percentFailGrubbs"]]) {
     # Skip targets with less than 3 probes
     multiProbeTable <- with(object, table(TargetName, Module)) >= 3L
     indices <- which(multiProbeTable, arr.ind=TRUE)
@@ -421,14 +426,13 @@ removeFlagProbes <- function(object, removeFlagCols=NULL) {
 #NEO make sure that when collapsed count occurs feature data QCFlags is removed
 setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
     object <- 
-        setLOQFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
+        setLOQFlags(object, cutoff=qcCutoffs[["loqCutoff"]])
     object <- 
         setHighCountFlags(object=object, cutoff=qcCutoffs[["highCountCutoff"]])
     return(object)
 }
 
-setLOQFlags <- 
-    function(object=object, cutoff=DEFAULTS[["loqCutoff"]]) {
+setLOQFlags <- function(object, cutoff=DEFAULTS[["loqCutoff"]]) {
         #NEO need negative values for LOQ
         if (featureType(object) == "Target") {
             negativeObject <- negativeControlSubset(object)
@@ -444,8 +448,7 @@ setLOQFlags <-
         return(object)
 }
 
-setProbeCountFlags <- 
-    function(object=object, cutoff=DEFAULTS[["minProbeCount"]]) {
+setProbeCountFlags <- function(object, cutoff=DEFAULTS[["minProbeCount"]]) {
         probeCountFlags <- apply(assayDataElement(object, elt="exprs"), 
             MARGIN=1, FUN=function(x, minCount){
                 all(x < minCount)
