@@ -1,7 +1,7 @@
 DEFAULTS <- list(minSegmentReads=1000, percentTrimmed=80, percentStitched=80, 
     percentAligned=80, percentSaturation=50, minNegativeCount=10, 
     maxNTCCount=60, minNuclei=16000, minArea=20, minProbeCount=10, 
-    minProbeRatio=0.1, localOutlierAlpha=0.01, globalOutlierRatio=0.2, 
+    minProbeRatio=0.1, outlierTestAlpha=0.01, percentFailGrubbs=20, 
     loqCutoff=1.0, highCountCutoff=10000)
 
 #NEO to fix the rox comments with new stuff
@@ -223,7 +223,7 @@ setAreaFlags <- function(object, cutoff=DEFAULTS[["minArea"]]) {
 #'           numeric between 0 and 1 to flag probes that have 
 #'           (geomean probe in all segments) / (geomean probes within target)
 #'           less than or equal to this ratio}
-#'     \item{maxGrubbsOutlierRatio, 
+#'     \item{percentFailGrubbs, 
 #'           numeric to flag probes that fail Grubb's test in 
 #'           greater than or equal this percent of segments}
 #' }
@@ -233,7 +233,7 @@ setAreaFlags <- function(object, cutoff=DEFAULTS[["minArea"]]) {
 #' @examples
 #' setBioProbeQCFlags(demoData, 
 #'                    qcCutoffs=list(minProbeRatio=0.1,
-#'                                   maxGrubbsOutlierRatio=20))
+#'                                   percentFailGrubbs=20))
 #' 
 #' @export
 #' 
@@ -241,10 +241,9 @@ setBioProbeQCFlags <- function(object, qcCutoffs=DEFAULTS) {
     qcCutoffs <- checkCutoffs(qcCutoffs)
     object <- setProbeRatioFlags(object=object, 
         cutoff=qcCutoffs[["minProbeRatio"]])
-    object <- setGrubbsLocalFlags(object=object, 
-        cutoff=qcCutoffs[["localOutlierAlpha"]])
-    object <- setGlobalFlags(object=object, 
-        cutoff=qcCutoffs[["globalOutlierRatio"]])
+    object <- setGrubbsFlags(cutoff=qcCutoffs[["outlierTestAlpha"]], 
+                             minCount=qcCutoffs[["minProbeCount"]],
+                             percFail=qcCutoffs[["percentFailGrubbs"]])
     return(object)
 }
 
@@ -264,95 +263,96 @@ setProbeRatioFlags <- function(object=object,
     return(object)
 }
 
-#NEO
-#time-wise does it makes sense to bypass anything with min flag
-#Yes can add and just match back by subsetting by true and and then marking by RTS
-#Update append to detect if less rows than object and match to flags and RTS
-setGrubbsLocalFlags <- function(object=object, 
-                                 cutoff=DEFAULTS[["localOutlierAlpha"]], 
-                                 minCount=cutoff=DEFAULTS[["minProbeCount"]]) {
-    multiProbeTable <- with(object, table(TargetName, Module)) >= 3
+setGrubbsFlags <- function(object=object, 
+                                 cutoff=DEFAULTS[["outlierTestAlpha"]], 
+                                 minCount=DEFAULTS[["minProbeCount"]],
+                                 percFail=DEFAULTS[["percentFailGrubbs"]]) {
+    # Skip targets with less than 3 probes
+    multiProbeTable <- with(object, table(TargetName, Module)) >= 3L
     indices <- which(multiProbeTable, arr.ind=TRUE)
-    targs <- rownames(multiProbeTable)[as.vector(indices[, "TargetName"])]
-    mods <- colnames(multiProbeTable)[as.vector(indices[, "Module"])]
-    multiProbeList <- 
-        unlist(lapply(seq_along(targs), function(x){
-            featureNames(subset(object, 
-                subset=TargetName == targs[x] & Module == mods[x]))
-        }))
-    multiObject <- object[multiProbeList, ]
+    if (length(indices) != dim(multiProbeTable)[1L]) {
+        targs <- rownames(multiProbeTable)[as.vector(indices[, "TargetName"])]
+        mods <- colnames(multiProbeTable)[as.vector(indices[, "Module"])]
+        multiProbeList <- 
+            unlist(lapply(seq_along(targs), function(x){
+                featureNames(subset(object, 
+                    subset=TargetName == targs[x] & Module == mods[x]))
+            }))
+        multiObject <- object[multiProbeList, ]
+    } else {
+        multiObject <- object
+    }
 
-    probeCountFlags <- apply(assayDataElement(object, elt="exprs"), 
-        MARGIN=1, FUN=function(x, minCount){
-            all(x < minCount)
-        }, minCount=minCount)
-
-        probeCounts <- 
-            setDT(cbind(fData(object)[, c("RTS_ID", "TargetName", "Module")], 
-                assayDataElement(object, elt="exprs")))
-        probeCounts <- melt(probeCounts, 
-            id.vars=c("RTS_ID", "TargetName", "Module"), 
-            variable.name="Sample_ID", 
-            value.name="Count", variable.factor=FALSE)
-        probeCounts[, Count:=logt(Count)]
-        probeCounts[, "LowLocalOutlier"] <- FALSE
-        probeCounts[, "HighLocalOutlier"] <- FALSE
-        probeCounts <- probeCounts[, suppressWarnings(grubbsFlag(.SD, alpha=cutoff)), 
-            by=.(TargetName, Module, Sample_ID)]
-        lowFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), stringsAsFactor=FALSE)
-        highFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), stringsAsFactor=FALSE)
-        rownames(lowFlags) <- lowFlags[["RTS_ID"]]
-        rownames(highFlags) <- highFlags[["RTS_ID"]]
-        lowFlags <- lowFlags[, colnames(lowFlags) != "RTS_ID"]
-        highFlags <- highFlags[, colnames(highFlags) != "RTS_ID"]
-        outlierFlags <- data.frame(LowLocalOutlier=lowFlags, HighLocalOutlier=highFlags)
-        object <- appendFeatureFlags(object, outlierFlags)
-    #} #else {
-    #    stop(paste("It is recommended to flag targets with overall", 
-    #        "low counts (i.e. background-level expression)", 
-    #        "prior to checking for outliers.\n", "Rerun outlier testing",
-    #        "after running setProbeCountFlags."))
-    #}
-    return(object)
-}
-
-setGlobalFlags <- 
-    function(object=object, cutoff=DEFAULTS[["globalOutlierRatio"]]) {
-        lowFlagRatio <- 
-            apply(fData(object)[["QCFlags"]][, grepl("LowLocalOutlier", 
-                colnames(fData(object)[["QCFlags"]]))], 1, mean )
-        highFlagRatio <- 
-            apply(fData(object)[["QCFlags"]][, grepl("HighLocalOutlier", 
-                colnames(fData(object)[["QCFlags"]]))], 1, mean )
-        outlierRatio <- lowFlagRatio > cutoff | highFlagRatio > cutoff
-        globalFlags <- data.frame("GlobalOutlier"=outlierRatio)
-        object <- appendFeatureFlags(object, globalFlags)
+    # Skip targets with all counts less than minimum probe count cutoff
+    multiTab <- unique(fData(multiObject)[c("TargetName", "Module")])
+    rownames(multiTab) <- NULL
+    multiTab[["countPass"]] <- 
+        apply(multiTab, 
+              MARGIN=1L, 
+              FUN=function(x){
+                  max(exprs(subset(multiObject, 
+                      subset=TargetName == x[["TargetName"]] & 
+                             Module == x[["Module"]]))) > minCount
+              })
+    if (sum(multiTab[["countPass"]]) > 0) {
+        multiTabPass <- multiTab[multiTab[["countPass"]], ]
+    } else {
+        # Skip grubb's test altogether if counts are low for remaining targets
+        grubbsFlags <- data.frame(GrubbsOutlier=rep(FALSE, dim(object)[1L]),
+                                  row.names=featureNames(object))
+        object <- appendFeatureFlags(object, grubbsFlags)
         return(object)
-}
+    }
+    if (dim(multiTabPass)[1L] != dim(multiTab)[1L]) {
+        passProbeList <- 
+            unlist(lapply(seq_along(rownames(multiTabPass)), function(x){
+                featureNames(subset(object, 
+                    subset=TargetName == multiTabPass[["TargetName"]][x] & 
+                               Module == multiTabPass[["Module"]][x]))
+            }))
+        minPassObject <- multiObject[passProbeList, ]
+    } else {
+        minPassObject <- multiObject
+    }
 
-setLOQFlags <- 
-    function(object=object, cutoff=DEFAULTS[["loqCutoff"]]) {
-        #NEO need negative values for LOQ
-        if (featureType(object) == "Target") {
-            negativeObject <- negativeControlSubset(object)
-            LOQs <- esApply(negativeObject, MARGIN=2, FUN=function(x) {
-                ngeoMean(x) * ngeoSD(x) ^ cutoff})
-            LOQFlags <- esApply(object, MARGIN=1, FUN=function(x) {
-                x > LOQs})
-            object <- appendFeatureFlags(object, LOQFlags)
-        } else {
-            warning(paste("Incorrect feature type.",
-                "Feature type should be Target."))
-        }
-        return(object)
-}
-
-#NEO make sure that when collapsed count occurs feature data QCFlags is removed
-setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
-    object <- 
-        setLOQFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
-    object <- 
-        setHighCountFlags(object=object, cutoff=qcCutoffs[["highCountCutoff"]])
+    #Perform Grubb's outlier test
+    probeCounts <- 
+        setDT(cbind(fData(minPassObject)[, c("RTS_ID", "TargetName", "Module")], 
+            assayDataElement(minPassObject, elt="exprs")))
+    probeCounts <- melt(probeCounts, 
+        id.vars=c("RTS_ID", "TargetName", "Module"), 
+        variable.name="Sample_ID", 
+        value.name="Count", variable.factor=FALSE)
+    probeCounts[, Count:=logt(Count)]
+    probeCounts[, "LowLocalOutlier"] <- FALSE
+    probeCounts[, "HighLocalOutlier"] <- FALSE
+    probeCounts <- probeCounts[, suppressWarnings(grubbsFlag(.SD, alpha=cutoff)), 
+        by=.(TargetName, Module, Sample_ID)]
+    lowFlags <- 
+        as.data.frame(dcast(probeCounts, 
+                            RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), stringsAsFactor=FALSE)
+    highFlags <- 
+        as.data.frame(dcast(probeCounts, 
+                            RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), stringsAsFactor=FALSE)
+    rownames(lowFlags) <- lowFlags[["RTS_ID"]]
+    rownames(highFlags) <- highFlags[["RTS_ID"]]
+    lowFlags <- lowFlags[, colnames(lowFlags) != "RTS_ID"]
+    highFlags <- highFlags[, colnames(highFlags) != "RTS_ID"]
+    lowFlags[["lowOutliers"]] <- 
+        (apply(lowFlags, MARGIN=1L, FUN=mean) * 100) >= percFail
+    highFlags[["highOutliers"]] <- 
+        (apply(highFlags, MARGIN=1L, FUN=mean) * 100) >= percFail
+    grubbsFlags <- data.frame(GrubbsOutlier=rep(FALSE, dim(object)[1L]),
+                              row.names=featureNames(object))
+    if (sum(lowFlags[["lowOutliers"]]) > 0) {
+        grubbsFlags[rownames(lowFlags[lowFlags[["lowOutliers"]],]), 
+                    "GrubbsOutlier"] <- TRUE
+    }
+    if (sum(highFlags[["highOutliers"]]) > 0) {
+        grubbsFlags[rownames(highFlags[highFlags[["highOutliers"]],]), 
+                    "GrubbsOutlier"] <- TRUE
+    }
+    object <- appendFeatureFlags(object, grubbsFlags)
     return(object)
 }
 
@@ -389,7 +389,6 @@ appendFeatureFlags <- function(object, currFlags) {
 
 # grubbs.flag
 # helper function to remove outliers using Grubbs' test given the controlled type I error alpha
-# modified from https://stackoverflow.com/questions/22837099/how-to-repeat-the-grubbs-test-and-flag-the-outliers
 # INPUT
 #   x = named vector
 #   alpha = indicator of the expected Type I erorr frequency
@@ -419,40 +418,29 @@ removeFlagProbes <- function(object, removeFlagCols=NULL) {
     
 }
 
-#NEO
-#time-wise does it makes sense to bypass anything with min flag
-#Yes can add and just match back by subsetting by true and and then marking by RTS
-#Update append to detect if less rows than object and match to flags and RTS
-setHighLowLocalFlags <- 
-    function(object=object, cutoff=DEFAULTS[["localOutlierAlpha"]]) {
-        #if ("LowProbeCount" %in% names(fData(object)[["QCFlags"]])) {
-          #  subObj <- object[!fData(object)[["QCFlags"]][["LowProbeRatio"]], ]
-            probeCounts <- 
-                setDT(cbind(fData(object)[, c("RTS_ID", "TargetName", "Module")], 
-                    assayDataElement(object, elt="exprs")))
-            probeCounts <- melt(probeCounts, 
-                id.vars=c("RTS_ID", "TargetName", "Module"), 
-                variable.name="Sample_ID", 
-                value.name="Count", variable.factor=FALSE)
-            probeCounts[, Count:=logt(Count)]
-            probeCounts[, "LowLocalOutlier"] <- FALSE
-            probeCounts[, "HighLocalOutlier"] <- FALSE
-            probeCounts <- probeCounts[, suppressWarnings(grubbsFlag(.SD, alpha=cutoff)), 
-                by=.(TargetName, Module, Sample_ID)]
-            lowFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), stringsAsFactor=FALSE)
-            highFlags <- as.data.frame(dcast(probeCounts, RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), stringsAsFactor=FALSE)
-            rownames(lowFlags) <- lowFlags[["RTS_ID"]]
-            rownames(highFlags) <- highFlags[["RTS_ID"]]
-            lowFlags <- lowFlags[, colnames(lowFlags) != "RTS_ID"]
-            highFlags <- highFlags[, colnames(highFlags) != "RTS_ID"]
-            outlierFlags <- data.frame(LowLocalOutlier=lowFlags, HighLocalOutlier=highFlags)
-            object <- appendFeatureFlags(object, outlierFlags)
-        #} #else {
-        #    stop(paste("It is recommended to flag targets with overall", 
-        #        "low counts (i.e. background-level expression)", 
-        #        "prior to checking for outliers.\n", "Rerun outlier testing",
-        #        "after running setProbeCountFlags."))
-        #}
+#NEO make sure that when collapsed count occurs feature data QCFlags is removed
+setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
+    object <- 
+        setLOQFlags(object=object, cutoff=qcCutoffs[["loqCutoff"]])
+    object <- 
+        setHighCountFlags(object=object, cutoff=qcCutoffs[["highCountCutoff"]])
+    return(object)
+}
+
+setLOQFlags <- 
+    function(object=object, cutoff=DEFAULTS[["loqCutoff"]]) {
+        #NEO need negative values for LOQ
+        if (featureType(object) == "Target") {
+            negativeObject <- negativeControlSubset(object)
+            LOQs <- esApply(negativeObject, MARGIN=2, FUN=function(x) {
+                ngeoMean(x) * ngeoSD(x) ^ cutoff})
+            LOQFlags <- esApply(object, MARGIN=1, FUN=function(x) {
+                x > LOQs})
+            object <- appendFeatureFlags(object, LOQFlags)
+        } else {
+            warning(paste("Incorrect feature type.",
+                "Feature type should be Target."))
+        }
         return(object)
 }
 
