@@ -31,7 +31,7 @@ setMethod("setQCFlags",
         object <- setBackgroundQCFlags(object=object, qcCutoffs=qcCutoffs)
         object <- setGeoMxQCFlags(object=object, qcCutoffs=qcCutoffs)
         if (featureType(object) == "Probe") {
-            object <- setBioProbeFlags(object=object, qcCutoffs=qcCutoffs)
+            object <- setBioProbeQCFlags(object=object, qcCutoffs=qcCutoffs)
         } else if (featureType(object) == "Target") {
         #   object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
         } else {
@@ -57,7 +57,7 @@ setMethod("setQCFlags",
 #'             appended to \code{protocolData}
 #' 
 #' @examples
-#' setSignalQCFlags(demoData, 
+#' setSeqQCFlags(demoData, 
 #'                  qcCutoffs=list(minSegmentReads=1000, 
 #'                                 percentAligned=80, 
 #'                                 percentSaturation=50))
@@ -134,7 +134,7 @@ setSaturationFlags <- function(object, cutoff=DEFAULTS[["percentSaturation"]]) {
 #'             appended to \code{protocolData}
 #' 
 #' @examples
-#' setSignalQCFlags(demoData, 
+#' setBackgroundQCFlags(demoData, 
 #'                  qcCutoffs=list(minNegativeCount=10, 
 #'                                 maxNTCCount=60))
 #' 
