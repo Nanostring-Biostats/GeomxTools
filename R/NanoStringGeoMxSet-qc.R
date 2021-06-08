@@ -418,7 +418,7 @@ grubbsFlag <- function(countDT, alpha=0.01) {
     return(countDT)
 }
 
-
+############Not used##########################################################
 removeFlagProbes <- function(object, removeFlagCols=NULL) {
     
 }
