@@ -376,7 +376,9 @@ appendSampleFlags <- function(object, currFlags) {
     currQCName <- colnames(currFlags)
     if ("QCFlags" %in% varLabels(protocolData(object))) {
         if (!is.null(protocolData(object)[["QCFlags"]][, currQCName])) {
-            protocolData(object)[["QCFlags"]][, currQCName] <- NULL
+            protocolData(object)[["QCFlags"]] <- 
+                protocolData(object)[["QCFlags"]][, 
+                    colnames(protocolData(object)[["QCFlags"]]) != currQCName]
         }
         protocolData(object)[["QCFlags"]] <- 
             cbind(protocolData(object)[["QCFlags"]], currFlags)
@@ -389,7 +391,9 @@ appendFeatureFlags <- function(object, currFlags) {
     currQCName <- colnames(currFlags)
     if ("QCFlags" %in% varLabels(featureData(object))) {
         if (!is.null(featureData(object)[["QCFlags"]][, currQCName])) {
-            featureData(object)[["QCFlags"]][, currQCName] <- NULL
+            featureData(object)[["QCFlags"]] <- 
+                featureData(object)[["QCFlags"]][, 
+                    colnames(featureData(object)[["QCFlags"]]) != currQCName]
         }
         featureData(object)[["QCFlags"]] <- 
             cbind(featureData(object)[["QCFlags"]], currFlags) 
