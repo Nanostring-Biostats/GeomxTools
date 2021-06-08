@@ -97,9 +97,9 @@ function(dccFiles,
                             function(experimentDataColName) 
                               unique(S4Vectors::na.omit(pheno@data[[experimentDataColName]])))
   names(experimentList) <- experimentDataColNames
-  
+
   experiment <- Biobase::MIAME(name = "", 
-                      other = c(experimentList, pkcHeader))
+                      other = c(experimentList, pkcHeader, list(shiftedByOne=FALSE)))
   
   # Create annotation
   annotation <- sort(sapply(strsplit(pkcFiles, "/"), function(x) x[length(x)]))
