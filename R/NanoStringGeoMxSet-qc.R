@@ -112,7 +112,7 @@ setAlignedFlags <- function(object, cutoff=DEFAULTS[["percentAligned"]]) {
 
 setSaturationFlags <- function(object, cutoff=DEFAULTS[["percentSaturation"]]) {
     percentSaturated <- 
-        1 - sData(object)["DeduplicatedReads"] / sData(object)["Aligned"]
+        100 * (1 - sData(object)["DeduplicatedReads"] / sData(object)["Aligned"])
     percentSaturated <- percentSaturated < cutoff
     colnames(percentSaturated) <- "LowSaturation"
     object<- appendSampleFlags(object, percentSaturated)
