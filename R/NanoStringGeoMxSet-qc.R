@@ -375,7 +375,7 @@ checkCutoffs <- function(qcCutoffs) {
 appendSampleFlags <- function(object, currFlags) {
     currQCName <- colnames(currFlags)
     if ("QCFlags" %in% varLabels(protocolData(object))) {
-        if (!is.null(protocolData(object)[["QCFlags"]][, currQCName])) {
+        if (currQCName %in% colnames(protocolData(object)[["QCFlags"]])) {
             protocolData(object)[["QCFlags"]] <- 
                 protocolData(object)[["QCFlags"]][, 
                     colnames(protocolData(object)[["QCFlags"]]) != currQCName]
@@ -390,7 +390,7 @@ appendSampleFlags <- function(object, currFlags) {
 appendFeatureFlags <- function(object, currFlags) {
     currQCName <- colnames(currFlags)
     if ("QCFlags" %in% varLabels(featureData(object))) {
-        if (!is.null(featureData(object)[["QCFlags"]][, currQCName])) {
+        if (currQCName %in% colnames(featureData(object)[["QCFlags"]])) {
             featureData(object)[["QCFlags"]] <- 
                 featureData(object)[["QCFlags"]][, 
                     colnames(featureData(object)[["QCFlags"]]) != currQCName]
