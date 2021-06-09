@@ -75,12 +75,25 @@ thresholdValues <- function(x, thresh=0.5) {
 #' 
 #' @export
 #' 
-shiftCountsOne <- function(object, elt="exprs") {
+shiftCountsOne <- function(object, elt="exprs", useDALogic=FALSE) {
+    if (countsShiftedByOne(object)) {
+        stop("The exprs matrix has already been shifted by one. ",
+             "This operation will not be repeated.")
+    }
     assayDataElement(object, "rawZero") <- 
         assayDataElement(object, elt=elt)
-    assayDataElement(object, "exprs") <- 
-        assayDataElement(object, elt=elt) + 1
     experimentData(object)@other$shiftedByOne <- TRUE
+    if (useDALogic) {
+        assayDataElement(object, 
+                         "exprs")[assayDataElement(object, "exprs") < 1] <- 1
+        experimentData(object)@other$shiftedByOneLogic <- 
+            "Only zeroes increased by 1 count in exprs matrix"
+    } else {
+        assayDataElement(object, "exprs") <- 
+            assayDataElement(object, elt=elt) + 1
+        experimentData(object)@other$shiftedByOneLogic <- 
+            "All counts increased by 1 throughout exprs matrix"
+    }
     return(object)
 }
 
