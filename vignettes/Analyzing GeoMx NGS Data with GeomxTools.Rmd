@@ -54,7 +54,7 @@ Next step is to load the DCC, PKC and annotation file.
 Save your DCC files in one folder for easy access and save set this location as your datadir below.
 
 ```{r, quickstart, message=FALSE, warning=FALSE}
-datadir <- file.path( "/home" , "rstudio" , "NAS_data", "szimmerman", "kidney_demo")
+datadir <- file.path( "/home" , "rstudio" , "NAS_data", "rvitancol", "kidney_demo")
 DCCFiles <- list.files(file.path( datadir , "DCC_files"), pattern=".dcc$", full.names=TRUE)
 PKCFiles <- list.files(file.path(datadir), pattern=".pkc$", full.names=TRUE)
 SampleAnnotationFile <- file.path(datadir, "kidney_demo_AOI_Annotations.xlsx")
@@ -66,11 +66,12 @@ demoData <-
                                           phenoDataSheet = "Template",
                                           phenoDataDccColName = c("Sample_ID",
                                                                   "pathology", 
-                                                                  "class"),
+                                                                  "class", 
+                                                                  "segment", "area", "nuclei"),
                                           protocolDataColNames = c("aoi", 
                                                                    "roi",
-                                                                   "slide_name"),
-                                          experimentDataColNames = c("panel")))
+                                                                   "slide_name", ""),
+                                          experimentDataColNames = c("panel", "instrument_type")))
 ```
 
 ## Checking the NanoStringGeoMxSet object
@@ -264,7 +265,7 @@ head(sData(lowArea)["area"])
 
 ```
 
-##### Set Segement QC flags Update cutoffs
+##### Set Segment QC flags Update cutoffs
 
 ```{r setsegmentqcflagupdated,  eval = TRUE}
 demoData <- setGeoMxQCFlags(demoData, 
