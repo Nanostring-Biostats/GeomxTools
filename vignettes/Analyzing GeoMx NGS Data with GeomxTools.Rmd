@@ -23,33 +23,36 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-Basic task when analyzing GeoMx NGS dataset outside the Digital Spatial Profiling Data Analysis (DSPDA) is to read the DCC files, PKC files, annotation file and  convert them to an object that allows user to perform their own analysis. GeomxTools gives users the capability to read these GeoMx output and perform  quality control and use the output to proceed with their own analysis pipeline.  
+Basic task when analyzing GeoMx NGS dataset outside the Digital Spatial Profiling Data Analysis (DSPDA) is to read the DCC files, PKC files, annotation file and  convert them to an object that allows user to perform their own analysis. 
 
-GeomxTools convert the DCC, PKC and annotation file to a NanoStringGeoMxSet which inherits functionality from Biobase's ExpressionSet class. The NanoStringGeoMxSet class was designed to encapsulate data and corresponding methods for NanoString DCC files generated from the NanoString GeoMx Digital Spatial Profiling (DSP) platform.
+GeomxTools gives users the capability to read these GeoMx output (DCC, PKC and annotation file) and convert them to NanoStringGeoMxSet, flag samples and probes that is below or above thresholds for quality control, remove samples or probes that are flagged.
 
 ## Dataset Introduction
 For this demo analysis, we will use the kidney dataset that can be found here:
-NanoString GeoMx DSP dataset of diabetic kidney disease (DKD) vs healthy kidney tissue. Seven slides were analyzed, 4 DKD and 3 healthy. Regions of Interest (ROI) were focused two different parts of a kidney’s structure: tubules or glomeruli. One glomerulus ROI contains the entirety of a glomerulus. Individual glomeruli were identified by a pathologist as either behaving relatively healthy or diseased regardless on if the tissue was DKD or healthy. Tubule ROIs were segmented into distal (PanCK) and proximal (neg) tubules. While both distal and proximal tubules are called tubules, they perform very different functions in the kidney. Segmented areas of an ROI are called Areas of Interest (AOI).
+NanoString GeoMx DSP dataset of diabetic kidney disease (DKD) vs healthy kidney tissue. 
+
+Seven slides were analyzed, 4 DKD and 3 healthy. Regions of Interest (ROI) were focused two different parts of a kidney’s structure: tubules or glomeruli. One glomerulus ROI contains the entirety of a glomerulus. Individual glomeruli were identified by a pathologist as either behaving relatively healthy or diseased regardless on if the tissue was DKD or healthy. Tubule ROIs were segmented into distal (PanCK) and proximal (neg) tubules. While both distal and proximal tubules are called tubules, they perform very different functions in the kidney. Segmented areas of an ROI are called Areas of Interest (AOI).
 
 
 ## Loading GeomxTools Packages and calling libraries
 
-First step in using the GeomxTools package is to install the package and save it library
+First step in using the GeomxTools package is to install the package and invoke the library command to load it into the current session.
 
 ```{r, message=FALSE, warning=FALSE }
 #devtools::install_github("Nanostring-Biostats/GeomxTools", 
 #                         build_vignettes = TRUE, ref = "dev")
 
 library(NanoStringNCTools)
-library(GeomxTools)
-## RV remove this after checking container
+library(GeomxTools, lib.loc = "/usr/local/lib/R/site-library" )
 library(EnvStats)
 library(ggiraph)
 ```
 
 ## Load DCC files, PKC files and annotation file
-Next step is to load the DCC, PKC and annotation file
+Next step is to load the DCC, PKC and annotation file. 
+
 Save your DCC files in one folder for easy access and save set this location as your datadir below.
+
 ```{r, quickstart, message=FALSE, warning=FALSE}
 datadir <- file.path( "/home" , "rstudio" , "NAS_data", "szimmerman", "kidney_demo")
 DCCFiles <- list.files(file.path( datadir , "DCC_files"), pattern=".dcc$", full.names=TRUE)
@@ -72,13 +75,22 @@ demoData <-
 
 ## Checking the NanoStringGeoMxSet object
 Note structure of the resulting demoData object. It contains the following Slots which contains the information from your data.
-assayData - contains the expression of targets (either probes or genes) for each sample information. 
+
+assayData - contains the expression of targets (either probes or genes) for each sample 
+information. 
+
 protocolData - 
+
 phenoData - contains information on your sample
+
 featureData - contains information for each target
+
 expermentData
+
 Annotation
+
 signature
+
 feature
 
 
@@ -110,11 +122,9 @@ head( sData(demoData), 2 )
 
 ## Quality Control Assessment
 
-Users can flag samples that fail QC thresholds or have borderline results based on expression. This is similar to QC in DSPDA
+Users can flag samples that fail QC thresholds based on expression. This is similar to QC in DSPDA.
 
-The setQC Flags will set the QC flags in the protocolData for the samples and probes that are low in count and saturation levels. It will also set flags for probe local outliers (low and high) and Global Outliers
-
-```{r setDefaults,  eval = TRUE}
+```{r setDefaults,  eval = FALSE, show = FALSE}
 DEFAULTS <- list(minSegmentReads=1000, # Raw Read threshold
                  percentTrimmed=80, 
                  percentStitched=80, 
@@ -154,21 +164,21 @@ QCResults$QCStatus <- apply(prData[["QCFlags"]], 1L, function(x) {
         y <- ifelse(y, "PASS", "WARNING")
         return(y)
     })
-QCResults
+head(QCResults)
 
 # Check which samples have low reads
 LowReads <- subset(demoData, select= prData[["QCFlags"]][,"LowReads"] == TRUE)
 sData(LowReads)["Raw"]
-QCResults[rownames(sData(LowReads)),]
+head(QCResults[rownames(sData(LowReads)),])
 
 # Check which samples are below Sequencing Saturation cutoff
 LowSaturation <- subset(demoData, select= prData[["QCFlags"]][,"LowSaturation"] == TRUE)
-sData(LowSaturation)[c("DeduplicatedReads", "Aligned")]
-sData(LowSaturation)[c("DeduplicatedReads", "Aligned")]
-QCResults[rownames(sData(LowSaturation)),]
+head(sData(LowSaturation)[c("DeduplicatedReads", "Aligned")])
+head(QCResults[rownames(sData(LowSaturation)),])
 ```
 
 ##### Set QC flags Update cutoffs
+If needed, you can set the threshold for sequencing cutoff.
 ```{r setqcflagupdated,  eval = TRUE}
 demoData <- setSeqQCFlags(demoData, 
                        qcCutoffs=list(minSegmentReads=1000,
@@ -200,22 +210,16 @@ QCResults$QCStatus <- apply(prData[["QCFlags"]], 1L, function(x) {
         y <- ifelse(y, "PASS", "WARNING")
         return(y)
     })
-QCResults
+head(QCResults)
 
 # Check which samples have low negative geomean
 lowNegatives <- subset(demoData, select= prData[["QCFlags"]][,"lowNegatives"] == TRUE)
-sampleNames(phenoData(lowNegatives))
+head(sampleNames(phenoData(lowNegatives)))
 
 #Check expression of negative probes for failing samples
-exprs(negativeControlSubset(lowNegatives))
+exprs(negativeControlSubset(lowNegatives))[1:5, 1:5]
 dim(negativeControlSubset(lowNegatives))
 
-
-# Check which samples are below Sequencing Saturation cutoff
-LowSaturation <- subset(demoData, select= prData[["QCFlags"]][,"LowSaturation"] == TRUE)
-sData(LowSaturation)[c("DeduplicatedReads", "Aligned")]
-sData(LowSaturation)[c("DeduplicatedReads", "Aligned")]
-QCResults[rownames(sData(LowSaturation)),]
 ```
 
 ##### Set Background QC flags Update cutoffs
@@ -250,11 +254,11 @@ QCResults$QCStatus <- apply(prData[["QCFlags"]], 1L, function(x) {
         y <- ifelse(y, "PASS", "WARNING")
         return(y)
     })
-QCResults
+head(QCResults)
 
 # Check which samples have low area
 lowArea <- subset(demoData, select= prData[["QCFlags"]][,"lowArea"]== TRUE)
-sData(lowArea)["area"]
+head(sData(lowArea)["area"])
 
 # Check which samples have low nuclei
 
@@ -284,7 +288,6 @@ demoData <- setBioProbeQCFlags(demoData)
 
 #Check Results
 head(fData(demoData)[["QCFlags"]])
-summary(demoData)
 
 ProbeQCResults <- fData(demoData)[["QCFlags"]]
 ProbeQCData <- as.data.frame(ProbeQCResults)
@@ -298,7 +301,7 @@ ProbeQCResults$outlierStatus <- apply(fData(demoData)[["QCFlags"]], 1L, function
         y <- ifelse(y, "PASS", "WARNING")
         return(y)
     })
-ProbeQCResults
+ProbeQCResults[1:5, ]
 
 # Check which probes have outliers
 outlierRatio <- subset(demoData, fData(demoData)[["QCFlags"]][,"LowProbeRatio"]== TRUE)
@@ -306,7 +309,7 @@ outlierGrubbs <- subset(demoData, fData(demoData)[["QCFlags"]][,"LowProbeRatio"]
 
 ```
 
-##### Set Segement QC flags Update cutoffs
+##### Set Segment QC flags Update cutoffs
 ```{r setbioprobeqcflagupdated,  eval = TRUE}
 demoData <- setBioProbeQCFlags(demoData,
                                qcCutoffs=list(minProbeRatio=0.1,                      
