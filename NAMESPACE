@@ -42,7 +42,7 @@ exportMethods(NanoStringGeoMxSet, show,
               featureType, "featureType<-",
               signatures, "signatures<-", signatureScores,
               design, "design<-", signatureGroups, 
-              checkQCFlags)
+              checkQCFlags, normalize)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -51,9 +51,19 @@ exportMethods(NanoStringGeoMxSet, show,
 export(readNanoStringGeoMxSet,
        readDccFile,
        readPKCFile,
-       writeNanoStringGeoMxSet,
-       aggregateCounts,
-       ngeoMean)
+       writeNanoStringGeoMxSet)
+export(aggregateCounts)
+export(checkQCFlags)
+export(countsShiftedByOne)
+export(logtBase)
+export(ngeoMean)
+export(ngeoSD)
+export(setBackgroundQCFlags)
+export(setBioProbeQCFlags)
+export(setGeoMxQCFlags)
+export(setSeqQCFlags)
+export(shiftCountsOne)
+export(summarizeNegatives)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S3 methods

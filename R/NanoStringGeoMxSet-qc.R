@@ -112,7 +112,7 @@ setAlignedFlags <- function(object, cutoff=DEFAULTS[["percentAligned"]]) {
 
 setSaturationFlags <- function(object, cutoff=DEFAULTS[["percentSaturation"]]) {
     percentSaturated <- 
-        1 - sData(object)["DeduplicatedReads"] / sData(object)["Aligned"]
+        100 * (1 - sData(object)["DeduplicatedReads"] / sData(object)["Aligned"])
     percentSaturated <- percentSaturated < cutoff
     colnames(percentSaturated) <- "LowSaturation"
     object<- appendSampleFlags(object, percentSaturated)
@@ -157,7 +157,7 @@ setLowNegFlags <- function(object, cutoff=DEFAULTS[["minNegativeCount"]]) {
                  assayDataApply( x, MARGIN = 2, FUN=ngeoMean, elt="exprs" ) 
              }) 
     lowNegs <- 
-        data.frame("lowNegatives"=apply(negativeGeoMeans < cutoff, 1, sum) > 0)
+        data.frame("LowNegatives"=apply(negativeGeoMeans < cutoff, 1, sum) > 0)
     object <- appendSampleFlags(object, lowNegs)
     return(object)
 }
@@ -165,7 +165,7 @@ setLowNegFlags <- function(object, cutoff=DEFAULTS[["minNegativeCount"]]) {
 setHighNTCFlags <- function(object, cutoff=DEFAULTS[["maxNTCCount"]]) {
     if (!is.null(sData(object)[["NTC"]])) {
         highNTC <- sData(object)["NTC"] > cutoff
-        colnames(highNTC) <- "highNTC"
+        colnames(highNTC) <- "HighNTC"
         object <- appendSampleFlags(object, highNTC)
     }
     return(object)
@@ -203,7 +203,7 @@ setGeoMxQCFlags <- function(object, qcCutoffs=DEFAULTS) {
 setNucleiFlags <- function(object, cutoff=DEFAULTS[["minNuclei"]]) {
     if (!is.null(sData(object)[["nuclei"]])) {
         lowNuclei <- sData(object)["nuclei"] < cutoff
-        colnames(lowNuclei) <- "lowNuclei"
+        colnames(lowNuclei) <- "LowNuclei"
         object <- appendSampleFlags(object, lowNuclei)
     }
     return(object)
@@ -212,7 +212,7 @@ setNucleiFlags <- function(object, cutoff=DEFAULTS[["minNuclei"]]) {
 setAreaFlags <- function(object, cutoff=DEFAULTS[["minArea"]]) {
     if (!is.null(sData(object)[["area"]])) {
         lowArea <- sData(object)["area"] < cutoff
-        colnames(lowArea) <- "lowArea"
+        colnames(lowArea) <- "LowArea"
         object <- appendSampleFlags(object, lowArea)
     }
     return(object)
@@ -373,7 +373,13 @@ checkCutoffs <- function(qcCutoffs) {
 }
 
 appendSampleFlags <- function(object, currFlags) {
+    currQCName <- colnames(currFlags)
     if ("QCFlags" %in% varLabels(protocolData(object))) {
+        if (currQCName %in% colnames(protocolData(object)[["QCFlags"]])) {
+            protocolData(object)[["QCFlags"]] <- 
+                protocolData(object)[["QCFlags"]][, 
+                    !colnames(protocolData(object)[["QCFlags"]]) %in% currQCName]
+        }
         protocolData(object)[["QCFlags"]] <- 
             cbind(protocolData(object)[["QCFlags"]], currFlags)
     } else {
@@ -383,7 +389,13 @@ appendSampleFlags <- function(object, currFlags) {
 }
 
 appendFeatureFlags <- function(object, currFlags) {
+    currQCName <- colnames(currFlags)
     if ("QCFlags" %in% varLabels(featureData(object))) {
+        if (currQCName %in% colnames(featureData(object)[["QCFlags"]])) {
+            featureData(object)[["QCFlags"]] <- 
+                featureData(object)[["QCFlags"]][, 
+                    !colnames(featureData(object)[["QCFlags"]]) %in% currQCName]
+        }
         featureData(object)[["QCFlags"]] <- 
             cbind(featureData(object)[["QCFlags"]], currFlags) 
     } else {
