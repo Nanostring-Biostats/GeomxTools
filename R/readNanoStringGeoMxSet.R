@@ -11,15 +11,6 @@ function(dccFiles,
   # Read data rccFiles
   data <- structure(lapply(dccFiles, readDccFile), names = basename(dccFiles))
 
-#  # remove any zero reads in Dcc files
-#  zeroRead <- which(sapply(seq_len(length(data)), 
-#                           function(x) nrow(data[[x]]$Code_Summary))==0)
-#  if(length(zeroRead) > 0){
-#    warning("The following DCC files are removed as they contain zero counts: ", names(data)[zeroRead])
-#    data <- data[-zeroRead]
-#    dccFiles <- dccFiles[-zeroRead]
-#  }
-  
   # Create assayData
   assay <- lapply(data, function(x)
     structure(x[["Code_Summary"]][["Count"]],
