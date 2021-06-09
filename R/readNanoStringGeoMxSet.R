@@ -11,14 +11,14 @@ function(dccFiles,
   # Read data rccFiles
   data <- structure(lapply(dccFiles, readDccFile), names = basename(dccFiles))
 
-  # remove any zero reads in Dcc files
-  zeroRead <- which(sapply(seq_len(length(data)), 
-                           function(x) nrow(data[[x]]$Code_Summary))==0)
-  if(length(zeroRead) > 0){
-    warning("The following DCC files are removed as they contain zero counts: ", names(data)[zeroRead])
-    data <- data[-zeroRead]
-    dccFiles <- dccFiles[-zeroRead]
-  }
+#  # remove any zero reads in Dcc files
+#  zeroRead <- which(sapply(seq_len(length(data)), 
+#                           function(x) nrow(data[[x]]$Code_Summary))==0)
+#  if(length(zeroRead) > 0){
+#    warning("The following DCC files are removed as they contain zero counts: ", names(data)[zeroRead])
+#    data <- data[-zeroRead]
+#    dccFiles <- dccFiles[-zeroRead]
+#  }
   
   # Create assayData
   assay <- lapply(data, function(x)
@@ -37,16 +37,47 @@ function(dccFiles,
     } else if (length(j) > 1L){
       stop("Multiple columns in `phenoDataFile` match `phenoDataDccColName`")
     }
-    missingPhenoCount <- sum(!(colnames(assay) %in% pheno[[j]]))
     pheno[[j]] <- paste0(pheno[[j]], ".dcc")
-    rownames(pheno) <- pheno[[j]]
-    pheno[[j]] <- NULL
-    pheno <- pheno[names(assay), , drop = FALSE]
-    if (missingPhenoCount != 0L) {
-      rownames(pheno) <- colnames(assay)
-      warning(sprintf("Column `phenoDataDccColName` in `phenoDataFile` is missing %d of %d Samples",
-                      missingPhenoCount, ncol(assay)))
+    if ("slide name" %in% colnames(pheno)) {
+        ntcs <- which(pheno[["slide name"]] == "No template control")
+        if (length(ntcs) > 0) {
+            ntcData <- lapply(seq_along(ntcs), function(x) {
+                ntcID <- pheno[ntcs[x], j]
+                if(!is.na(ntcs[x + 1L])) {
+                    ntcNames <- rep(ntcID, ntcs[x + 1L] - ntcs[x])
+                    ntcCounts <- 
+                        rep(sum(assay[[ntcID]]), ntcs[x + 1L] - ntcs[x])
+                    ntcDF <- data.frame("NTC_ID"=ntcNames, "NTC"=ntcCounts)
+                } else {
+                    ntcNames <- rep(ntcID, dim(pheno)[1L] - ntcs[x] + 1L)
+                    ntcCounts <- 
+                        rep(sum(assay[[ntcID]]), dim(pheno)[1L] - ntcs[x] + 1L)
+                    ntcDF <- data.frame("NTC_ID"=ntcNames, "NTC"=ntcCounts)
+                }
+                return(ntcDF)
+            })
+            ntcData <- do.call(rbind, ntcData)
+            pheno <- cbind(pheno, ntcData)
+            pheno <- pheno[!rownames(pheno) %in% ntcs, ]
+            assay <- assay[!names(assay) %in% unique(pheno[["NTC_ID"]])]
+        }
     }
+    rownames(pheno) <- pheno[[j]]
+    missingDCCFiles <- pheno[[j]][!pheno[[j]] %in% names(assay)]
+    missingPhenoData <- names(assay)[!names(assay) %in% pheno[[j]]]
+    assay <- assay[names(assay) %in% pheno[[j]]]
+    pheno <- pheno[names(assay), , drop = FALSE]
+    if (length(missingDCCFiles) > 0L) {
+      warning("DCC files missing for the following: ",
+              paste0(missingDCCFiles, sep=", "),
+              "These will be excluded from the GeoMxSet object.")
+    }
+    if (length(missingPhenoData) > 0L) {
+      warning("Annotations missing for the following: ",
+              paste0(missingPhenoData, sep=", "),
+              "These will be excluded from the GeoMxSet object.")
+    }
+    pheno[[j]] <- NULL
     if (phenoDataColPrefix != "") {
       colnames(pheno) <- paste0(phenoDataColPrefix, colnames(pheno))
       protocolDataColNames <- paste0(phenoDataColPrefix, protocolDataColNames)
