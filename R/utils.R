@@ -57,7 +57,7 @@ thresholdValues <- function(x, thresh=0.5) {
       thresh <- 0.5
     }
     if (min(x, na.rm = TRUE) < thresh) {
-        x[!is.na(x)] + thresh
+        x <- x[!is.na(x)] + thresh
     }
     return(x)
 }
