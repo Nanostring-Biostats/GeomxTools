@@ -30,7 +30,7 @@ function(dccFiles,
     }
     pheno[[j]] <- paste0(pheno[[j]], ".dcc")
     if ("slide name" %in% colnames(pheno)) {
-        ntcs <- which(pheno[["slide name"]] == "No template control")
+        ntcs <- which(tolower(pheno[["slide name"]]) == "no template control")
         if (length(ntcs) > 0) {
             ntcData <- lapply(seq_along(ntcs), function(x) {
                 ntcID <- pheno[ntcs[x], j]
@@ -47,16 +47,32 @@ function(dccFiles,
                 }
                 return(ntcDF)
             })
-            ntcData <- do.call(rbind, ntcData)
+            if (length(ntcs) > 1L) {
+                ntcData <- do.call(rbind, ntcData)
+            } else {
+                ntcData <- ntcData[[1L]]
+            }
             pheno <- cbind(pheno, ntcData)
             pheno <- pheno[!rownames(pheno) %in% ntcs, ]
             assay <- assay[!names(assay) %in% unique(pheno[["NTC_ID"]])]
+            data <- data[!names(data) %in% unique(pheno[["NTC_ID"]])]
+            protocolDataColNames <- c(protocolDataColNames, "NTC_ID", "NTC")
         }
     }
     rownames(pheno) <- pheno[[j]]
+    zeroReads <- names(which(lapply(assay, length) == 0L))
+    if (length(zeroReads) > 0L) {
+        warning("The following DCC files had no counts: ",
+                paste0(zeroReads, sep=", "),
+                "These will be excluded from the GeoMxSet object.")
+        pheno <- pheno[!rownames(pheno) %in% zeroReads, ]
+        assay <- assay[!names(assay) %in% zeroReads]
+        data <- data[!names(data) %in% zeroReads]
+    }
     missingDCCFiles <- pheno[[j]][!pheno[[j]] %in% names(assay)]
     missingPhenoData <- names(assay)[!names(assay) %in% pheno[[j]]]
     assay <- assay[names(assay) %in% pheno[[j]]]
+    data <- data[names(data) %in% pheno[[j]]]
     pheno <- pheno[names(assay), , drop = FALSE]
     if (length(missingDCCFiles) > 0L) {
       warning("DCC files missing for the following: ",
@@ -92,9 +108,9 @@ function(dccFiles,
     rownames(pkcData) <- pkcData[["RTS_ID"]]
   }
 
-  probeAssay <- lapply(seq_len(length(data)), function(x)
+  probeAssay <- lapply(names(data), function(x)
     data.frame(data[[x]][["Code_Summary"]],
-               Sample_ID = names(data)[x]))
+               Sample_ID = x))
   probeAssay <- do.call(rbind, probeAssay)
   zeroProbes <- setdiff(rownames(pkcData), unique(probeAssay[["RTS_ID"]]))
   zeroProbeAssay <- data.frame(RTS_ID=pkcData[zeroProbes, "RTS_ID"], 
@@ -132,7 +148,7 @@ function(dccFiles,
   # Create protocolData
   protocol <-
     do.call(rbind,
-            lapply(seq_along(dccFiles), function(i) {
+            lapply(names(data), function(i) {
               cbind(data[[i]][["Header"]], data[[i]][["Scan_Attributes"]],
                     data[[i]][["NGS_Processing_Attributes"]])
             }))
