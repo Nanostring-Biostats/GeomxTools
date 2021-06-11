@@ -34,7 +34,6 @@ Loading the NanoStringNCTools and GeoMxTools packages allow users access to the 
 ```{r, message=FALSE, warning=FALSE}
 library(NanoStringNCTools)
 library(GeomxTools)
-## RV remove this after checking container
 library(EnvStats)
 library(ggiraph)
 ```
@@ -60,33 +59,57 @@ demoData <-
                                                                    "pool_rep",
                                                                    "slide_rep"),
                                           experimentDataColNames = c("panel")))
-class( demoData )
-isS4( demoData )
-is( demoData, "ExpressionSet" )
+class(demoData)
+isS4(demoData)
+is(demoData, "ExpressionSet")
 demoData
 ```
 
 
-## Accessing and Assigning NanoStringGeoMxSet Data Members
+## How is the DSP data stored in the NanoStringGeoMxSet object?
 
-Alongside the accessors associated with the ExpressionSet class, NanoStringGeoMxSet objects have unique additional assignment and accessor methods faciliting common ways to view DSP data and associated labels.
+The count matrix is stored in the assayData, the annotations are stores in the protocolData or if it is sample information, it is stored in the phenoData. Information about the probe and targets are stored in the feature data.
 
-```{r accessobject}
-head( pData( demoData ), 2 )
-protocolData( demoData )
-svarLabels( demoData )
-head( sData(demoData), 2 )
+
+```{r countmatric}
+# access the count matrix 
+assayData(demoData)[["exprs"]][1:3, 1:3]
+
+# access phendata
+pData(demoData)[1:3, ]
+
+# access the protocol data
+pData(protocolData(demoData))[1:3, ]
+
+# access the probe information
+fData(demoData)[1:3, ]
+
 ```
 
+## Accessing and Assigning NanoStringGeoMxSet Data Members
+
+There are numerous accessor functions that NanoStringGeoMxSet inherited from ExpressionSet class. You can find these in this link: https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf
+
+
+Alongside the accessors associated with the ExpressionSet class, NanoStringGeoMxSet objects have unique additional assignment and accessor methods facilitating common ways to view DSP data and associated labels.
+
+## Access annotations
+The package provide functions to get the annotations of the data
+
+```{r accessobject}
+# access the available pheno and protocol data variables
+svarLabels(demoData)
+head(sData(demoData), 2)
+```
 Design information can be assigned to the NanoStringGeoMxSet object, as well as feature and sample labels to use for NanoStringGeoMxSet plotting methods.
 
 ```{r assigndesign}
-design( demoData ) <- ~ `segments`
-design( demoData )
+design(demoData) <- ~ `segments`
+design(demoData)
 
-dimLabels( demoData )
-dimLabels( demoData )[2] <- "Sample ID"
-dimLabels( demoData )
+dimLabels(demoData)
+dimLabels(demoData)[2] <- "Sample ID"
+dimLabels(demoData)
 ```
 
 ## Summarizing NanoString GeoMx Data
@@ -94,40 +117,48 @@ dimLabels( demoData )
 Easily summarize count results using the summary method. Data summaries can be generated across features or samples. Labels can be used to generate summaries based on feature or sample groupings.
 
 ```{r summaryobject}
-head( summary( demoData , MARGIN = 1 ), 2 )
-head( summary( demoData , MARGIN = 2 ), 2 )
-unique( sData( demoData )$"cell_line" )
-head( summary( demoData , MARGIN = 2, GROUP = "cell_line" )$"HS578T", 2 )
-head( summary( demoData , MARGIN = 2, GROUP = "cell_line" )$"COLO201", 2 )
-head( summary( demoData , MARGIN = 2, GROUP = "cell_line", log2 = FALSE )$"COLO201", 2 )
+head(summary(demoData, MARGIN = 1), 2)
+head(summary(demoData, MARGIN = 2), 2)
+unique(sData(demoData)$"cell_line")
+head(summary(demoData, MARGIN = 2, GROUP = "cell_line")$"HS578T", 2)
+head(summary(demoData, MARGIN = 2, GROUP = "cell_line")$"COLO201", 2)
+head(summary(demoData, MARGIN = 2, GROUP = "cell_line", log2 = FALSE)$"COLO201", 2)
 ```
+
 ## Subsetting NanoStringGeoMxSet Objects
 
-Common subsetting methods including those to separate endogenous features from controls are provided with NanoStringGeoMxSet objects. In addition, users can use the subset or select arguments to further subset by feature or sample, respectively.
+Common subsetting methods including those to separate endogenous features from controls are provided with NanoStringGeoMxSet objects. Endogenous refers to the code class in the feature data.
+
+In addition, users can use the subset or select arguments to further subset by feature or sample, respectively.
 
 ```{r subsetobject}
-## RV Remove once CodeClass iss34 is closed
-if (is.null(featureData(demoData)[["CodeClass"]]) & !(is.null(featureData(demoData)[["Codeclass"]])))
-    featureData(demoData)[["CodeClass"]] <- featureData(demoData)[["Codeclass"]]  
+# subset demoData object by selecting only certain slides
+length(sampleNames(demoData))
+length(sampleNames(subset(demoData, 
+                             select = phenoData(demoData)[["slide name"]] == "6panel-old-slide1 (PTL-10891)")))
 
-length( sampleNames( demoData ) )
-length( sampleNames( subset( demoData , 
-                             select = phenoData( demoData )[["slide name"]] == "6panel-old-slide1 (PTL-10891)" ) ) )
-
-dim( exprs( demoData ) )
+# subset by selecting specific targets and slide name
+dim(demoData)
 dim(demoData[, demoData$`slide name` == "6panel-old-slide1 (PTL-10891)"])
 dim(subset(demoData, TargetName == "ACTA2", `slide name` == "6panel-old-slide1 (PTL-10891)"))
 dim(subset(demoData, CodeClass == "Control", `slide name` == "6panel-old-slide1 (PTL-10891)"))
-dim( exprs( endogenousSubset( demoData, 
-                              select = phenoData( demoData )[["slide name"]] == "6panel-old-slide1 (PTL-10891)" ) ) )
 
-with( endogenousSubset( demoData ) , table( `slide name` ) )
-with( demoData [1:10, 1:10] , table(cell_line) )    
-with( negativeControlSubset( demoData ) , table( CodeClass ) )
+# use endogenousSubset and negativeControlSubset function to subset the demodata and include only features that belong to endougenous code class or negative code class.
+dim(endogenousSubset(demoData))
+dim(negativeControlSubset(demoData))
+
+# endogenousSubset function also takes select arguments to further subset by phenodata
+dim(endogenousSubset(demoData, 
+                              select = phenoData(demoData)[["slide name"]] == "6panel-old-slide1 (PTL-10891)"))
+
+# tally the number of samples according to their protocol or phenodata grouping
+with(endogenousSubset(demoData), table(`slide name`))
+with(demoData [1:10, 1:10], table(cell_line))    
+with(negativeControlSubset(demoData), table(CodeClass))
 
 ## RV uncomment when iss8 control subset is closed
-## with( controlSubset( demoData ) , table( CodeClass ) )
-## with( nonControlSubset( demoData ) , table( CodeClass ) )
+## with(controlSubset(demoData), table(CodeClass))
+## with(nonControlSubset(demoData), table(CodeClass))
 ```
 
 
@@ -136,99 +167,87 @@ with( negativeControlSubset( demoData ) , table( CodeClass ) )
 Similar to the ExpressionSet's esApply function, an equivalent method is available with NanoStringGeoMxSet objects. Functions can be applied to assay data feature- or sample-wise.
 
 ```{r applyFunctions}
-assayDataElement( demoData, "demoElem" ) <- 
-  assayDataApply( demoData, MARGIN=2, FUN=log, base=10, elt="exprs" )
-assayDataElement( demoData, "demoElem" )[1:3, 1:2]
-assayDataApply( demoData, MARGIN=1, FUN=mean, elt="demoElem")[1:5]
+# add the demoElem data which is computed as the logarithm of the count matrix (exprs) into the demoData by using assayDataApply function. The accessor function assayDataElement from eSet returns matrix element from assayData slot of object. Elt refers to the element in the assayData.
 
-head( esBy( demoData, 
+assayDataElement()
+(demoData, "demoElem") <- 
+  assayDataApply(demoData, MARGIN=2, FUN=log, base=10, elt="exprs")
+assayDataElement(demoData, "demoElem")[1:3, 1:2]
+
+# loop over the features(1) or samples(2) of the assayData element and get the mean
+assayDataApply(demoData, MARGIN=1, FUN=mean, elt="demoElem")[1:5]
+
+# split the data by group column with feature, pheno or protocol data then get the mean
+head(esBy(demoData, 
             GROUP = "cell_line", 
-            FUN = function( x ) { 
-              assayDataApply( x, MARGIN = 1, FUN=mean, elt="demoElem" ) 
-            } ) )
+            FUN = function(x) { 
+              assayDataApply(x, MARGIN = 1, FUN=mean, elt="demoElem") 
+            }))
 ```
+
 ## Built-in Quality Control Assessment
 
 Users can flag samples that fail QC thresholds or have borderline results based on expression. 
 
 The setQC Flags will set the QC flags in the protocolData for the samples and probes that are low in count and saturation levels. It will also set flags for probe local outliers (low and high) and Global Outliers
-```{r qcobject}
+
+```{r qcobject, eval = FALSE}
 demoData <- setQCFlags(demoData)
-demoData@featureData@data[["QCFlags"]][1:2, 1:4]
-dim(subset(demoData, QCFlags[["LowProbeRatio"]] == TRUE))
-dim(subset(demoData, QCFlags[["LowProbeCount"]] == TRUE))
-dim(subset(demoData, QCFlags[["GlobalOutlier"]] == TRUE))
+head(protocolData(demoData)[["QCFlags"]])
+head(featureData(demoData)[["QCFlags"]])
 ```
+
 Probes and Samples that were flagged can be removed from analysis useing checkQCFlags function. 
 
 ```{r removeQCSampleProbe}
-dim(demoData)
-demoData<- checkQCFlags(demoData, removeLowLocalOutliers = FALSE)
-dim(demoData)
+# Subset object to exclude all that did not pass Sequencing and background QC
+QCResultsIndex <- which(apply(protocolData(demoData)[["QCFlags"]], 1L , function(x) sum(x) == 0L))
+QCPassed <- demoData[, QCResultsIndex]
+dim(QCPassed) 
 ```
 
-After cleaning the iobject from low counts, the counts can be collapsed to Target using aggregateCounts function.
+After cleaning the object from low counts, the counts can be collapsed to Target using aggregateCounts function.
 
-```{r}
-exprs(demoData)[1:5, 1:5]
-demoData <- aggregateCounts(demoData)
-dim(demoData)
-exprs(demoData)[1:5, 1:5]
+```{r, eval = TRUE}
+target_demoData <- aggregateCounts(demoData)
+dim(target_demoData)
+exprs(target_demoData)[1:5, 1:5]
 ```
 
 ## Normalization
-There is also a preloaded GeoMx DSP-DA Normalization that comes with the NanoStringGeoMxSet class. This includes the options to normalize on quantile, housekeeping or negative normalization.
+There is a preloaded GeoMx DSP-DA Normalization that comes with the NanoStringGeoMxSet class. This includes the options to normalize on quantile, housekeeping or negative normalization.
 
 ```{r normalizeObject}
-demoData <- normalize(demoData , data_type="RNA", norm_method="quant", desiredQuantile = .9, toElt = "q_norm")
-demoData <- normalize(demoData , data_type="RNA", norm_method="neg", fromElt="exprs",  toElt="neg_norm")
-demoData <- normalize(demoData , data_type="RNA", norm_method="hk", fromElt="exprs", toElt="hk_norm")
-assayDataElement( demoData , elt = "q_norm" )[1:3, 1:2]
-assayDataElement( demoData , elt = "hk_norm" )[1:3, 1:2]
-assayDataElement( demoData , elt = "neg_norm" )[1:3, 1:2]
+target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="quant", 
+                      desiredQuantile = .9, toElt = "q_norm")
+target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="neg", fromElt="exprs",  toElt="neg_norm")
+target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="hk", fromElt="exprs", toElt="hk_norm")
+assayDataElement( target_demoData , elt = "q_norm" )[1:3, 1:2]
+assayDataElement( target_demoData , elt = "hk_norm" )[1:3, 1:2]
+assayDataElement( target_demoData , elt = "neg_norm" )[1:3, 1:2]
 ```
-
-## Normalization Plots
-To help you decide which is the best normalization to use, you can plot the normalization factors using heatmap option in the autoplot function
-
-```{r normalizePlot, fig.width=5, fig.height=4}
-# Run to generate plots to compare normalization heatmap 
-p_qnorm <- autoplot(demoData, type = "heatmap-genes",  elt = "q_norm",
-                        log2scale = FALSE, heatmapGroup = c("cell_line", "segment")
-                       )
-p_negnorm <- autoplot(demoData, type = "heatmap-genes",  elt = "neg_norm",
-                        log2scale = FALSE, heatmapGroup = c("cell_line", "segment")
-                        )
-
-p_qnorm
-
-```
-
-
 
 ## Transforming NanoStringRCCSet Data to Data Frames
 
-The NanoStringGeoMxSet munge function helps users generate data frames for downstream modeling and visualization. There is also a transform method, which functions similarly to the base transform function.
+The NanoStringGeoMxSet munge function generates a data frame obhect for downstream modeling and visualization. This combines available features and samples into a ling format.
 
 ```{r mungeObject}
-neg_set <- negativeControlSubset( demoData )
-class( neg_set )
-neg_ctrls <- munge( neg_set, ~ exprs)
-head( neg_ctrls, 2 )
-class( neg_ctrls )
-head( munge( demoData, ~ exprs ), 2 )
-munge( demoData, mapping = ~`cell_line` + GeneMatrix )
-exprs_df <- transform(assayDataElement(demoData, elt = "q_norm"))
+neg_set <- negativeControlSubset(demoData)
+class(neg_set)
+neg_ctrls <- munge(neg_set, ~ exprs)
+head(neg_ctrls, 2)
+class(neg_ctrls)
+head(munge(demoData, ~ exprs), 2)
+munge(demoData, mapping = ~`cell_line` + GeneMatrix)
+```
+
+There is also a transform method, which functions similarly to the base transform function.
+
+```{r transformObject}
+exprs_df <- transform(assayDataElement(demoData, elt = "exprs"))
 class(exprs_df)
 exprs_df[1:3, 1:2]
 ```
-
-
-
-## Data exploration
-
-Further data exploration can be performed by visualizing a select feature's expression or by getting a bird's eye view with expression heatmaps auto-generated with unsupervised clustering dendrograms.
-
 
 
 ```{r}
