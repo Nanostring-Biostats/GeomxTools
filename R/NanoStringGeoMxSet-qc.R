@@ -88,6 +88,8 @@ setLowReadFlags <- function(object, cutoff=DEFAULTS[["minSegmentReads"]]) {
 
 setTrimmedFlags <- function(object, cutoff=DEFAULTS[["percentTrimmed"]]) {
     percentTrim <- 100 * (sData(object)["Trimmed"] / sData(object)["Raw"])
+    colnames(percentTrim) <- "Trimmed (%)"
+    protocolData(object)[["Trimmed (%)"]] <- percentTrim
     percentTrim <- percentTrim < cutoff
     colnames(percentTrim) <- "LowTrimmed"
     object<- appendSampleFlags(object, percentTrim)
@@ -96,6 +98,8 @@ setTrimmedFlags <- function(object, cutoff=DEFAULTS[["percentTrimmed"]]) {
 
 setStitchedFlags <- function(object, cutoff=DEFAULTS[["percentStitched"]]) {
     percentStitch <- 100 * (sData(object)["Stitched"] / sData(object)["Raw"])
+    colnames(percentStitch) <- "Stitched (%)"
+    protocolData(object)[["Stitched (%)"]] <- percentStitch
     percentStitch <- percentStitch < cutoff
     colnames(percentStitch) <- "LowStitched"
     object<- appendSampleFlags(object, percentStitch)
@@ -104,6 +108,8 @@ setStitchedFlags <- function(object, cutoff=DEFAULTS[["percentStitched"]]) {
 
 setAlignedFlags <- function(object, cutoff=DEFAULTS[["percentAligned"]]) {
     percentAlign <- 100 * (sData(object)["Aligned"] / sData(object)["Raw"])
+    colnames(percentAlign) <- "Aligned (%)"
+    protocolData(object)[["Aligned (%)"]] <- percentAlign
     percentAlign <- percentAlign < cutoff
     colnames(percentAlign) <- "LowAligned"
     object<- appendSampleFlags(object, percentAlign)
@@ -113,6 +119,8 @@ setAlignedFlags <- function(object, cutoff=DEFAULTS[["percentAligned"]]) {
 setSaturationFlags <- function(object, cutoff=DEFAULTS[["percentSaturation"]]) {
     percentSaturated <- 
         100 * (1 - sData(object)["DeduplicatedReads"] / sData(object)["Aligned"])
+    colnames(percentSaturated) <- "Saturated (%)"
+    protocolData(object)[["Saturated (%)"]] <- percentSaturated
     percentSaturated <- percentSaturated < cutoff
     colnames(percentSaturated) <- "LowSaturation"
     object<- appendSampleFlags(object, percentSaturated)
@@ -156,8 +164,9 @@ setLowNegFlags <- function(object, cutoff=DEFAULTS[["minNegativeCount"]]) {
              FUN=function( x ) { 
                  assayDataApply( x, MARGIN = 2, FUN=ngeoMean, elt="exprs" ) 
              }) 
+    protocolData(object)[["NegGeoMean"]] <- negativeGeoMeans
     lowNegs <- 
-        data.frame("lowNegatives"=apply(negativeGeoMeans < cutoff, 1, sum) > 0)
+        data.frame("LowNegatives"=apply(negativeGeoMeans < cutoff, 1, sum) > 0)
     object <- appendSampleFlags(object, lowNegs)
     return(object)
 }
@@ -165,7 +174,7 @@ setLowNegFlags <- function(object, cutoff=DEFAULTS[["minNegativeCount"]]) {
 setHighNTCFlags <- function(object, cutoff=DEFAULTS[["maxNTCCount"]]) {
     if (!is.null(sData(object)[["NTC"]])) {
         highNTC <- sData(object)["NTC"] > cutoff
-        colnames(highNTC) <- "highNTC"
+        colnames(highNTC) <- "HighNTC"
         object <- appendSampleFlags(object, highNTC)
     }
     return(object)
@@ -203,7 +212,7 @@ setGeoMxQCFlags <- function(object, qcCutoffs=DEFAULTS) {
 setNucleiFlags <- function(object, cutoff=DEFAULTS[["minNuclei"]]) {
     if (!is.null(sData(object)[["nuclei"]])) {
         lowNuclei <- sData(object)["nuclei"] < cutoff
-        colnames(lowNuclei) <- "lowNuclei"
+        colnames(lowNuclei) <- "LowNuclei"
         object <- appendSampleFlags(object, lowNuclei)
     }
     return(object)
@@ -212,7 +221,7 @@ setNucleiFlags <- function(object, cutoff=DEFAULTS[["minNuclei"]]) {
 setAreaFlags <- function(object, cutoff=DEFAULTS[["minArea"]]) {
     if (!is.null(sData(object)[["area"]])) {
         lowArea <- sData(object)["area"] < cutoff
-        colnames(lowArea) <- "lowArea"
+        colnames(lowArea) <- "LowArea"
         object <- appendSampleFlags(object, lowArea)
     }
     return(object)
@@ -258,12 +267,23 @@ setProbeRatioFlags <- function(object,
     rawTargetCounts[["Mean"]] <- 
         apply(rawTargetCounts[, sampleNames(object)], 
             MARGIN=1, FUN=ngeoMean)
-    rownames(rawTargetCounts) <- rawTargetCounts[["TargetName"]]
-    targetMeans <- rawTargetCounts[fData(object)[["TargetName"]], "Mean"]
     probeMeans <- apply(assayDataElement(object, elt="exprs"), 
         MARGIN=1, FUN=ngeoMean)
-    probeRatioFlags <- (probeMeans / targetMeans) < cutoff
-    probeRatioFlags <- data.frame("LowProbeRatio"=probeRatioFlags)
+    probeRatios <- 
+        lapply(names(probeMeans), function(x) {
+            currTarget <- fData(object)[x, "TargetName"]
+            currModule <- fData(object)[x, "Module"]
+            currTargetMean <- 
+                rawTargetCounts[rawTargetCounts[["TargetName"]] == currTarget & 
+                                rawTargetCounts[["Module"]] == currModule, 
+                                "Mean"]
+            ratios <- probeMeans[[x]] / currTargetMean
+        })
+    probeRatios <- data.frame("ProbeRatio"=unlist(probeRatios), 
+                              row.names=names(probeMeans))
+    featureData(object)[["ProbeRatio"]] <- probeRatios
+    probeRatioFlags <- probeRatios < cutoff
+    colnames(probeRatioFlags) <- "LowProbeRatio"
     object <- appendFeatureFlags(object, probeRatioFlags)
     return(object)
 }
@@ -373,7 +393,13 @@ checkCutoffs <- function(qcCutoffs) {
 }
 
 appendSampleFlags <- function(object, currFlags) {
+    currQCName <- colnames(currFlags)
     if ("QCFlags" %in% varLabels(protocolData(object))) {
+        if (currQCName %in% colnames(protocolData(object)[["QCFlags"]])) {
+            protocolData(object)[["QCFlags"]] <- 
+                protocolData(object)[["QCFlags"]][, 
+                    !colnames(protocolData(object)[["QCFlags"]]) %in% currQCName]
+        }
         protocolData(object)[["QCFlags"]] <- 
             cbind(protocolData(object)[["QCFlags"]], currFlags)
     } else {
@@ -383,7 +409,13 @@ appendSampleFlags <- function(object, currFlags) {
 }
 
 appendFeatureFlags <- function(object, currFlags) {
+    currQCName <- colnames(currFlags)
     if ("QCFlags" %in% varLabels(featureData(object))) {
+        if (currQCName %in% colnames(featureData(object)[["QCFlags"]])) {
+            featureData(object)[["QCFlags"]] <- 
+                featureData(object)[["QCFlags"]][, 
+                    !colnames(featureData(object)[["QCFlags"]]) %in% currQCName]
+        }
         featureData(object)[["QCFlags"]] <- 
             cbind(featureData(object)[["QCFlags"]], currFlags) 
     } else {
