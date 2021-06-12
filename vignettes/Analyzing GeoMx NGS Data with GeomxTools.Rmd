@@ -67,15 +67,11 @@ demoData <-
                                           pkcFiles = PKCFiles,
                                           phenoDataFile = SampleAnnotationFile,
                                           phenoDataSheet = "Template",
-                                          phenoDataDccColName = c("Sample_ID",
-                                                                  "pathology", 
-                                                                  "class", 
-                                                                  "segment", 
-                                                                  "area", "nuclei",
-                                                                  "slide name"),
+                                          phenoDataDccColName = "Sample_ID",
                                           protocolDataColNames = c("aoi", 
                                                                    "roi"),
-                                          experimentDataColNames = c("panel", "instrument_type")))
+                                          experimentDataColNames = c("panel",
+                                                                     "instrument_type")))
 
 #Shift counts to one to mimic how DSPDA handles zero counts
 demoData <- shiftCountsOne(demoData, elt="exprs", useDALogic=TRUE) 
