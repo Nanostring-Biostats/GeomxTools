@@ -15,7 +15,7 @@ function(dccFiles,
   assay <- lapply(data, function(x)
     structure(x[["Code_Summary"]][["Count"]],
               names = rownames(x[["Code_Summary"]])))
-  
+
   # Create phenoData
   if (is.null(phenoDataFile)) {
     stop("Please specify an input for phenoDataFile.")
@@ -28,6 +28,10 @@ function(dccFiles,
     } else if (length(j) > 1L){
       stop("Multiple columns in `phenoDataFile` match `phenoDataDccColName`")
     }
+    # check protocolDataColNames
+    if (!(all(protocolDataColNames %in% colnames(pheno)))){
+      stop("Columns specified in `protocolDataColNames` are not found in `phenoDataFile`")
+    }
     pheno[[j]] <- paste0(pheno[[j]], ".dcc")
     if ("slide name" %in% colnames(pheno)) {
         ntcs <- which(tolower(pheno[["slide name"]]) == "no template control")
@@ -36,12 +40,12 @@ function(dccFiles,
                 ntcID <- pheno[ntcs[x], j]
                 if(!is.na(ntcs[x + 1L])) {
                     ntcNames <- rep(ntcID, ntcs[x + 1L] - ntcs[x])
-                    ntcCounts <- 
+                    ntcCounts <-
                         rep(sum(assay[[ntcID]]), ntcs[x + 1L] - ntcs[x])
                     ntcDF <- data.frame("NTC_ID"=ntcNames, "NTC"=ntcCounts)
                 } else {
                     ntcNames <- rep(ntcID, dim(pheno)[1L] - ntcs[x] + 1L)
-                    ntcCounts <- 
+                    ntcCounts <-
                         rep(sum(assay[[ntcID]]), dim(pheno)[1L] - ntcs[x] + 1L)
                     ntcDF <- data.frame("NTC_ID"=ntcNames, "NTC"=ntcCounts)
                 }
@@ -92,7 +96,7 @@ function(dccFiles,
     pheno <- Biobase::AnnotatedDataFrame(pheno,
                                 dimLabels = c("sampleNames", "sampleColumns"))
   }
-  
+
   #stopifnot(all(sapply(feature, function(x) identical(feature[[1L]], x))))
   if (is.null(pkcFiles)) {
     stop("Please specify an input for pkcFiles")
@@ -103,7 +107,7 @@ function(dccFiles,
     pkcHeader[["PKCFileDate"]] <- as.character(pkcHeader[["PKCFileDate"]])
 
     pkcData$RTS_ID <- gsub("RNA", "RTS00", pkcData$RTS_ID)
-    
+
     pkcData <- as.data.frame(pkcData)
     rownames(pkcData) <- pkcData[["RTS_ID"]]
   }
@@ -113,16 +117,16 @@ function(dccFiles,
                Sample_ID = x))
   probeAssay <- do.call(rbind, probeAssay)
   zeroProbes <- setdiff(rownames(pkcData), unique(probeAssay[["RTS_ID"]]))
-  zeroProbeAssay <- data.frame(RTS_ID=pkcData[zeroProbes, "RTS_ID"], 
+  zeroProbeAssay <- data.frame(RTS_ID=pkcData[zeroProbes, "RTS_ID"],
     Count=rep(0, length(zeroProbes)),
     Sample_ID=rep(probeAssay[1, "Sample_ID"], length(zeroProbes)))
   probeAssay <- rbind(probeAssay, zeroProbeAssay)
   probeAssay[["Module"]] <- pkcData[probeAssay[["RTS_ID"]], "Module"]
-  probeAssay <- reshape2::dcast(probeAssay, RTS_ID + Module ~ Sample_ID, 
+  probeAssay <- reshape2::dcast(probeAssay, RTS_ID + Module ~ Sample_ID,
       value.var="Count", fill=0)
   rownames(probeAssay) <- probeAssay[, "RTS_ID"]
   assay <- as.matrix(probeAssay[, names(data)])
-  
+
   # Create featureData
   feature <- pkcData[rownames(assay), , drop = FALSE]
   # change the colnames of feature data to match with dimLables
@@ -131,14 +135,14 @@ function(dccFiles,
                                 dimLabels = c("featureNames", "featureColumns"))
 
   # Create experimentData
-  experimentList<- lapply(experimentDataColNames, 
-                            function(experimentDataColName) 
+  experimentList<- lapply(experimentDataColNames,
+                            function(experimentDataColName)
                               unique(S4Vectors::na.omit(pheno@data[[experimentDataColName]])))
   names(experimentList) <- experimentDataColNames
 
-  experiment <- Biobase::MIAME(name = "", 
+  experiment <- Biobase::MIAME(name = "",
                       other = c(experimentList, pkcHeader, list(shiftedByOne=FALSE)))
-  
+
   # Create annotation
   annotation <- sort(sapply(strsplit(pkcFiles, "/"), function(x) x[length(x)]))
   if(!identical(annotation, paste0(sort(unique(probeAssay[["Module"]])), ".pkc"))) {
@@ -152,24 +156,24 @@ function(dccFiles,
               cbind(data[[i]][["Header"]], data[[i]][["Scan_Attributes"]],
                     data[[i]][["NGS_Processing_Attributes"]])
             }))
-  
-  protocol <- data.frame(protocol, 
+
+  protocol <- data.frame(protocol,
                          pheno@data[, which(colnames(pheno@data) %in% protocolDataColNames)],
                          check.names = FALSE)
-  
-  pheno <- pheno[, setdiff(colnames(pheno@data), 
+
+  pheno <- pheno[, setdiff(colnames(pheno@data),
                            c(protocolDataColNames, experimentDataColNames))]
 
-  annot_labelDescription <-  
+  annot_labelDescription <-
     data.frame(
       labelDescription=rep(NA_character_, length(protocolDataColNames) + 1L),
       row.names = c(protocolDataColNames, "DeduplicatedReads"),
       stringsAsFactors = FALSE)
-  protocol <- 
+  protocol <-
     protocol[, names(protocol) %in% c(rownames(.dccMetadata[["protocolData"]]),
                                       rownames(annot_labelDescription))]
   protocol <- AnnotatedDataFrame(protocol,
-                                 rbind(.dccMetadata[["protocolData"]], 
+                                 rbind(.dccMetadata[["protocolData"]],
                                        annot_labelDescription),
                                  dimLabels = c("sampleNames", "sampleColumns"))
 
