@@ -32,7 +32,9 @@ function(dccFiles,
     if (!(all(protocolDataColNames %in% colnames(pheno)))){
       stop("Columns specified in `protocolDataColNames` are not found in `phenoDataFile`")
     }
-    pheno[[j]] <- paste0(pheno[[j]], ".dcc")
+    # add ".dcc" to the filenames if there is none
+    pheno[[j]] <- ifelse(grepl(".dcc", pheno[[j]]), paste0(pheno[[j]]),
+                         paste0(pheno[[j]], ".dcc"))
     if ("slide name" %in% colnames(pheno)) {
         ntcs <- which(tolower(pheno[["slide name"]]) == "no template control")
         if (length(ntcs) > 0) {
