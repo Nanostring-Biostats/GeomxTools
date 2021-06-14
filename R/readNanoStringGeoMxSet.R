@@ -118,6 +118,10 @@ function(dccFiles,
     data.frame(data[[x]][["Code_Summary"]],
                Sample_ID = x))
   probeAssay <- do.call(rbind, probeAssay)
+  # check for missing probes in PKC that are in assay
+  if (length(setdiff(unique(probeAssay[["RTS_ID"]]), rownames(pkcData))) > 0L){
+    stop("Missing PKC files, not all probes are not in specified PKC files.")
+  }
   zeroProbes <- setdiff(rownames(pkcData), unique(probeAssay[["RTS_ID"]]))
   zeroProbeAssay <- data.frame(RTS_ID=pkcData[zeroProbes, "RTS_ID"],
     Count=rep(0, length(zeroProbes)),
