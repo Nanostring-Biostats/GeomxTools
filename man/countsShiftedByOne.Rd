@@ -16,6 +16,9 @@ boolean indicating if counts in default matrix were shifted by one
 Accessor to check if "exprs" \code{assDataElement} was shifted by one
 }
 \examples{
+datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+                       package="GeomxTools")
+demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 countsShiftedByOne(demoData)
 
 }

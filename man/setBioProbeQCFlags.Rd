@@ -28,6 +28,9 @@ setBioProbeQCFlags(object, qcCutoffs = DEFAULTS)
 Add probe QC flags to NanoStringGeoMxSet object feature data
 }
 \examples{
+datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+                       package="GeomxTools")
+demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 setBioProbeQCFlags(demoData, 
                    qcCutoffs=list(minProbeRatio=0.1,
                                   percentFailGrubbs=20))

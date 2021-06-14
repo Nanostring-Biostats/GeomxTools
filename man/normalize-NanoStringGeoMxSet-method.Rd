@@ -32,5 +32,8 @@ a NanoStringGeoMxSet object with normalized counts and normalized factors
 normalize GeoMxSet using different normalization methods
 }
 \examples{
+datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+                       package="GeomxTools")
+demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 norm_object <- normalize(demoData)
 }

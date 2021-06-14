@@ -25,6 +25,9 @@ setBackgroundQCFlags(object, qcCutoffs = DEFAULTS)
 Add background QC flags to NanoStringGeoMxSet object protocol data
 }
 \examples{
+datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+                       package="GeomxTools")
+demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 setBackgroundQCFlags(demoData, 
                  qcCutoffs=list(minNegativeCount=10, 
                                 maxNTCCount=60))
