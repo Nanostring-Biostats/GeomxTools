@@ -8,9 +8,12 @@ HOUSEKEEPERS <- c('C1orf43','GPI','OAZ1','POLR2A','PSMB2','RAB7A',
 #' @param fromElt name of the assayDataElement to normalize
 #' @param toElt name of the assayDataElement to store normalized values
 #' @return a NanoStringGeoMxSet object with normalized counts and normalized factors
-#' @export
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' norm_object <- normalize(demoData)
+#' @export
  
 setMethod("normalize", "NanoStringGeoMxSet",
     function(object, norm_method=c("quant", "neg", "hk", "subtractBackground"), 
@@ -35,7 +38,7 @@ setMethod("normalize", "NanoStringGeoMxSet",
 quantileNorm <- function(object, data_type, desiredQuantile = .75, toElt, fromElt) 
 { 
    ## Get quantile of counts for each sample
-   qs <- apply(exprs(object), 2, function(x) quantile(x,desiredQuantile))
+   qs <- apply(exprs(object), 2, function(x) stats::quantile(x,desiredQuantile))
    ## Save the normfactors for desired quantile
    if (toElt != "exprs_norm")
        pData(object)[[paste(toElt, "qFactors", sep= "_")]] <- qs/ngeoMean(qs) 
@@ -108,6 +111,9 @@ subtractBackground <- function(object, data_type, toElt, fromElt)
 #' @return a NanoStringGeoMxSet object probes and samples failing QC removed
 #' @export
 #' @examples 
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' DemoData <- checkQCFlags(Demodata)
 setGeneric("checkQCFlags", signature = c("object"), 
            function(object, ...)
@@ -121,6 +127,9 @@ setGeneric("checkQCFlags", signature = c("object"),
 #' @export
 #'
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' QCobject <- checkQCFlags(demoData)
 setMethod("checkQCFlags", "NanoStringGeoMxSet",
           function(object, removeLowLocalOutliers = FALSE,  ...)

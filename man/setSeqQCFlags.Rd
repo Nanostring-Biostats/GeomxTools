@@ -28,6 +28,9 @@ setSeqQCFlags(object, qcCutoffs = DEFAULTS)
 Add sequencing QC flags to NanoStringGeoMxSet object protocol data
 }
 \examples{
+datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+                       package="GeomxTools")
+demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 setSeqQCFlags(demoData, 
                  qcCutoffs=list(minSegmentReads=1000, 
                                 percentAligned=80, 

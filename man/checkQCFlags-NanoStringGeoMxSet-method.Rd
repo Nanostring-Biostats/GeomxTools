@@ -18,5 +18,8 @@ NanoStringGeoMxSet
 checkQCFlags
 }
 \examples{
+datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+                       package="GeomxTools")
+demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 QCobject <- checkQCFlags(demoData)
 }

@@ -9,7 +9,7 @@ Authors@R: c(person("Nicole", "Ortogero", email = "nortogero@nanostring.com", ro
 Depends: R (>= 3.6), NanoStringNCTools
 Imports: Biobase, S4Vectors, rjson, readxl, EnvStats, reshape2, methods, 
          utils, stats, data.table, outliers, BiocGenerics
-Suggests: knitr
+Suggests: rmarkdown, knitr
 License: Artistic-2.0
 Collate: DccMetadata.R
          NanoStringGeoMxSet-class.R

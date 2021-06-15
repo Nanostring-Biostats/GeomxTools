@@ -5,7 +5,12 @@
 #' 
 #' @return a NanoStringGeoMxSet object with targets as features
 #' 
+#' @importFrom NanoStringRccSet esBy
+#' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' targetGeoMxSet <- aggregateCounts(demoData)
 #' 
 #' @export
@@ -45,6 +50,9 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
 #' appended to sample data
 #' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' demoData <- summarizeNegatives(demoData, functionList = c(mean, min, max))
 #' 
 #' @export

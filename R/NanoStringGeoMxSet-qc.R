@@ -57,6 +57,9 @@ setMethod("setQCFlags",
 #'             appended to \code{protocolData}
 #' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' setSeqQCFlags(demoData, 
 #'                  qcCutoffs=list(minSegmentReads=1000, 
 #'                                 percentAligned=80, 
@@ -142,6 +145,9 @@ setSaturationFlags <- function(object, cutoff=DEFAULTS[["percentSaturation"]]) {
 #'             appended to \code{protocolData}
 #' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' setBackgroundQCFlags(demoData, 
 #'                  qcCutoffs=list(minNegativeCount=10, 
 #'                                 maxNTCCount=60))
@@ -194,6 +200,9 @@ setHighNTCFlags <- function(object, cutoff=DEFAULTS[["maxNTCCount"]]) {
 #'         appended to \code{protocolData}
 #' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' setGeoMxQCFlags(demoData, 
 #'                  qcCutoffs=list(minNuclei=16000, 
 #'                                 minArea=20))
@@ -244,6 +253,9 @@ setAreaFlags <- function(object, cutoff=DEFAULTS[["minArea"]]) {
 #'         appended to \code{protocolData}
 #' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' setBioProbeQCFlags(demoData, 
 #'                    qcCutoffs=list(minProbeRatio=0.1,
 #'                                   percentFailGrubbs=20))
