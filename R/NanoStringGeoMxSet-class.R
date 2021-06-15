@@ -10,7 +10,7 @@ setClass("NanoStringGeoMxSet",
          prototype = prototype(
              new("VersionedBiobase",
                  versions = c(classVersion("ExpressionSet"),
-                              NanoStringGeoMxSet = "1.0.0")),
+                              NanoStringGeoMxSet = "2.0.0")),
              signatures = SignatureSet(),
              design = NULL,
              featureType = "Probe"))
