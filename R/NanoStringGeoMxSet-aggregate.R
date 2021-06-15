@@ -61,12 +61,25 @@ summarizeNegatives <-
     function(object, functionList=c()) {
         functionList <- 
             append(c(NegGeoMean=ngeoMean, NegGeoSD=ngeoSD), functionList)
-        negObject <- object[fData(object)[, "Negative"], ]
+        negObject <- negativeControlSubset(object)
         summaryList <- 
             lapply(functionList, function(x) {
-                esApply(negObject, MARGIN=2, FUN=x)})
+                esBy(negativeControlSubset(object), 
+                     GROUP="Module", 
+                     FUN=function(x) { 
+                         assayDataApply(x, 
+                                        MARGIN = 2,
+                                        FUN=ngeoMean,
+                                        elt="exprs") 
+                     })
+            })
+        summaryListNames <- 
+            unlist(lapply(names(summaryList), 
+                       function (x) {
+                           paste0(x, "_", colnames(summaryList[[x]]))
+                        }))
         summaryDF <- do.call(cbind, summaryList)
-        colnames(summaryDF) <- names(functionList)
+        colnames(summaryDF) <- summaryListNames
         summaryDF <- summaryDF[sampleNames(object), ]
         pData(object) <- cbind(pData(object), summaryDF)
         return(object)
