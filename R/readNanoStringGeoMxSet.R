@@ -36,11 +36,13 @@ function(dccFiles,
       stop("Multiple columns in `phenoDataFile` match `phenoDataDccColName`")
     }
     # check protocolDataColNames
-    if (!(all(protocolDataColNames %in% colnames(pheno)))){
+    if (!(all(protocolDataColNames %in% colnames(pheno))) &
+          !(ifelse((length(protocolDataColNames) == 1L), (protocolDataColNames == "slide name"), FALSE))) {
       stop("Columns specified in `protocolDataColNames` are not found in `phenoDataFile`")
     }
     # check experimentDataColNames
-    if (!(all(experimentDataColNames %in% colnames(pheno)))){
+    if (!(all(experimentDataColNames %in% colnames(pheno))) &
+      !(ifelse((length(experimentDataColNames) == 1L), (experimentDataColNames == "panel"), FALSE))) {
       stop("Columns specified in `experimentDataColNames` are not found in `phenoDataFile`")
     }
     # add ".dcc" to the filenames if there is none
