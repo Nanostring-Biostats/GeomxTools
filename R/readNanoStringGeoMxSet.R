@@ -8,6 +8,13 @@ function(dccFiles,
          protocolDataColNames = c("slide name"),
          experimentDataColNames = c("panel"))
 {
+  # check inputs
+  if (!(sum(grepl("\\.dcc$",dccFiles)) == length(dccFiles) && length(dccFiles) > 0L)){
+    stop("Specify valid dcc files." )
+  }
+  if (!(sum(grepl("\\.pkc$",pkcFiles)) == length(pkcFiles) && length(pkcFiles) > 0L)){
+    stop( "Specify valid PKC files." )
+  }
   # Read data rccFiles
   data <- structure(lapply(dccFiles, readDccFile), names = basename(dccFiles))
 
@@ -31,6 +38,10 @@ function(dccFiles,
     # check protocolDataColNames
     if (!(all(protocolDataColNames %in% colnames(pheno)))){
       stop("Columns specified in `protocolDataColNames` are not found in `phenoDataFile`")
+    }
+    # check experimentDataColNames
+    if (!(all(experimentDataColNames %in% colnames(pheno)))){
+      stop("Columns specified in `experimentDataColNames` are not found in `phenoDataFile`")
     }
     # add ".dcc" to the filenames if there is none
     pheno[[j]] <- ifelse(grepl(".dcc", pheno[[j]]), paste0(pheno[[j]]),
