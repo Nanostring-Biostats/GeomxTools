@@ -8,6 +8,13 @@ function(dccFiles,
          protocolDataColNames = c("slide name"),
          experimentDataColNames = c("panel"))
 {
+  # check inputs
+  if (!(sum(grepl("\\.dcc$",dccFiles)) == length(dccFiles) && length(dccFiles) > 0L)){
+    stop("Specify valid dcc files." )
+  }
+  if (!(sum(grepl("\\.pkc$",pkcFiles)) == length(pkcFiles) && length(pkcFiles) > 0L)){
+    stop( "Specify valid PKC files." )
+  }
   # Read data rccFiles
   data <- structure(lapply(dccFiles, readDccFile), names = basename(dccFiles))
 
@@ -32,7 +39,13 @@ function(dccFiles,
     if (!(all(protocolDataColNames %in% colnames(pheno)))){
       stop("Columns specified in `protocolDataColNames` are not found in `phenoDataFile`")
     }
-    pheno[[j]] <- paste0(pheno[[j]], ".dcc")
+    # check experimentDataColNames
+    if (!(all(experimentDataColNames %in% colnames(pheno)))){
+      stop("Columns specified in `experimentDataColNames` are not found in `phenoDataFile`")
+    }
+    # add ".dcc" to the filenames if there is none
+    pheno[[j]] <- ifelse(grepl(".dcc", pheno[[j]]), paste0(pheno[[j]]),
+                         paste0(pheno[[j]], ".dcc"))
     if ("slide name" %in% colnames(pheno)) {
         ntcs <- which(tolower(pheno[["slide name"]]) == "no template control")
         if (length(ntcs) > 0) {
@@ -116,6 +129,10 @@ function(dccFiles,
     data.frame(data[[x]][["Code_Summary"]],
                Sample_ID = x))
   probeAssay <- do.call(rbind, probeAssay)
+  # check for missing probes in PKC that are in assay
+  if (length(setdiff(unique(probeAssay[["RTS_ID"]]), rownames(pkcData))) > 0L){
+    stop("Missing PKC files, not all probes are not in specified PKC files.")
+  }
   zeroProbes <- setdiff(rownames(pkcData), unique(probeAssay[["RTS_ID"]]))
   zeroProbeAssay <- data.frame(RTS_ID=pkcData[zeroProbes, "RTS_ID"],
     Count=rep(0, length(zeroProbes)),
