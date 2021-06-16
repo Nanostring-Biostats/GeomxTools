@@ -21,10 +21,11 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
         FUN=function(x) {esApply(x, 2, FUN)}, simplify=FALSE))
     targetFeats <- featureData(object)@data
     targetFeats <- 
-        targetFeats[!duplicated(targetFeats[, c("TargetName", "Module")]), ]
+        targetFeats[!duplicated(targetFeats[["TargetName"]]), ]
     rownames(targetFeats) <- targetFeats[, "TargetName"]
+    probeColumns <- c("RTS_ID", "QCFlags", "ProbeID")
     targetFeats <- 
-        targetFeats[, !colnames(targetFeats) %in% c("RTS_ID", "QCFlags")]
+        targetFeats[, !colnames(targetFeats) %in% probeColumns]
     targetFeats <- 
          AnnotatedDataFrame(targetFeats[rownames(targetCounts), ], 
                             dimLabels = c("featureNames", "featureColumns"))
