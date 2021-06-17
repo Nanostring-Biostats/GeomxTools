@@ -5,8 +5,8 @@ function(dccFiles,
          phenoDataSheet,
          phenoDataDccColName = "Sample_ID",
          phenoDataColPrefix = "",
-         protocolDataColNames = c("slide name"),
-         experimentDataColNames = c("panel"))
+         protocolDataColNames = NULL,
+         experimentDataColNames = NULL)
 {
   # check inputs
   if (!(sum(grepl("\\.dcc$",dccFiles)) == length(dccFiles) && length(dccFiles) > 0L)){
@@ -37,12 +37,12 @@ function(dccFiles,
     }
     # check protocolDataColNames
     if (!(all(protocolDataColNames %in% colnames(pheno))) &
-          !(ifelse((length(protocolDataColNames) == 1L), (protocolDataColNames == "slide name"), FALSE))) {
+          !(is.null(protocolDataColNames))) {
       stop("Columns specified in `protocolDataColNames` are not found in `phenoDataFile`")
     }
     # check experimentDataColNames
     if (!(all(experimentDataColNames %in% colnames(pheno))) &
-      !(ifelse((length(experimentDataColNames) == 1L), (experimentDataColNames == "panel"), FALSE))) {
+        !(is.null(experimentDataColNames))) {
       stop("Columns specified in `experimentDataColNames` are not found in `phenoDataFile`")
     }
     # add ".dcc" to the filenames if there is none
