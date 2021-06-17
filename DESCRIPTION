@@ -9,7 +9,10 @@ Authors@R: c(person("Nicole", "Ortogero", email = "nortogero@nanostring.com", ro
 Depends: R (>= 3.6), NanoStringNCTools
 Imports: Biobase, S4Vectors, rjson, readxl, EnvStats, reshape2, methods, 
          utils, stats, data.table, outliers, BiocGenerics
-Suggests: rmarkdown, knitr
+Suggests: 
+    rmarkdown,
+    knitr,
+    testthat (>= 3.0.0)
 License: Artistic-2.0
 Collate: DccMetadata.R
          NanoStringGeoMxSet-class.R
@@ -32,3 +35,4 @@ biocViews: GeneExpression, Transcription, CellBasedAssays, DataImport,
 VignetteEngine: knitr::rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
+Config/testthat/edition: 3
