@@ -4,7 +4,6 @@ DEFAULTS <- list(minSegmentReads=1000, percentTrimmed=80, percentStitched=80,
     minProbeRatio=0.1, outlierTestAlpha=0.01, percentFailGrubbs=20, 
     loqCutoff=1.0, highCountCutoff=10000)
 
-#NEO to fix the rox comments with new stuff
 #' Add QC flags to feature or protocol data
 #' 
 #' @param object name of the object class to perform QC on
@@ -22,7 +21,6 @@ DEFAULTS <- list(minSegmentReads=1000, percentTrimmed=80, percentStitched=80,
 #' 
 #' @examples
 #' 
-#NEO set default cutoffs as in DA and make sure set to NULL and check for NULL if not a normal DA cutoff
 setMethod("setQCFlags",
     signature(object="NanoStringGeoMxSet"),
     function(object, qcCutoffs=DEFAULTS, ...) {
@@ -367,14 +365,18 @@ setGrubbsFlags <- function(object,
         by=.(TargetName, Module, Sample_ID)]
     lowFlags <- 
         as.data.frame(dcast(probeCounts, 
-                            RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), stringsAsFactor=FALSE)
+                            RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), 
+                      stringsAsFactor=FALSE)
     highFlags <- 
         as.data.frame(dcast(probeCounts, 
-                            RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), stringsAsFactor=FALSE)
+                            RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), 
+                      stringsAsFactor=FALSE)
     rownames(lowFlags) <- lowFlags[["RTS_ID"]]
     rownames(highFlags) <- highFlags[["RTS_ID"]]
     lowFlags <- lowFlags[, colnames(lowFlags) != "RTS_ID"]
     highFlags <- highFlags[, colnames(highFlags) != "RTS_ID"]
+
+    # Determine global outlier flags
     lowFlags[["lowOutliers"]] <- 
         (apply(lowFlags, MARGIN=1L, FUN=mean) * 100) >= percFail
     highFlags[["highOutliers"]] <- 
@@ -390,6 +392,21 @@ setGrubbsFlags <- function(object,
                     "GrubbsOutlier"] <- TRUE
     }
     object <- appendFeatureFlags(object, grubbsFlags)
+
+    # Append local outlier flags
+    lowFlags[["lowOutliers"]] <- NULL
+    highFlags[["highOutliers"]] <- NULL
+    localFlags <- (highFlags + lowFlags) > 0
+    notMultiProbes <- 
+        featureNames(object)[!(featureNames(object) %in% rownames(localFlags))]
+    notMultiFlags <- exprs(object[notMultiProbes, ]) == "change to boolean"
+    localFlags <- localFlags[, colnames(notMultiFlags)]
+    localGrubbsFlags <- rbind(localFlags, notMultiFlags)
+    localGrubbsFlags <- 
+        localGrubbsFlags[featureNames(object), sampleNames(object)]
+    localGrubbsFlags <- 
+        data.frame(localGrubbsFlags=localGrubbsFlags, check.names=FALSE)
+    object <- appendFeatureFlags(object, localGrubbsFlags)
     return(object)
 }
 
@@ -477,7 +494,6 @@ setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
 }
 
 setLOQFlags <- function(object, cutoff=DEFAULTS[["loqCutoff"]]) {
-        #NEO need negative values for LOQ
         if (featureType(object) == "Target") {
             negativeObject <- negativeControlSubset(object)
             LOQs <- esApply(negativeObject, MARGIN=2, FUN=function(x) {
