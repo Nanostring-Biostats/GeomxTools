@@ -405,7 +405,7 @@ setGrubbsFlags <- function(object,
     localGrubbsFlags <- 
         localGrubbsFlags[featureNames(object), sampleNames(object)]
     localGrubbsFlags <- 
-        data.frame(localGrubbsFlags=localGrubbsFlags, check.names=FALSE)
+        data.frame(LocalGrubbsOutlier=localGrubbsFlags, check.names=FALSE)
     object <- appendFeatureFlags(object, localGrubbsFlags)
     return(object)
 }
@@ -440,7 +440,7 @@ appendSampleFlags <- function(object, currFlags) {
 appendFeatureFlags <- function(object, currFlags) {
     currQCName <- colnames(currFlags)
     if ("QCFlags" %in% varLabels(featureData(object))) {
-        if (currQCName %in% colnames(featureData(object)[["QCFlags"]])) {
+        if (any(currQCName %in% colnames(featureData(object)[["QCFlags"]]))) {
             featureData(object)[["QCFlags"]] <- 
                 featureData(object)[["QCFlags"]][, 
                     !colnames(featureData(object)[["QCFlags"]]) %in% currQCName]
