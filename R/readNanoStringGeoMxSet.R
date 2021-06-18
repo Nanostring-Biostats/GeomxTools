@@ -154,11 +154,11 @@ function(dccFiles,
                                 dimLabels = c("featureNames", "featureColumns"))
 
   # Create experimentData
+  if (!(is.null(experimentDataColNames))) {
   experimentList<- lapply(experimentDataColNames,
                             function(experimentDataColName)
-                              unique(S4Vectors::na.omit(pheno@data[[experimentDataColName]])))
+                              unique(S4Vectors::na.omit(pheno@data[[experimentDataColName]])))}
   names(experimentList) <- experimentDataColNames
-
   experiment <- Biobase::MIAME(name = "",
                       other = c(experimentList, pkcHeader, list(shiftedByOne=FALSE)))
 
