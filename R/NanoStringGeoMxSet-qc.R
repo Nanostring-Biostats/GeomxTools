@@ -266,7 +266,7 @@ setBioProbeQCFlags <- function(object, qcCutoffs=DEFAULTS) {
         cutoff=qcCutoffs[["minProbeRatio"]])
     object <- setGrubbsFlags(object=object,
                              minCount=qcCutoffs[["minProbeCount"]],
-                             cutoff=qcCutoffs[["outlierTestAlpha"]],
+                             alphaCutoff=qcCutoffs[["outlierTestAlpha"]],
                              percFail=qcCutoffs[["percentFailGrubbs"]])
     return(object)
 }
@@ -299,114 +299,105 @@ setProbeRatioFlags <- function(object,
 }
 
 setGrubbsFlags <- function(object, 
-                           cutoff=DEFAULTS[["outlierTestAlpha"]], 
+                           alphaCutoff=DEFAULTS[["outlierTestAlpha"]], 
                            minCount=DEFAULTS[["minProbeCount"]],
                            percFail=DEFAULTS[["percentFailGrubbs"]]) {
     # Skip targets with less than 3 probes
-    multiProbeTable <- with(object, table(TargetName, Module)) >= 3L
-    indices <- which(multiProbeTable, arr.ind=TRUE)
-    if (length(indices) != dim(multiProbeTable)[1L]) {
-        targs <- rownames(multiProbeTable)[as.vector(indices[, "TargetName"])]
-        mods <- colnames(multiProbeTable)[as.vector(indices[, "Module"])]
-        multiProbeList <- 
-            unlist(lapply(seq_along(targs), function(x){
-                featureNames(subset(object, 
-                    subset=TargetName == targs[x] & Module == mods[x]))
-            }))
-        multiObject <- object[multiProbeList, ]
+    multiProbeTable <- with(object, table(TargetName)) >= 3L
+    multiProbeTargs <- 
+        names(multiProbeTable)[which(multiProbeTable, arr.ind=TRUE)]
+    if (length(multiProbeTargs) > 0) {
+        multiObject <- 
+            object[fData(object)[["TargetName"]] %in% multiProbeTargs, ]
     } else {
         multiObject <- object
     }
 
-    # Skip targets with all counts less than minimum probe count cutoff
-    multiTab <- unique(fData(multiObject)[c("TargetName", "Module")])
-    rownames(multiTab) <- NULL
-    multiTab[["countPass"]] <- 
-        apply(multiTab, 
-              MARGIN=1L, 
-              FUN=function(x){
-                  max(exprs(subset(multiObject, 
-                      subset=TargetName == x[["TargetName"]] & 
-                             Module == x[["Module"]]))) > minCount
-              })
-    if (sum(multiTab[["countPass"]]) > 0) {
-        multiTabPass <- multiTab[multiTab[["countPass"]], ]
-    } else {
-        # Skip grubb's test altogether if counts are low for remaining targets
-        grubbsFlags <- data.frame(GrubbsOutlier=rep(FALSE, dim(object)[1L]),
-                                  row.names=featureNames(object))
-        object <- appendFeatureFlags(object, grubbsFlags)
-        return(object)
-    }
-    if (dim(multiTabPass)[1L] != dim(multiTab)[1L]) {
-        passProbeList <- 
-            unlist(lapply(seq_along(rownames(multiTabPass)), function(x){
-                featureNames(subset(object, 
-                    subset=TargetName == multiTabPass[["TargetName"]][x] & 
-                               Module == multiTabPass[["Module"]][x]))
-            }))
-        minPassObject <- multiObject[passProbeList, ]
-    } else {
-        minPassObject <- multiObject
-    }
-
-    #Perform Grubb's outlier test
-    probeCounts <- 
-        setDT(cbind(fData(minPassObject)[, c("RTS_ID", "TargetName", "Module")], 
-            assayDataElement(minPassObject, elt="exprs")))
-    probeCounts <- melt(probeCounts, 
-        id.vars=c("RTS_ID", "TargetName", "Module"), 
-        variable.name="Sample_ID", 
-        value.name="Count", variable.factor=FALSE)
-    probeCounts[, Count:=logt(Count)]
-    probeCounts[, "LowLocalOutlier"] <- FALSE
-    probeCounts[, "HighLocalOutlier"] <- FALSE
-    probeCounts <- probeCounts[, suppressWarnings(grubbsFlag(.SD, alpha=cutoff)), 
-        by=.(TargetName, Module, Sample_ID)]
-    lowFlags <- 
-        as.data.frame(dcast(probeCounts, 
-                            RTS_ID ~ Sample_ID, value.var="LowLocalOutlier"), 
-                      stringsAsFactor=FALSE)
-    highFlags <- 
-        as.data.frame(dcast(probeCounts, 
-                            RTS_ID ~ Sample_ID, value.var="HighLocalOutlier"), 
-                      stringsAsFactor=FALSE)
-    rownames(lowFlags) <- lowFlags[["RTS_ID"]]
-    rownames(highFlags) <- highFlags[["RTS_ID"]]
-    lowFlags <- lowFlags[, colnames(lowFlags) != "RTS_ID"]
-    highFlags <- highFlags[, colnames(highFlags) != "RTS_ID"]
-
-    # Determine global outlier flags
-    lowFlags[["lowOutliers"]] <- 
-        (apply(lowFlags, MARGIN=1L, FUN=mean) * 100) >= percFail
-    highFlags[["highOutliers"]] <- 
-        (apply(highFlags, MARGIN=1L, FUN=mean) * 100) >= percFail
-    grubbsFlags <- data.frame(GrubbsOutlier=rep(FALSE, dim(object)[1L]),
+    grubbsResults <- 
+        lapply(unique(fData(multiObject)[["Module"]]), FUN=function(x) {
+            modObject <- subset(multiObject, subset=Module == x)
+            assayDataElement(modObject, elt="log10") <- 
+                logtBase(exprs(modObject), base=10)
+            targetOutliers <- 
+                esBy(modObject, GROUP="TargetName", FUN=function(y) {
+                    currExprs <- assayDataElement(y, elt="log10")
+                    currResult <- apply(currExprs, 2, function(z) { 
+                        if (max(z) < logtBase(minCount, base=10)) {
+                            return(NA)
+                        }
+                        if (length(unique(z)) == 1) {
+                            return(NA)
+                        }
+                        grubbsTest <- 
+                            outliers::grubbs.test(z, two.sided=TRUE, type=10)
+                        if(grubbsTest$p.value < alphaCutoff) {
+                            if (grepl("lowest", tolower(grubbsTest$alternative))) {
+                                outlierDirection <- 
+                                    data.frame(LowLocalOutlier=TRUE, 
+                                               HighLocalOutlier=FALSE, 
+                                               RTS_ID=names(grubbsTest$p.value))
+   
+                            } else {
+                                outlierDirection <- 
+                                    data.frame(LowLocalOutlier=FALSE, 
+                                               HighLocalOutlier=TRUE, 
+                                               RTS_ID=names(grubbsTest$p.value))
+                            }
+                            return(outlierDirection)
+                        } else {
+                            return(NA)
+                        }
+                    })
+                    appendedResult <-
+                        lapply(names(currResult[!is.na(currResult)]), function(q) {
+                            toAppendResult <- currResult[[q]]
+                            toAppendResult[["Sample_ID"]] <- q
+                            return(toAppendResult)
+                        })
+                })
+            if(!all(is.na(targetOutliers))) {
+                targetOutliers <- do.call(rbind, targetOutliers[!is.na(targetOutliers)])
+                return(targetOutliers)
+            } else {
+                return(NA)
+            }
+        })
+    
+    featureData(object)[["OutlierFrequency"]] <- 0
+    globalFlags <- data.frame(GlobalGrubbsOutlier=rep(FALSE, dim(object)[1L]),
                               row.names=featureNames(object))
-    if (sum(lowFlags[["lowOutliers"]]) > 0) {
-        grubbsFlags[rownames(lowFlags[lowFlags[["lowOutliers"]],]), 
-                    "GrubbsOutlier"] <- TRUE
-    }
-    if (sum(highFlags[["highOutliers"]]) > 0) {
-        grubbsFlags[rownames(highFlags[highFlags[["highOutliers"]],]), 
-                    "GrubbsOutlier"] <- TRUE
-    }
-    object <- appendFeatureFlags(object, grubbsFlags)
-
-    # Append local outlier flags
-    lowFlags[["lowOutliers"]] <- NULL
-    highFlags[["highOutliers"]] <- NULL
-    localFlags <- (highFlags + lowFlags) > 0
-    notMultiProbes <- 
-        featureNames(object)[!(featureNames(object) %in% rownames(localFlags))]
-    notMultiFlags <- exprs(object[notMultiProbes, ]) == "change to boolean"
-    localFlags <- localFlags[, colnames(notMultiFlags)]
-    localGrubbsFlags <- rbind(localFlags, notMultiFlags)
     localGrubbsFlags <- 
-        localGrubbsFlags[featureNames(object), sampleNames(object)]
-    localGrubbsFlags <- 
-        data.frame(LocalGrubbsOutlier=localGrubbsFlags, check.names=FALSE)
-    object <- appendFeatureFlags(object, localGrubbsFlags)
+        data.frame(matrix(nrow=dim(object)[1L], 
+                          ncol=dim(object)[2L], 
+                          dimnames=list(featureNames(object), sampleNames(object))),
+                          check.names=FALSE)
+    if(!all(is.na(grubbsResults))) {
+        grubbsResults <- do.call(rbind, grubbsResults[!is.na(grubbsResults)])
+        
+        outlierFreqs <- table(grubbsResults[["RTS_ID"]]) / dim(object)[2L]
+        fData(object)[names(outlierFreqs), "OutlierFrequency"] <- outlierFreqs
+        globalFlags[["GlobalGrubbsOutlier"]] <- fData(object)[["OutlierFrequency"]] > alphaCutoff
+        
+        subsetOfLocals <- 
+            lapply(unique(grubbsResults[["RTS_ID"]]), function(currOut) {
+                currFlags <- localGrubbsFlags[currOut, , drop=FALSE]
+                lowAOIs <- grubbsResults[(grubbsResults[["RTS_ID"]] == currOut & 
+                                          grubbsResults[["LowLocalOutlier"]]), "Sample_ID"]
+                highAOIs <- grubbsResults[(grubbsResults[["RTS_ID"]] == currOut & 
+                                          grubbsResults[["HighLocalOutlier"]]), "Sample_ID"]
+                if (length(lowAOIs) > 0) {currFlags[, lowAOIs] <- rep("Low", length(lowAOIs))}
+                if (length(highAOIs) > 0) {currFlags[, highAOIs] <- rep("High", length(highAOIs))}
+                return(currFlags)
+            })
+        subsetOfLocals <- do.call(rbind, subsetOfLocals)
+        localGrubbsFlags[rownames(subsetOfLocals), colnames(subsetOfLocals)] <- 
+            subsetOfLocals
+        localGrubbsFlags <- localGrubbsFlags[featureNames(object), sampleNames(object)]
+    }
+    localGrubbsFlags[is.na(localGrubbsFlags)] <- FALSE
+    LocalGrubbsOutlier <- data.frame(LocalGrubbsOutlier=localGrubbsFlags, check.names=FALSE)
+    object <- appendFeatureFlags(object, globalFlags)
+    object <- appendFeatureFlags(object, LocalGrubbsOutlier)
     return(object)
 }
 
@@ -451,32 +442,6 @@ appendFeatureFlags <- function(object, currFlags) {
         featureData(object)[["QCFlags"]] <- currFlags
     }
     return(object)
-}
-
-# grubbs.flag
-# helper function to remove outliers using Grubbs' test given the controlled type I error alpha
-# INPUT
-#   x = named vector
-#   alpha = indicator of the expected Type I erorr frequency
-#   logt = boolean to log 10 transform data prior to outlier test
-#   min_count = integer of minimum expected counts for testing
-# OUTPUT
-#   vector of TRUE / FALSE For flagged or not flagged
-grubbsFlag <- function(countDT, alpha=0.01) {
-    if (dim(countDT)[1] < 3 | all(countDT[, Count] == countDT[1][, Count])) {
-        return(countDT)
-    }
-    grubbsResult <- outliers::grubbs.test(countDT[, Count], two.sided=TRUE)
-    if (grubbsResult$p.value < alpha) {
-        if (grepl("lowest", tolower(grubbsResult$alternative))) {
-            countDT[Count == min(Count), "LowLocalOutlier"] <- TRUE
-        } else {
-            countDT[Count == max(Count), "HighLocalOutlier"] <- TRUE
-        }
-    } else {
-        return(countDT)
-    }
-    return(countDT)
 }
 
 ############Not used##########################################################
