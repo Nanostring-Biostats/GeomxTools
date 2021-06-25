@@ -4,12 +4,12 @@
 \alias{shiftCountsOne}
 \title{Add one to all counts in an expression matrix}
 \usage{
-shiftCountsOne(object, elt = "exprs")
+shiftCountsOne(object, elt = "exprs", useDALogic = FALSE)
 }
 \arguments{
 \item{object}{name of the NanoStringGeoMxSet object}
 
-\item{elt}{expression matrix element in /code{assayDataElement}
+\item{elt}{expression matrix element in \code{assayDataElement}
 to shift all counts by}
 }
 \value{
@@ -19,6 +19,9 @@ object of NanoStringGeoMxSet class
 Add one to all counts in an expression matrix
 }
 \examples{
+datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+                       package="GeomxTools")
+demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 shiftCountsOne(demoData)
 
 }

@@ -5,7 +5,12 @@
 #' 
 #' @return a NanoStringGeoMxSet object with targets as features
 #' 
+#' @importFrom NanoStringRccSet esBy
+#' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' targetGeoMxSet <- aggregateCounts(demoData)
 #' 
 #' @export
@@ -16,10 +21,11 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
         FUN=function(x) {esApply(x, 2, FUN)}, simplify=FALSE))
     targetFeats <- featureData(object)@data
     targetFeats <- 
-        targetFeats[!duplicated(targetFeats[, c("TargetName", "Module")]), ]
+        targetFeats[!duplicated(targetFeats[["TargetName"]]), ]
     rownames(targetFeats) <- targetFeats[, "TargetName"]
+    probeColumns <- c("RTS_ID", "QCFlags", "ProbeID")
     targetFeats <- 
-        targetFeats[, !colnames(targetFeats) %in% c("RTS_ID", "QCFlags")]
+        targetFeats[, !colnames(targetFeats) %in% probeColumns]
     targetFeats <- 
          AnnotatedDataFrame(targetFeats[rownames(targetCounts), ], 
                             dimLabels = c("featureNames", "featureColumns"))
@@ -45,6 +51,9 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
 #' appended to sample data
 #' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' demoData <- summarizeNegatives(demoData, functionList = c(mean, min, max))
 #' 
 #' @export
@@ -53,12 +62,25 @@ summarizeNegatives <-
     function(object, functionList=c()) {
         functionList <- 
             append(c(NegGeoMean=ngeoMean, NegGeoSD=ngeoSD), functionList)
-        negObject <- object[fData(object)[, "Negative"], ]
+        negObject <- negativeControlSubset(object)
         summaryList <- 
             lapply(functionList, function(x) {
-                esApply(negObject, MARGIN=2, FUN=x)})
+                esBy(negativeControlSubset(object), 
+                     GROUP="Module", 
+                     FUN=function(x) { 
+                         assayDataApply(x, 
+                                        MARGIN = 2,
+                                        FUN=ngeoMean,
+                                        elt="exprs") 
+                     })
+            })
+        summaryListNames <- 
+            unlist(lapply(names(summaryList), 
+                       function (x) {
+                           paste0(x, "_", colnames(summaryList[[x]]))
+                        }))
         summaryDF <- do.call(cbind, summaryList)
-        colnames(summaryDF) <- names(functionList)
+        colnames(summaryDF) <- summaryListNames
         summaryDF <- summaryDF[sampleNames(object), ]
         pData(object) <- cbind(pData(object), summaryDF)
         return(object)

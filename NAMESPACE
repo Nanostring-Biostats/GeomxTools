@@ -12,13 +12,16 @@ importFrom(EnvStats, geoMean)
 importFrom(reshape2, dcast)
 importFrom(utils, read.csv)
 importFrom(stats, as.formula)
+importFrom(stats, quantile)
 importFrom(stats, weights)
 importFrom(methods, callGeneric)
 importFrom(methods, callNextMethod)
+importFrom(methods, is)
+importFrom(methods, validObject)
+importFrom(utils, write.table)
 importFrom(outliers, grubbs.test)
 importFrom(BiocGenerics, design)
 importFrom(BiocGenerics, "design<-")
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
@@ -32,7 +35,7 @@ export(NanoStringGeoMxSet, sData, svarLabels, dimLabels, "dimLabels<-",
        featureType, "featureType<-",
        signatures, "signatures<-", signatureScores,
        design, "design<-", signatureGroups,
-       checkQCFlags)
+       checkQCFlags, normalize)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 methods

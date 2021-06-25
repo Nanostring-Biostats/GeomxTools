@@ -18,6 +18,9 @@ a NanoStringGeoMxSet object with targets as features
 Aggregate probe counts to target level for feature data
 }
 \examples{
+datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+                       package="GeomxTools")
+demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 targetGeoMxSet <- aggregateCounts(demoData)
 
 }

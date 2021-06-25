@@ -65,12 +65,15 @@ thresholdValues <- function(x, thresh=0.5) {
 #' Add one to all counts in an expression matrix
 #' 
 #' @param object name of the NanoStringGeoMxSet object
-#' @param elt expression matrix element in /code{assayDataElement}
+#' @param elt expression matrix element in \code{assayDataElement}
 #'        to shift all counts by
 #' 
 #' @return object of NanoStringGeoMxSet class
 #' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' shiftCountsOne(demoData)
 #' 
 #' @export
@@ -104,6 +107,9 @@ shiftCountsOne <- function(object, elt="exprs", useDALogic=FALSE) {
 #' @return boolean indicating if counts in default matrix were shifted by one
 #' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' countsShiftedByOne(demoData)
 #' 
 #' @export
