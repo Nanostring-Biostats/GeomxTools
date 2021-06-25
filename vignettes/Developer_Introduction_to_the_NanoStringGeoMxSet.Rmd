@@ -1,10 +1,10 @@
 ---
-title: "Introduction to the NanoStringGeoMxSet Class"
+title: "Developer Introduction to the NanoStringGeoMxSet"
 author: "David Henderson, Patrick Aboyoun, Nicole Ortogero, Zhi Yang, Jason Reeves, Kara Gorman, Rona Vitancol, Thomas Smith, Maddy Griswold"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction to the NanoStringGeoMxSet Class}
+  %\VignetteIndexEntry{Developer Introduction to the NanoStringGeoMxSet}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
