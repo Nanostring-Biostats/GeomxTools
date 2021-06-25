@@ -5,8 +5,8 @@ function(dccFiles,
          phenoDataSheet,
          phenoDataDccColName = "Sample_ID",
          phenoDataColPrefix = "",
-         protocolDataColNames = c("slide name"),
-         experimentDataColNames = c("panel"))
+         protocolDataColNames = NULL,
+         experimentDataColNames = NULL)
 {
   # check inputs
   if (!(sum(grepl("\\.dcc$",dccFiles)) == length(dccFiles) && length(dccFiles) > 0L)){
@@ -29,18 +29,20 @@ function(dccFiles,
   } else {
     pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet)
     pheno <- data.frame(pheno, stringsAsFactors = FALSE, check.names = FALSE)
-    j <- grep(phenoDataDccColName, colnames(pheno), ignore.case = TRUE)
+    j <- colnames(pheno)[colnames(pheno) == phenoDataDccColName]
     if (length(j) == 0L){
       stop("Column `phenoDataDccColName` not found in `phenoDataFile`")
     } else if (length(j) > 1L){
       stop("Multiple columns in `phenoDataFile` match `phenoDataDccColName`")
     }
     # check protocolDataColNames
-    if (!(all(protocolDataColNames %in% colnames(pheno)))){
+    if (!(all(protocolDataColNames %in% colnames(pheno))) &
+          !(is.null(protocolDataColNames))) {
       stop("Columns specified in `protocolDataColNames` are not found in `phenoDataFile`")
     }
     # check experimentDataColNames
-    if (!(all(experimentDataColNames %in% colnames(pheno)))){
+    if (!(all(experimentDataColNames %in% colnames(pheno))) &
+        !(is.null(experimentDataColNames))) {
       stop("Columns specified in `experimentDataColNames` are not found in `phenoDataFile`")
     }
     # add ".dcc" to the filenames if there is none
@@ -151,20 +153,30 @@ function(dccFiles,
   feature <- AnnotatedDataFrame(feature,
                                 dimLabels = c("featureNames", "featureColumns"))
 
-  # Create experimentData
-  experimentList<- lapply(experimentDataColNames,
-                            function(experimentDataColName)
-                              unique(S4Vectors::na.omit(pheno@data[[experimentDataColName]])))
-  names(experimentList) <- experimentDataColNames
+    # Create experimentData
+    if (!(is.null(experimentDataColNames))) {
+        experimentList <- 
+            lapply(experimentDataColNames,
+                   function(experimentDataColName) {
+                       unique(S4Vectors::na.omit(pheno@data[[experimentDataColName]]))})
+        names(experimentList) <- experimentDataColNames
+        experiment <- 
+            Biobase::MIAME(name = "", 
+                           other = c(experimentList, 
+                                     pkcHeader, 
+                                     list(shiftedByOne=FALSE)))
+    } else {
+        experiment <- 
+            Biobase::MIAME(name = "",
+                           other = c(pkcHeader, 
+                                     list(shiftedByOne=FALSE)))
+    }
 
-  experiment <- Biobase::MIAME(name = "",
-                      other = c(experimentList, pkcHeader, list(shiftedByOne=FALSE)))
-
-  # Create annotation
-  annotation <- sort(sapply(strsplit(pkcFiles, "/"), function(x) x[length(x)]))
-  if(!identical(annotation, paste0(sort(unique(probeAssay[["Module"]])), ".pkc"))) {
-    stop("Name mismatch between pool and PKC files")
-  }
+    # Create annotation
+    annotation <- sort(sapply(strsplit(pkcFiles, "/"), function(x) x[length(x)]))
+    if(!identical(annotation, paste0(sort(unique(probeAssay[["Module"]])), ".pkc"))) {
+        stop("Name mismatch between pool and PKC files")
+    }
 
   # Create protocolData
   protocol <-
