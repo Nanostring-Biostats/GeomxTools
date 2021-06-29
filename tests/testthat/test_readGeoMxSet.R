@@ -27,20 +27,21 @@ testData <-
                                                                    "slide_rep"),
                                           experimentDataColNames = c("panel")))
 
-pkcFile <- readPKCFile(PKCFiles) 
+pkcFile <- readPKCFile(PKCFiles)
 
+DCCFiles <- DCCFiles[!basename(DCCFiles) %in% unique(sData(testData)$NTC_ID)]
 
 
 # req 1: test that the column names and the rownames of testData@assayData$exprs match those in DCC files and PKC Files respectively:------
 testthat::test_that("test that the column names and the rownames of testData@assayData$exprs match those in DCC files and PKC Files respectively", {
   expect_true(all(basename(DCCFiles) %in% colnames(testData@assayData$exprs)))
-  expect_true(all(unique(pkcFile$Gene) %in% rownames(testData@assayData$exprs)))
+  expect_true(all(unique(pkcFile$RTS_ID) %in% rownames(testData@assayData$exprs)))
 })
 
 
 
 
-# req 2: test that the column names and the rownames of testData@phenoData$data match those in DCC files and PKC Files respectively:------ ????????
+# req 2: test that the column names and the rownames of testData@phenoData$data match those in DCC files and PKC Files respectively:------ 
 testthat::test_that("test that the column names and the rownames of testData@phenoData$exprs match those in DCC files and PKC Files respectively", {
   phenoDataDccColName <- "Sample_ID"
   protocolDataColNames <- c("aoi",
@@ -78,7 +79,7 @@ testthat::test_that("test that the column names and the rownames of testData@pro
 # req 4: test that the genes in testData@featureData@data match those in PKC Files:------
 testthat::test_that("test that the genes in testData@featureData$exprs match those in PKC Files", {
   expect_true(dim(testData@featureData@data)[1] == length(unique(pkcFile$RTS_ID))) # QuickBase: length(unique(pkcFile$Gene))
-  expect_true(all(unique(pkcFile$Gene) %in% testData@featureData@data$Gene))
+  expect_true(all(unique(pkcFile$RTS_ID) %in% testData@featureData@data$RTS_ID))
 })
 
 
@@ -95,4 +96,23 @@ testthat::test_that("test that the names in testData@experimentData@other are in
                               "MinNuclei")
   expect_true(all(experimentDataColNames %in% names(testData@experimentData@other))) 
 })
+
+
+#req 6: test that the counts in testData@assayData$exprs match those in DCC files
+testthat::test_that("test that the counts of testData@assayData$exprs match those in DCC files", {
+  correct <- TRUE
+  i <- 1
+  while(correct == TRUE & i < length(DCCFiles)){
+    dccFile <- suppressWarnings(readDccFile(DCCFiles[i]))
+    
+    mtxCount <- testData@assayData$exprs[,basename(DCCFiles[i])]
+    genes <- match(dccFile$Code_Summary$RTS_ID, names(mtxCount))
+    
+    correct <- all(mtxCount[genes] == dccFile$Code_Summary$Count) & all(mtxCount[!genes] == 0)
+    
+    i <- i+1
+  }
+  expect_true(correct)
+})
+
 

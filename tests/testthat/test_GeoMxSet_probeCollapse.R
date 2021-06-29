@@ -32,7 +32,7 @@ PKC <- readPKCFile(PKCFiles)
 PKC$RTS_ID <- gsub("RNA", "RTS00", PKC$RTS_ID)
 DCC_file <- DCCFiles[2]
 DCC <- suppressWarnings(readDccFile(DCC_file))
-DCC_file <- stringr::str_split(DCC_file, "/", simplify = T)[,11]
+DCC_file <- basename(DCC_file)
 rownames(DCC$Code_Summary) <- gsub("RNA", "RTS00", rownames(DCC$Code_Summary))
 
 matches <- NULL 
@@ -40,9 +40,9 @@ for(i in unique(fData(test_Data)[["TargetName"]])){
   probes <- PKC$RTS_ID[which(PKC$Target == i)]
   if(sum(is.na(DCC$Code_Summary[probes,"Count"])) > 0){
     DCC$Code_Summary[probes, "Count"][is.na(DCC$Code_Summary[probes, "Count"])] <- 1
-    }
-    matches <- c(matches, EnvStats::geoMean(DCC$Code_Summary[probes,"Count"]) == 
-                   test_Data@assayData$exprs[i,DCC_file])
+  }
+  matches <- c(matches, EnvStats::geoMean(DCC$Code_Summary[probes,"Count"]) == 
+                 test_Data@assayData$exprs[i,DCC_file])
 }
 
 

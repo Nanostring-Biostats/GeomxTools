@@ -148,7 +148,7 @@ function(dccFiles,
 
   # Create featureData
   feature <- pkcData[rownames(assay), , drop = FALSE]
-  # change the colnames of feature data to match with dimLables
+  # change the colnames of feature data to match with dimLabels
   colnames(feature)[which(colnames(feature)=="Target")] <- "TargetName"
   feature <- AnnotatedDataFrame(feature,
                                 dimLabels = c("featureNames", "featureColumns"))
@@ -205,7 +205,7 @@ function(dccFiles,
                                  rbind(.dccMetadata[["protocolData"]],
                                        annot_labelDescription),
                                  dimLabels = c("sampleNames", "sampleColumns"))
-
+  
   # Create NanoStringGeoMxSet
   return( NanoStringGeoMxSet(assayData = assay,
                              phenoData = pheno,
@@ -213,5 +213,6 @@ function(dccFiles,
                              experimentData = experiment,
                              annotation = annotation,
                              protocolData = protocol,
-                             check = FALSE) )
+                             check = FALSE, 
+                             dimLabels = c("RTS_ID", "SampleID")) )
 }

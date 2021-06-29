@@ -1,4 +1,8 @@
 ### CONFIGURATION SECTION ###
+library(GeomxTools)
+library(testthat)
+library(EnvStats)
+
 # load data
 demoData <- readRDS(file= system.file("extdata","DSP_NGS_Example_Data", "demoData.rds", package = "GeomxTools"))
 demoData <- normalize(demoData , data_type="RNA", norm_method="quant",
@@ -8,14 +12,13 @@ housekeepers <- c('C1orf43','GPI','OAZ1','POLR2A','PSMB2','RAB7A',
                                'SDHA','SNRPD3','TBC1D10B','TPM4','TUBB','UBB')
 #run aggregateCounts function on the data
 target_demoData <- aggregateCounts(demoData)
-tolerance <- 0.000001 # accepted tolerance between normalized values
 #############################
 
 ########### Quantile Normalization test
 #### req 1 check that normfactors are in in pData of demoData
 test_that("quantile norm factors are present", {
-  expect_snapshot(demoData@phenoData@data[["q_norm_qFactors"]])
-  expect_snapshot(demoData@phenoData@data[["normFactors"]])
+  expect_true(length(demoData@phenoData@data[["q_norm_qFactors"]]) == dim(demoData@assayData$exprs)[2]) 
+  expect_true(length(demoData@phenoData@data[["normFactors"]]) == dim(demoData@assayData$exprs)[2])
 })
 
 #### req 2 verify calculation of q90 norm factors
@@ -58,11 +61,6 @@ test_that("quantile norm values are correct", {
   expect_equal(expectedOutputData, actualOutputData)
 })
 
-########### Negative Normalization test
-test_that("aggregateCounts", {
-  expect_snapshot(featureData(target_demoData))
-  expect_snapshot(exprs(target_demoData))
-})
 
 #### req 4 verify calculation of negative norm factors
 #call negative normalization

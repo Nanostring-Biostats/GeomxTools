@@ -50,3 +50,11 @@ testthat::test_that("test that dimLabels(testData) matches the value assigned", 
   expect_false(identical(design(testData), des))
 })
 
+# req 3: test that featureType(testData) matches the value assigned:------
+testthat::test_that("test that dimLabels(testData) matches the value assigned", {
+  featType <- featureType(testData)
+  featureType(testData) <- "Target"
+  expect_true(all(featureType(testData) == "Target"))
+  expect_false(identical(featureType(testData), featType))
+})
+
