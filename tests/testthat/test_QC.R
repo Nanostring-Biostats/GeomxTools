@@ -10,7 +10,8 @@ library(ggiraph)
 # This dataset is the same as what is used in Analyzing-GeoMx-NGS-Data-with-GeomxTools.html. 
 # The original file is located at: datadir <- file.path( "/home" , "rstudio" , "NAS_data", "rvitancol", "kidney_demo")
 
-datadir <- file.path("~/YREN", "GeomxTools", "GeoMx_SampleData")
+datadir <- file.path( "~/NAS_data", "rvitancol", "kidney_demo")
+# datadir <- file.path("~/YREN", "GeomxTools", "GeoMx_SampleData")
 DCCFiles <- list.files(file.path( datadir , "DCC_files"), pattern=".dcc$", full.names=TRUE)
 PKCFiles <- list.files(file.path(datadir), pattern=".pkc$", full.names=TRUE)
 SampleAnnotationFile <- file.path(datadir, "kidney_demo_AOI_Annotations.xlsx")
@@ -20,10 +21,7 @@ testData <-
                                           pkcFiles = PKCFiles,
                                           phenoDataFile = SampleAnnotationFile,
                                           phenoDataSheet = "Template",
-                                          phenoDataDccColName = c("Sample_ID",
-                                                                  "pathology", 
-                                                                  "class", 
-                                                                  "segment", "area", "nuclei"),
+                                          phenoDataDccColName = "Sample_ID",
                                           protocolDataColNames = c("aoi", 
                                                                    "roi",
                                                                    "slide name"),
