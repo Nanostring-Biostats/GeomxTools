@@ -41,6 +41,66 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
     return(targetObject)
 }
 
+#' Aggregate non-negative probe counts to target level for feature data
+#' 
+#' @param object name of the NanoStringGeoMxSet object to aggregate
+#' @param FUN_neg function to use for count aggregation in negative probes
+#' @param FUN_nonneg function to use for count aggregation in non-negative probes
+#' 
+#' @return a NanoStringGeoMxSet object with targets as features
+#' 
+#' @importFrom NanoStringRccSet esBy
+#' 
+#' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
+#' targetGeoMxSet <- aggregateCountsNoNeg(demoData, FUN_neg = identity, FUN_nonneg = sum)
+#' 
+#' @export
+#' 
+aggregateCountsNoNeg <- function(object, FUN_neg = identity, FUN_nonneg = sum) {
+    object <- summarizeNegatives(object)
+    object_neg <- object[which(fData(object)$Negative), ]
+    object_nonneg <- object[which(!fData(object)$Negative), ]
+    
+    targetCounts_neg <- do.call(rbind, esBy(object_neg, GROUP = "TargetName",
+                                            FUN=function(x) {esApply(x, 2, FUN_neg)}, simplify=FALSE))
+    targetCounts_nonneg <- do.call(rbind, esBy(object_nonneg, GROUP = "TargetName",
+                                            FUN=function(x) {esApply(x, 2, FUN_nonneg)}, simplify=FALSE))
+
+    targetFeats <- featureData(object_nonneg)@data
+    targetFeats <-
+        targetFeats[!duplicated(targetFeats[["TargetName"]]), ]
+    rownames(targetFeats) <- targetFeats[, "TargetName"]
+    probeColumns <- c("RTS_ID", "QCFlags", "ProbeID")
+    targetFeats_nonneg <-
+        targetFeats[, !colnames(targetFeats) %in% probeColumns]
+    
+    targetFeats <- featureData(object_neg)@data
+    rownames(targetFeats) <- targetFeats[, "RTS_ID"]
+    targetFeats[, "TargetName"] <- targetFeats[, "RTS_ID"]
+    probeColumns <- c("RTS_ID", "QCFlags", "ProbeID")
+    targetFeats_neg <-
+        targetFeats[, !colnames(targetFeats) %in% probeColumns]
+    
+    targetFeats <-
+        AnnotatedDataFrame(rbind(targetFeats_nonneg[rownames(targetCounts_nonneg), ],
+                                 targetFeats_neg[rownames(targetCounts_neg), ]),
+                           dimLabels = c("featureNames", "featureColumns"))
+    
+    targetObject <- NanoStringGeoMxSet(
+        assayData = rbind(targetCounts_nonneg, targetCounts_neg),
+        phenoData = phenoData(object),
+        featureData = targetFeats,
+        experimentData = experimentData(object),
+        annotation = annotation(object),
+        protocolData = protocolData(object),
+        featureType = "Target",
+        check = FALSE)
+    return(targetObject)
+}
+
 #' Calculate negative probe summary stats
 #' 
 #' @param object name of the NanoStringGeoMxSet object to summarize
