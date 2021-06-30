@@ -1,9 +1,7 @@
 # devtools::install_github("https://github.com/Nanostring-Biostats/GeomxTools/", ref="dev", force = TRUE, dependencies = FALSE)
 
-library(NanoStringNCTools)
 library(GeomxTools)
 library(testthat)
-library(EnvStats)
 
 
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
@@ -12,24 +10,22 @@ DCCFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)
 PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
 SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
-testData <-
-  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, # QuickBase: readNanoStringGeomxSet, need to change it
-                                          pkcFiles = PKCFiles,
-                                          phenoDataFile = SampleAnnotationFile,
-                                          phenoDataSheet = "CW005",
-                                          phenoDataDccColName = "Sample_ID",
-                                          protocolDataColNames = c("aoi",
-                                                                   "cell_line",
-                                                                   "roi_rep",
-                                                                   "pool_rep",
-                                                                   "slide_rep"),
-                                          experimentDataColNames = c("panel")))
-
 protocolDataColNames <- c("aoi",
                           "cell_line",
                           "roi_rep",
                           "pool_rep",
                           "slide_rep")
+
+testData <-
+  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                          pkcFiles = PKCFiles,
+                                          phenoDataFile = SampleAnnotationFile,
+                                          phenoDataSheet = "CW005",
+                                          phenoDataDccColName = "Sample_ID",
+                                          protocolDataColNames = protocolDataColNames,
+                                          experimentDataColNames = c("panel")))
+
+
 
 DCCFiles <- DCCFiles[!basename(DCCFiles) %in% unique(sData(testData)$NTC_ID)]
 testData2 <- shiftCountsOne(testData, elt="exprs", useDALogic=TRUE) 
