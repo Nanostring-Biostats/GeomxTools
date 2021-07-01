@@ -24,7 +24,10 @@ testData <-
                                           experimentDataColNames = c("panel")))
 
 
-test_Data <- aggregateCounts(testData)
+
+
+# req 1: test that the number of collapsed probe is correct for aggregateCounts:------
+test_Data1 <- aggregateCounts(testData)
 
 DCCFiles <- DCCFiles[!basename(DCCFiles) %in% unique(sData(testData)$NTC_ID)]
 
@@ -44,7 +47,7 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
   DCC_file <- basename(DCC_file)
   rownames(DCC$Code_Summary) <- gsub("RNA", "RTS00", rownames(DCC$Code_Summary))
   
-  for(i in unique(fData(test_Data)[["TargetName"]])){
+  for(i in unique(fData(test_Data1)[["TargetName"]])){
     probes <- PKC$RTS_ID[which(PKC$Target == i)]
     if(sum(is.na(DCC$Code_Summary[probes,"Count"])) > 0){
       #NAs are changed to 0 counts
@@ -56,21 +59,69 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
     }
     
     matches <- c(matches, EnvStats::geoMean(DCC$Code_Summary[probes,"Count"]) == 
-                   test_Data@assayData$exprs[i,DCC_file])
+                   test_Data1@assayData$exprs[i,DCC_file])
   }
   
   dcc <- dcc + 1
 }
 
-
-
-
-# req 1: test that the number of collapsed probe is correct:------
-testthat::test_that("test that the number of collapsed probe is correct", {
-  expect_true(sum(matches) == nrow(test_Data@assayData$exprs)*numDCC)
+testthat::test_that("test that the number of collapsed probe is correct for aggregateCounts", {
+  expect_true(sum(matches) == nrow(test_Data1@assayData$exprs)*numDCC)
 })
 
+# req 2: test that the number of collapsed probe is correct for aggregateCountsNoNeg:------
+test_Data2 <- aggregateCountsNoNeg(testData, FUN_neg = identity, FUN_nonneg = sum)
 
+DCCFiles <- DCCFiles[!basename(DCCFiles) %in% unique(sData(testData)$NTC_ID)]
+
+PKC <- readPKCFile(PKCFiles)
+PKC$RTS_ID <- gsub("RNA", "RTS00", PKC$RTS_ID)
+
+numDCC <- 10
+
+#random subset of 10 DCC files
+DCCFiles <- DCCFiles[sample(1:length(DCCFiles), numDCC)]
+
+matches <- NULL
+dcc <- 1
+test_Data2_neg <- test_Data2[which(fData(test_Data2)$Negative), ]
+test_Data2_nonneg <- test_Data2[-which(fData(test_Data2)$Negative), ]
+while(dcc <= length(DCCFiles) & all(matches == TRUE)){
+  DCC_file <- DCCFiles[dcc]
+  DCC <- suppressWarnings(readDccFile(DCC_file))
+  DCC_file <- basename(DCC_file)
+  rownames(DCC$Code_Summary) <- gsub("RNA", "RTS00", rownames(DCC$Code_Summary))
+  
+  for(i in unique(fData(test_Data2)[["TargetName"]])){
+    if ( !grepl("RTS0", i) ){
+      # for non-negative probes, the aggregated counts is the sum of probes 
+      probes <- PKC$RTS_ID[which(PKC$Target == i)]
+      if(sum(is.na(DCC$Code_Summary[probes,"Count"])) > 0){
+        #NAs are changed to 0 counts
+        DCC$Code_Summary[probes, "Count"][is.na(DCC$Code_Summary[probes, "Count"])] <- 0
+      }
+      
+      matches <- c(matches, sum(DCC$Code_Summary[probes,"Count"]) == 
+                     test_Data2@assayData$exprs[i,DCC_file])
+    } else {
+      # for negative probes, the aggregated counts is itself without any modification 
+      probes <- i
+      if(sum(is.na(DCC$Code_Summary[probes,"Count"])) > 0){
+        #NAs are changed to 0 counts
+        DCC$Code_Summary[probes, "Count"][is.na(DCC$Code_Summary[probes, "Count"])] <- 0
+      }
+      
+      matches <- c(matches, identity(DCC$Code_Summary[probes,"Count"]) == 
+                     test_Data2@assayData$exprs[i,DCC_file])
+    }
+  }
+  
+  dcc <- dcc + 1
+}
+
+testthat::test_that("test that the number of collapsed probe is correct for aggregateCountsNoNeg", {
+  expect_true(sum(matches) == nrow(test_Data2@assayData$exprs)*numDCC)
+})
 
 # a = PKC$RTS_ID[which(PKC$Target == "ANGPT2")]
 # EnvStats::geoMean(DCC$Code_Summary[a,"Count"])
