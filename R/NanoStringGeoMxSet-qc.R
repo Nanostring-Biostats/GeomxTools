@@ -394,8 +394,8 @@ setGrubbsFlags <- function(object,
                                           grubbsResults[["LowLocalOutlier"]]), "Sample_ID"]
                 highAOIs <- grubbsResults[(grubbsResults[["RTS_ID"]] == currOut & 
                                           grubbsResults[["HighLocalOutlier"]]), "Sample_ID"]
-                if (length(lowAOIs) > 0) {currFlags[, lowAOIs] <- rep("Low", length(lowAOIs))}
-                if (length(highAOIs) > 0) {currFlags[, highAOIs] <- rep("High", length(highAOIs))}
+                if (length(lowAOIs) > 0) {currFlags[, lowAOIs] <- rep(TRUE, length(lowAOIs))}
+                if (length(highAOIs) > 0) {currFlags[, highAOIs] <- rep(TRUE, length(highAOIs))}
                 return(currFlags)
             })
         subsetOfLocals <- do.call(rbind, subsetOfLocals)
@@ -414,8 +414,7 @@ changeLocalsToNA <- function(object) {
     localColumns <- grepl("LocalGrubbs", colnames(fData(object)[["QCFlags"]]))
     if (sum(localColumns) > 0L) {
         assayDataElement(object, elt="preLocalRemoval") <- exprs(object)
-        exprs(object)[fData(object)[["QCFlags"]][, localColumns] == "Low"] <- NA
-        exprs(object)[fData(object)[["QCFlags"]][, localColumns] == "High"] <- NA
+        exprs(object)[fData(object)[["QCFlags"]][, localColumns] == TRUE] <- NA
     } else {
         warning("Local outlier test not performed yet. ",
                 "No change in local outlier values performed.")
