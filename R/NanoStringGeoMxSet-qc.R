@@ -301,7 +301,7 @@ setProbeRatioFlags <- function(object,
     probeRatios <- data.frame("ProbeRatio"=unlist(probeRatios), 
                               row.names=names(probeMeans))
     featureData(object)[["ProbeRatio"]] <- probeRatios
-    probeRatioFlags <- probeRatios < cutoff
+    probeRatioFlags <- probeRatios <= cutoff
     colnames(probeRatioFlags) <- "LowProbeRatio"
     object <- appendFeatureFlags(object, probeRatioFlags)
     return(object)
@@ -385,7 +385,7 @@ setGrubbsFlags <- function(object,
         
         outlierFreqs <- table(grubbsResults[["RTS_ID"]]) / dim(object)[2L]
         fData(object)[names(outlierFreqs), "OutlierFrequency"] <- outlierFreqs
-        globalFlags[["GlobalGrubbsOutlier"]] <- fData(object)[["OutlierFrequency"]] > alphaCutoff
+        globalFlags[["GlobalGrubbsOutlier"]] <- 100 * fData(object)[["OutlierFrequency"]] >= percFail
         
         subsetOfLocals <- 
             lapply(unique(grubbsResults[["RTS_ID"]]), function(currOut) {

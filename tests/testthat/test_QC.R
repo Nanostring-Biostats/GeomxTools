@@ -128,18 +128,53 @@ testData <- setBioProbeQCFlags(testData,
 
 
 probeQC <- fData(testData)[["QCFlags"]]
-probeQCResults <- data.frame(fData(testData)[["QCFlags"]])
+probeQCResults <- data.frame(fData(testData)[["QCFlags"]], check.names = FALSE)
 
 # req 1: test that the number of Low Probe Ratio is correct:------
 testthat::test_that("test that the number of Low Probe Ratio is correct", {
-  expect_true(sum(probeQC$LowProbeRatio) == sum(fData(testData)["ProbeRatio"] < 0.1)) 
+  expect_true(sum(probeQC$LowProbeRatio) == sum(fData(testData)["ProbeRatio"] <= 0.1)) 
 })
 
 
 
-# req 2: test that the Low Grubbs Outlier is correct:------ ?????????????
-neg_set <- exprs(negativeControlSubset(testData))
-# globalOutlier = rownames(probeQCResults)[which(probeQCResults$GrubbsOutlier==TRUE)]
+# req 2: test that the Local Grubbs Outlier is correct:
+neg_set <- assayDataElement(negativeControlSubset(testData), elt="preLocalRemoval")
+neg_set <- neg_set[, !apply(neg_set, 2, function(x) {max(x) < 10L})]
+neg_set <- logtBase(neg_set, base=10L)
 
-outliers::grubbs.test(neg_set[,1], two.sided = TRUE)
-probeQCResults["RTS0039349", "LocalGrubbsOutlier.DSP.1001250007851.H.A02.dcc"]
+test_results <- apply(neg_set, 2, outliers::grubbs.test, two.sided=TRUE)
+test_list <- lapply(test_results, function(x) {x$p.value < 0.01})
+test_outliers <- test_list[test_list == TRUE]
+test_nonoutliers <- test_list[test_list == FALSE]
+test_outliers <- lapply(test_outliers, function(x) {names(x)})
+outlier_flags <- 
+  lapply(names(test_outliers), 
+         function(x) {probeQCResults[test_outliers[[x]], 
+                                     paste0("LocalGrubbsOutlier.", x)]})
+testthat::test_that("test that outliers detected are correct", {
+  testthat::expect_true(all(unlist(outlier_flags))) 
+})
+outlier_count <- 
+  apply(probeQCResults[, paste0("LocalGrubbsOutlier.", names(test_outliers))],
+        2, 
+        sum)
+testthat::test_that("test that flagged sample/target sets have one outlier", {
+  testthat::expect_true(all(outlier_count == 1)) 
+})
+nonoutlier_count <- 
+  apply(probeQCResults[, paste0("LocalGrubbsOutlier.", names(test_nonoutliers))],
+        2, 
+        sum)
+testthat::test_that("test that sample/target sets not flagged are correct", {
+  testthat::expect_true(all(nonoutlier_count == 0)) 
+})
+
+
+# req 3: test that the Global Grubbs Outlier is correct:
+globals_flagged <- rownames(probeQCResults)[which(probeQCResults$GlobalGrubbsOutlier==TRUE)]
+probe_flag_percent <- 100 * table(t(as.data.frame(test_outliers))) / dim(testData)[["Samples"]]
+global_outliers <- names(probe_flag_percent[probe_flag_percent >= 20])
+testthat::test_that("flagged global outliers are correct", {
+  testthat::expect_true(all(global_outliers %in% globals_flagged))
+  testthat::expect_true(all(globals_flagged %in% global_outliers))
+})
