@@ -4,7 +4,7 @@
 \alias{setBioProbeQCFlags}
 \title{Add probe QC flags to NanoStringGeoMxSet object feature data}
 \usage{
-setBioProbeQCFlags(object, qcCutoffs = DEFAULTS)
+setBioProbeQCFlags(object, qcCutoffs = DEFAULTS, removeLocalOutliers = TRUE)
 }
 \arguments{
 \item{object}{name of the NanoStringGeoMxSet object to perform QC on}
@@ -19,6 +19,9 @@ setBioProbeQCFlags(object, qcCutoffs = DEFAULTS)
           numeric to flag probes that fail Grubb's test in 
           greater than or equal this percent of segments}
 }}
+
+\item{removeLocalOutliers}{boolean to determine if 
+local outliers should be excluded from \code{exprs} matrix}
 }
 \value{
 \code{NanoStringGeoMxSet} object with \code{QCFlags} data frame 
@@ -33,6 +36,7 @@ datadir <- system.file("extdata", "DSP_NGS_Example_Data",
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 setBioProbeQCFlags(demoData, 
                    qcCutoffs=list(minProbeRatio=0.1,
-                                  percentFailGrubbs=20))
+                                  percentFailGrubbs=20),
+                   removeLocalOutliers=TRUE)
 
 }
