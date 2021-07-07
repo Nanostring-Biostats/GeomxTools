@@ -4,39 +4,39 @@ DEFAULTS <- list(minSegmentReads=1000, percentTrimmed=80, percentStitched=80,
     minProbeRatio=0.1, outlierTestAlpha=0.01, percentFailGrubbs=20, 
     loqCutoff=1.0, highCountCutoff=10000)
 
-#' Add QC flags to feature or protocol data
+#' Add segment QC flags to protocol data
 #' 
 #' @param object name of the object class to perform QC on
 #' \enumerate{
 #'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 #' }
-#' @param dataDim the dimension of the object to QC on
-#' \enumerate{
-#'     \item{sample, QC data on the AOI level}
-#'     \item{feature, QC data on probe or target level}
-#' }
 #' @param qcCutoffs list of cutoffs and thresholds to use for QC
 #' 
-#' @return the object that QC was performed on
+#' @return \code{NanoStringGeoMxSet} object with \code{QCFlags} data frame 
+#'             appended to \code{protocolData}
 #' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
+#' setSegmentQCFlags(demoData, 
+#'                   qcCutoffs=list(minSegmentReads=1000, 
+#'                                  percentAligned=80, 
+#'                                  percentSaturation=50,
+#'                                  minNegativeCount=10, 
+#'                                  maxNTCCount=60,
+#'                                  minNuclei=16000, 
+#'                                  minArea=20))
 #' 
-setMethod("setQCFlags",
-    signature(object="NanoStringGeoMxSet"),
-    function(object, qcCutoffs=DEFAULTS, ...) {
-        qcCutoffs <- checkCutoffs(qcCutoffs)
-        object <- setSeqQCFlags(object=object, qcCutoffs=qcCutoffs)
-        object <- setBackgroundQCFlags(object=object, qcCutoffs=qcCutoffs)
-        object <- setGeoMxQCFlags(object=object, qcCutoffs=qcCutoffs)
-        if (featureType(object) == "Probe") {
-            object <- setBioProbeQCFlags(object=object, qcCutoffs=qcCutoffs)
-        } else if (featureType(object) == "Target") {
-        #   object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
-        } else {
-            valid(Object(x))
-        }
-        return(object)
-})
+#' @export
+#' 
+setSegmentQCFlags <- function(object, qcCutoffs=DEFAULTS) {
+    qcCutoffs <- checkCutoffs(qcCutoffs)
+    object <- setSeqQCFlags(object=object, qcCutoffs=qcCutoffs)
+    object <- setBackgroundQCFlags(object=object, qcCutoffs=qcCutoffs)
+    object <- setGeoMxQCFlags(object=object, qcCutoffs=qcCutoffs)
+    return(object)
+}
 
 #' Add sequencing QC flags to NanoStringGeoMxSet object protocol data
 #' 
@@ -247,6 +247,9 @@ setAreaFlags <- function(object, cutoff=DEFAULTS[["minArea"]]) {
 #'           numeric to flag probes that fail Grubb's test in 
 #'           greater than or equal this percent of segments}
 #' }
+#' @param removeLocalOutliers boolean to determine if 
+#'     local outliers should be excluded from \code{exprs} matrix
+#'
 #' @return \code{NanoStringGeoMxSet} object with \code{QCFlags} data frame 
 #'         appended to \code{protocolData}
 #' 
@@ -256,11 +259,14 @@ setAreaFlags <- function(object, cutoff=DEFAULTS[["minArea"]]) {
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' setBioProbeQCFlags(demoData, 
 #'                    qcCutoffs=list(minProbeRatio=0.1,
-#'                                   percentFailGrubbs=20))
+#'                                   percentFailGrubbs=20),
+#'                    removeLocalOutliers=TRUE)
 #' 
 #' @export
 #' 
-setBioProbeQCFlags <- function(object, qcCutoffs=DEFAULTS) {
+setBioProbeQCFlags <- function(object, 
+                               qcCutoffs=DEFAULTS, 
+                               removeLocalOutliers=TRUE) {
     qcCutoffs <- checkCutoffs(qcCutoffs)
     object <- setProbeRatioFlags(object=object, 
         cutoff=qcCutoffs[["minProbeRatio"]])
@@ -268,6 +274,9 @@ setBioProbeQCFlags <- function(object, qcCutoffs=DEFAULTS) {
                              minCount=qcCutoffs[["minProbeCount"]],
                              alphaCutoff=qcCutoffs[["outlierTestAlpha"]],
                              percFail=qcCutoffs[["percentFailGrubbs"]])
+    if (removeLocalOutliers) {
+        object <- changeLocalsToNA(object)
+    }
     return(object)
 }
 
@@ -401,6 +410,19 @@ setGrubbsFlags <- function(object,
     return(object)
 }
 
+changeLocalsToNA <- function(object) {
+    localColumns <- grepl("LocalGrubbs", colnames(fData(object)[["QCFlags"]]))
+    if (sum(localColumns) > 0L) {
+        assayDataElement(object, elt="preLocalRemoval") <- exprs(object)
+        exprs(object)[fData(object)[["QCFlags"]][, localColumns] == "Low"] <- NA
+        exprs(object)[fData(object)[["QCFlags"]][, localColumns] == "High"] <- NA
+    } else {
+        warning("Local outlier test not performed yet. ",
+                "No change in local outlier values performed.")
+    }
+    return(object)
+}
+
 checkCutoffs <- function(qcCutoffs) {
     if (suppressWarnings(!all(lapply(qcCutoffs, is.numeric)))) {
         stop("qcCutoffs must be numeric values")
@@ -445,6 +467,40 @@ appendFeatureFlags <- function(object, currFlags) {
 }
 
 ############Not used##########################################################
+#' Add QC flags to feature or protocol data
+#' 
+#' @param object name of the object class to perform QC on
+#' \enumerate{
+#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+#' }
+#' @param dataDim the dimension of the object to QC on
+#' \enumerate{
+#'     \item{sample, QC data on the AOI level}
+#'     \item{feature, QC data on probe or target level}
+#' }
+#' @param qcCutoffs list of cutoffs and thresholds to use for QC
+#' 
+#' @return the object that QC was performed on
+#' 
+#' @examples
+#' 
+setMethod("setQCFlags",
+    signature(object="NanoStringGeoMxSet"),
+    function(object, qcCutoffs=DEFAULTS, ...) {
+        qcCutoffs <- checkCutoffs(qcCutoffs)
+        object <- setSeqQCFlags(object=object, qcCutoffs=qcCutoffs)
+        object <- setBackgroundQCFlags(object=object, qcCutoffs=qcCutoffs)
+        object <- setGeoMxQCFlags(object=object, qcCutoffs=qcCutoffs)
+        if (featureType(object) == "Probe") {
+            object <- setBioProbeQCFlags(object=object, qcCutoffs=qcCutoffs)
+        } else if (featureType(object) == "Target") {
+        #   object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
+        } else {
+            valid(Object(x))
+        }
+        return(object)
+})
+
 removeFlagProbes <- function(object, removeFlagCols=NULL) {
     
 }
