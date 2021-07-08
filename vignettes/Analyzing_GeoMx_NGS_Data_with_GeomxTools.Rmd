@@ -5,6 +5,11 @@ date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
     toc: true
+    self_contained: false
+    fig_width: 5
+    fig_height: 4.5
+    mainfont: Arial
+    fontfamily: Arial
 vignette: >
   %\VignetteIndexEntry{Analyzing GeoMx NGS Data with GeomxTools}
   %\VignetteEncoding{UTF-8}
@@ -19,7 +24,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.width = 5,
-  fig.height = 4,
+  fig.height = 4.5,
   dpi=200
 )
 ```
@@ -32,6 +37,10 @@ GeomxTools gives users the capability to read these GeoMx output (DCC, PKC and a
 
 ### Dataset Introduction
 For this demo analysis, we will use the kidney dataset that can be found here:
+
+http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip
+
+Download and unzip the file. 
 
 NanoString GeoMx DSP dataset of diabetic kidney disease (DKD) vs healthy kidney tissue. 
 
@@ -50,24 +59,35 @@ First step in using the GeomxTools package is to install the package and invoke 
 # devtools::install_github("Nanostring-Biostats/NanoStringNCTools")
 
 library(NanoStringNCTools)
-library(GeomxTools, lib.loc = "/usr/local/lib/R/site-library" )
+library(GeomxTools)
 library(EnvStats)
 library(ggiraph)
 ```
 
 ## Load DCC files, PKC files and annotation file
 Next step is to load the DCC, PKC and annotation file. 
+
 - Save your PKC and annotation files in one folder, in this example, it is 
 stored in kidney_demo 
+
 - Save your DCC files as a sub-folder of the above for easy access, in this example, 
 it is stored in kidney_demo/DCC_files. 
+
 - Copy the folder path as your datadir below and change the slash to backslash. 
 
 ```{r quickstart, message=FALSE, warning=FALSE}
-datadir <- file.path( "/home/rstudio/NAS_data/rvitancol/kidney_demo")
-DCCFiles <- list.files(file.path( datadir , "DCC_files"), pattern=".dcc$", full.names=TRUE)
-PKCFiles <- list.files(file.path(datadir), pattern=".pkc$", full.names=TRUE)
-SampleAnnotationFile <- file.path(datadir, "kidney_demo_AOI_Annotations.xlsx")
+# Unzip and place the Kidney Dataset files downloaded from the Geoscript HUB website
+# Please enter the file path address with "/" instead of "\". Say if your file is in your downloads folder, set the datadir like below.
+# datadir <- file.path( "C:/Users/RVitancol/Downloads/Kidney_Dataset")
+
+datadir <- file.path( "/home/rstudio/hades/Rona/GeomxTools_1/Kidney_Dataset")
+
+# If there is none yet, make individual folders titled "dccs" "pkcs" and "annotation" 
+# to build your own lab worksheet, you may need to combine the multiple lab worksheets for your experiment in to one universal document
+# Please refer to the formatting and file type of the kidney example sheet
+DCCFiles <- dir(file.path(datadir, "dccs"), pattern=".dcc$", full.names=TRUE, recursive=TRUE)
+PKCFiles <- dir(file.path(datadir, "pkcs"), pattern=".pkc$", full.names=TRUE, recursive=TRUE)
+SampleAnnotationFile <- dir(file.path(datadir, "annotation"), pattern=".xlsx$", full.names=TRUE, recursive=TRUE)
 
 demoData <-
   suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
@@ -80,7 +100,7 @@ demoData <-
                                           experimentDataColNames = c("panel",
                                                                      "instrument_type")))
 
-#Shift counts to one to mimic how DSPDA handles zero counts
+# Shift counts to one to mimic how DSPDA handles zero counts
 demoData <- shiftCountsOne(demoData, elt="exprs", useDALogic=TRUE) 
 ```
 
@@ -92,15 +112,32 @@ You can then save it to a csv file if you need to.
 ```{r countmatrix, eval = FALSE}
 segmentProperties <- sData(demoData)
 head(segmentProperties)
-BioProbeCountMatrix <- exprs(demoData)
-head(BioProbeCountMatrix)
+
+# Access count matrix
+CountMatrix <- exprs(demoData)
+
+# Access Count matrix With Probe information (Probes are rows and AOIs as columns)
+BioProbeCountMatrix_With_Probe_Data <- (munge(demoData, mapping = ~ exprs + `TargetName` + `ProbeID`))
+
+# Convert the results above to wide format
+BioProbeCountMatrix_With_Probe_Data <- tidyr::spread(BioProbeCountMatrix_With_Probe_Data, SampleName, exprs)
+dim(BioProbeCountMatrix_With_Probe_Data)
+BioProbeCountMatrix_With_Probe_Data[1:4, 1:4]
+
+# Access Count matrix With Probe information (AOIs are rows and Probes as columns)
+BioProbeCountMatrix <- (munge(demoData, mapping = ~ exprs + `roi` + `slide name` + `segment` + `aoi` ))
+# convert the results above to wide format
+BioProbeCountMatrix <- tidyr::spread(BioProbeCountMatrix, FeatureName, exprs)
+dim(BioProbeCountMatrix)
+BioProbeCountMatrix[1:4, 1:6]
+
 # write.csv(BioProbeCountMatrix, "Bioprobe_count_matrix.csv")
 
-
+# Other useful accessor functions
 head(assayData(demoData)[["exprs"]])
-head( pData( demoData ), 2 )
-protocolData( demoData )
-svarLabels( demoData )
+head(pData(demoData), 2)
+protocolData(demoData)
+svarLabels(demoData) 
 ```
 
 ## Quality Control Assessment
@@ -111,41 +148,63 @@ Note that GeoDiff R package, a bayesian model based data analysis package is
 currently under development and planned to be released. This will include quality 
 control functions based on score test, AOI QC as well as differential expression analysis. 
 
-### Technical Signal QC 
+### Segment QC 
+The setSegmentQCFlags  function will set the QC flags in the protocolData for the segment. 
+This will run the the technical signal QC, Sequencing QC, background QC and segment QC.
 
-##### Set Sequencing QC flags using default settings from DSPDA
-
-Use the setSeqQCFlags  function to set Sequencing QC Flags to your dataset.
-
-```{r setseqqcflag,  eval = TRUE}
-demoData <- setSeqQCFlags(demoData, 
-                          qcCutoffs=list(minSegmentReads=1000, 
-                                 percentAligned=80, 
-                                 percentSaturation=50))
+```{r qcobject, eval = TRUE}
+# Please set the QC parameters per your study, this QC runs on default parameters similar to DSPDA setting
+demoData <- setSegmentQCFlags (demoData) 
 ```
 
 ##### Check Results
-
 ```{r checkseqqcflag,  eval = TRUE}
-head(protocolData(demoData)[["QCFlags"]])
+# TRUE means AOI did not pass the QC parameters specified
+summary(sData(demoData)[["QCFlags"]])
 
 prData <- protocolData(demoData)
 QCResults <- prData[["QCFlags"]]
 QCResults <- as.data.frame(QCResults)
 
-# Check which samples have low reads
-LowReads <- subset(demoData, select= prData[["QCFlags"]][,"LowReads"] == TRUE)
-sData(LowReads)["Raw"]
+# Append relevant variables to the the QC results dataframe. 
+QCResults <- cbind(QCResults, sData(demoData)[c( "Raw", "Trimmed", "Trimmed (%)",
+                                                 "DeduplicatedReads", "Saturated (%)",
+                                                 "Aligned", "Aligned (%)", "Stitched",
+                                                 "Stitched (%)", "NTC", "NegGeoMean", 
+                                                 "area", "nuclei")])
 
-# Check which samples have low percent Trimmed
-LowTrimmed <- subset(demoData, select= prData[["QCFlags"]]
-                     [,"LowTrimmed"] == TRUE)
-sData(LowTrimmed)[c("Trimmed", "Raw", "Trimmed (%)")]
+# Flag sample as PASS or WARNING if sample has a QC flag
+QCResults$QCStatus <- apply(prData[["QCFlags"]], 1L, function(x) {
+        y <- sum(x) == 0L
+        y <- ifelse(y, "PASS", "WARNING")
+        return(y)
+    })
+head(QCResults)
+# View(QCResults)
+
+# To check how many passed and how many segments are flagged as WARNING
+table(QCResults$QCStatus)
+
+# You can filter QC Results based on segments flagged as "warning" 
+head(QCResults[which(QCResults$QCStatus == "WARNING"), ])
+
+# You can filter QC Results to check which samples have low reads
+head(QCResults[which(QCResults$QCStatus == "WARNING" & 
+                       QCResults$LowReads == "TRUE" ), ])
+
+# You can filter QC Results to check which samples have Low Negatives
+head(QCResults[which(QCResults$QCStatus == "WARNING" & 
+                       QCResults$LowNegatives == "TRUE" ), ])
+
+# Or you can use subset function to subset demoData based on QC Flags
+# This is how to subset demoData to get samples have low reads
+LowReads <- subset(demoData, select= prData[["QCFlags"]][,"LowReads"] == TRUE)
+head(sData(LowReads)["Raw"])
 
 # Check which samples have low percent Stitched
 LowStitched <- subset(demoData, select= prData[["QCFlags"]]
                       [,"LowStitched"] == TRUE)
-sData(LowStitched)[c("Stitched", "Stitched (%)")]
+head(sData(LowStitched)[c("Stitched", "Stitched (%)")])
 
 # Check which samples are below Sequencing Saturation cutoff
 LowSaturation <- subset(demoData, select= prData[["QCFlags"]][,"LowSaturation"] == TRUE)
@@ -155,12 +214,16 @@ head(sData(LowSaturation)[c("DeduplicatedReads", "Aligned", "Saturated (%)")])
 LowAligned <- subset(demoData, select= prData[["QCFlags"]][,"LowAligned"] == TRUE)
 head(sData(LowAligned)[c("Raw", "Aligned", "Aligned (%)")])
 
-# Append relevant variables to the the QC results dataframe. 
-QCResults <- cbind(QCResults, sData(demoData)[c( "Raw", "Trimmed", "Trimmed (%)",
-                                                 "DeduplicatedReads", "Saturated (%)",
-                                                 "Aligned", "Aligned (%)",  "Stitched",
-                                                 "Stitched (%)")])
-head(QCResults)
+# Check which samples have LowNegatives flag 
+LowNegatives <- subset(demoData, select= prData[["QCFlags"]]
+                      [,"LowNegatives"] == TRUE)
+head(sData(LowNegatives)[c("NegGeoMean")])
+
+# Check which samples have HighNTC flag 
+HighNTC <- subset(demoData, select= prData[["QCFlags"]]
+                      [,"HighNTC"] == TRUE)
+head(sData(HighNTC)[c("NTC")])
+
 ```
 
 Other columns that are available in the NanoStringGeoMxSet that can easily be added to your 
@@ -172,203 +235,97 @@ names(sData(demoData))
 # add as additional column to your QCResults, say you want to add scan name, 
 # roi, aoi and slide name to your QC results
 QCResults <- cbind(QCResults, sData(demoData)[c("aoi", "roi", "slide name")])
-
 ```
 
 
 ##### Update cutoffs for Sequencing QC
-If needed, you can set the threshold for sequencing cutoff. And repeat checking of the QC flags steps above. Here we set the percentAligned to 75.
+If needed, you can set the threshold for sequencing cutoff and repeat checking the 
+QC flags steps above. Here we set the percentAligned to 75.
 
 ```{r setqcflagupdated,  eval = TRUE}
-demoData <- setSeqQCFlags(demoData, 
-                       qcCutoffs=list(minSegmentReads=1000,
+demoData <- setSegmentQCFlags(demoData, 
+                       qcCutoffs=list(minSegmentReads=1000, # Sequencing QC
                                       percentAligned=75,
-                                      percentSaturation=60))
+                                      percentSaturation=50, 
+                                      minNegativeCount=5, # background QC
+                                      maxNTCCount=150, 
+                                      minNuclei=15000, #Geomx QC
+                                      minArea=20))
+summary(sData(demoData)[["QCFlags"]])
 ```
 
 
 #####  Exclude samples that did not pass Sequencing QC
+Samples that were flagged can be removed from analysis by subsetting. 
+Subset object to exclude all that did not pass Sequencing and background QC.
 
-```{r excludeseq,  eval = TRUE}
-QCResultsIndex <- which(apply(protocolData(demoData)[["QCFlags"]], 1L , 
-                              function(x) sum(x) == 0L))
-QCPassed <- demoData[, QCResultsIndex]
-dim(QCPassed) 
-```
-
-
-### Technical background QC 
-
-##### Set Background QC flags using default settings from DSPDA
-
-Use the setBackgroundQCFlags function to set background QC Flags to your dataset.
-Not that LowNegatives and HighNTC flags are added to your protocolData
-
-
-```{r setbgqcflag,  eval = TRUE}
-demoData <- setBackgroundQCFlags(demoData, 
-                                 qcCutoffs=list(minNegativeCount=10, 
-                                 maxNTCCount=60))
-```
-
-##### Check Results
-
-```{r checkbgqcflag}
-head(protocolData(demoData)[["QCFlags"]])
-
-prData <- protocolData(demoData)
-QCResults <- prData[["QCFlags"]]
-QCResults <- as.data.frame(QCResults)
-
-#Flag sample as PASS or WARNING if sample has a QC flag
-QCResults$QCStatus <- apply(prData[["QCFlags"]], 1L, function(x) {
-        y <- sum(x) == 0L
-        y <- ifelse(y, "PASS", "WARNING")
-        return(y)
-    })
-
-# Append relevant variables to the the QC results dataframe
-QCResults <- cbind(QCResults, sData(demoData)[c("NegGeoMean", "NTC")])
-head(QCResults[which(QCResults$QCStatus == "WARNING"),])
-
-# Check which samples have low negative geomean
-LowNegatives <- subset(demoData, select= prData[["QCFlags"]]
-                       [,"LowNegatives"] == TRUE)
-head(sampleNames(phenoData(LowNegatives)))
-
-# Check which samples have high NTC
-HighNTC <- subset(demoData, select= prData[["QCFlags"]][,"HighNTC"] == TRUE)
-head(sampleNames(phenoData(HighNTC)))
-```
-
-##### Update cutoffs for background QC
-
-```{r setbgqcflagupdated,  eval = TRUE}
-demoData <- setBackgroundQCFlags(demoData, 
-                  qcCutoffs=list(minNegativeCount=5,  
-                                 maxNTCCount=8000))
-```
-
-#####  Exclude samples that did not pass Background and Sequencing QC
-
-```{r excludebg_seq}
-# Subset object to exclude all that did not pass Sequencing and background QC
-QCResultsIndex <- which(apply(protocolData(demoData)[["QCFlags"]], 1L , 
-                              function(x) sum(x) == 0L))
-QCPassed <- demoData[, QCResultsIndex]
-dim(QCPassed) 
-```
-
-#####  Exclude samples that did not pass just the Background QC
-
-```{r excludebg_only}
-# Subset object to exclude those that did not pass just the background QC
-QCResultsIndex <- which(apply(protocolData(demoData)[["QCFlags"]]
-                              [, c("HighNTC", "LowNegatives")], 
+```{r removeQCSampleProbe,  eval = TRUE}
+QCResultsIndex <- which(apply(protocolData(demoData)[["QCFlags"]], 
                               1L , function(x) sum(x) == 0L))
-QCPassed <- demoData[,QCResultsIndex]
-dim(QCPassed) 
-```
-
-
-
-### Segment QC
-
-##### DSP Parameters Minimum Nuclei and Surface Area Count QC  
-
-Set Segment QC flags using default settings from DSPDA
-Use the setGeoMxQCFlags function to set segment QC Flags to your dataset.
-
-```{r setsegmentqcflag,  eval = TRUE}
-demoData <- setGeoMxQCFlags(demoData, 
-                            qcCutoffs=list(minNuclei=16000,
-                                           minArea=20))
-```
-
-##### Check Results
-
-```{r checksegqcflag}
-#Check Results
-head(protocolData(demoData)[["QCFlags"]])
-
-prData <- protocolData(demoData)
-QCResults <- prData[["QCFlags"]]
-QCResults <- as.data.frame(QCResults)
-
-#Flag sample as PASS or WARNING if sample has a QC flag
-QCResults$QCStatus <- apply(prData[["QCFlags"]], 1L, function(x) {
-        y <- sum(x) == 0L
-        y <- ifelse(y, "PASS", "WARNING")
-        return(y)
-    })
-
-# Check which samples have low area
-LowArea <- subset(demoData, select= prData[["QCFlags"]][,"LowArea"]== TRUE)
-head(sData(LowArea)["area"])
-
-# Check which samples have low nuclei
-LowNuclei <- subset(demoData, select= prData[["QCFlags"]][,"LowNuclei"]== TRUE)
-head(sData(LowNuclei)["nuclei"])
-
-# Append relevant variables to the the QC results dataframe
-QCResults <- cbind(QCResults, sData(demoData)[c("area", "nuclei")])
-head(QCResults[which(QCResults$QCStatus == "WARNING"),])
-
-```
-
-##### Update cutoffs for Segment QC
-
-If needed, you can set the threshold for minimum area and minimum nuclei cutoff. 
-Repeat checking of the QC flags steps above if needed. For this one, maybe 
-update the minimum nuclei to 15000
-
-
-```{r setsegmentqcflagupdated,  eval = TRUE}
-demoData <- setGeoMxQCFlags(demoData, 
-                            qcCutoffs=list(minNuclei=15000, 
-                                           minArea=20))
-```
-
-##### Exclude samples that did not pass QC
-
-```{r}
-# Subset object to exclude all samples that did not pass QC
-QCResultsIndex <- which(apply(protocolData(demoData)[["QCFlags"]], 1L , 
-                              function(x) sum(x) == 0L))
 QCPassed <- demoData[, QCResultsIndex]
-dim(QCPassed) 
-```
 
-#####  Exclude samples that did not pass just the segment QC
+# QC Passed is your pruned dataset without the Sequencing QC warning AOIs
+# Setting demoData to contain only those that passed AOI QC
+demoData <- QCPassed
+dim(demoData) 
 
-```{r excludesegment_only}
-# Subset object to exclude those that did not pass just the segment QC
-QCResultsIndex <- which(apply(protocolData(demoData)[["QCFlags"]]
-                              [, c("LowArea", "LowNuclei")], 1L , 
-                              function(x) sum(x) == 0L))
-QCPassed <- demoData[,QCResultsIndex]
-dim(QCPassed) 
+# Write Pruned Bioprobe QC dataset to csv
+# write.csv(QCPassed, "Bioprobe_AOI_QC.csv")
 ```
 
 
 ### Biological Probe QC 
 
 Use the setBioProbeQCFlags function to set QC Flags for probes that appear to 
-be outliers in the data
+be outliers in the data. Set removeLocalOutliers parameter to TRUE if you want to 
+remove local outliers.
+
+Local outliers are probes that are outliers within a segment. When the removeLocalOutliers parameter is set to TRUE, the function assigns NA to the counts for the probes for the particular segment. This will then exclude it in the computation for collapsing to Target counts.
 
 ##### Set Biological Probe QC flags using default settings from DSPDA
 
 ```{r setbioprobeqcflag,  eval = TRUE}
+# Generally keep the qcCutoffs parameters unchanged. Set removeLocalOutliers to 
+# FALSE if you do not want to remove local outliers
 demoData <- setBioProbeQCFlags(demoData, 
                                qcCutoffs=list(minProbeRatio=0.1,
-                                              percentFailGrubbs=20))
+                                              percentFailGrubbs=20), 
+                               removeLocalOutliers=TRUE)
 ```
 
 ##### Check Results
 
-```{r}
-head(fData(demoData)[["QCFlags"]])
+```{r checkprobeQCresults}
+featureData(demoData)[["QCFlags"]][1:5, 1:5]
+probeQCFlags <- featureData(demoData)[["QCFlags"]]
 
+# Check how many Grubbs local outliers were set
+probeQCFlags <- probeQCFlags[ , grepl( "LocalGrubbsOutlier", names(probeQCFlags))]
+table(unlist(probeQCFlags))
+# TRUE means probe was flagged as local outlier
+
+# Check which probes are flagged as local outlier
+# subset probes that are local outliers = Low or High or TRUE
+localColumns <- grepl("LocalGrubbs", colnames(fData(demoData)[["QCFlags"]]))
+locals <- fData(demoData)[["QCFlags"]][, localColumns]  
+localFlagProbes <- locals[apply(locals, 1, sum) > 0, ]
+localFlagSamples <- locals[, apply(locals, 2, sum) > 0]
+
+# How many probes are local outliers
+dim(localFlagProbes)[1]
+
+# How many samples have local outliers
+dim(localFlagSamples)[2]
+
+# Check probes that are flagged as Global outlier 
+# TRUE means probe did not pass global probe outlier
+summary(fData(demoData)[["QCFlags"]][["GlobalGrubbsOutlier"]])
+
+# TRUE means probe did not pass low probe ratio threshold, if there is no TRUE, 
+# means all probes passed low ratio threshold
+summary(fData(demoData)[["QCFlags"]][["LowProbeRatio"]])
+
+# Construct ProbeQC results dataframe
 ProbeQCResults <- fData(demoData)[["QCFlags"]]
 ProbeQCData <- as.data.frame(ProbeQCResults)
 ProbeQCResults$medianCounts <- apply(assayDataElement(demoData, elt="exprs"),
@@ -387,49 +344,40 @@ ProbeQCResults$outlierStatus <- apply(fData(demoData)[["QCFlags"]], 1L,
                                       )
 # Append relevant variables to the the QC results dataframe
 ProbeQCResults <- cbind(ProbeQCResults, fData(demoData)[c("ProbeRatio", "TargetName")])
-ProbeQCResults[1:5, ]
 dim(ProbeQCResults)
+# View(ProbeQCResults)
 
+# Subset to show only Global outliers and low probe ratio
+ProbeQCResults_Global <- ProbeQCResults[,!c(grepl( "LocalGrubbsOutlier" , names(ProbeQCResults)))]
+head(ProbeQCResults_Global)
 
-# Check which probes have outliers
-outlierRatio <- subset(demoData, fData(demoData)[["QCFlags"]][,"LowProbeRatio"]== TRUE)
-dim(outlierRatio)
-outlierGrubbs <- subset(demoData, fData(demoData)[["QCFlags"]][,"GrubbsOutlier"]== TRUE)
-dim(outlierGrubbs)
+# Check which probes have global outliers
 outliersQC <- subset(demoData, 
                      fData(demoData)[["QCFlags"]][,c("LowProbeRatio")]== TRUE |
-                       fData(demoData)[["QCFlags"]][,c("GrubbsOutlier")]== TRUE)
-
-# Total Number of probes
-length(featureData(demoData)[["ProbeID"]])
-
-# Total Number of probes passed
-length(featureData(outliersQC)[["ProbeID"]])
-
-# local outliers
-length(featureData(outlierRatio)[["ProbeID"]])
-
-# global outliers
-length(featureData(outlierGrubbs)[["ProbeID"]])
-
+                       fData(demoData)[["QCFlags"]][,c("GlobalGrubbsOutlier")]== TRUE)
+# fData(outliersQC)[1:5, 1:8]
 ```
+
 
 ##### Update cutoffs for Biological Probe QC
 
-```{r setbioprobeqcflagupdated,  eval = TRUE}
+```{r setbioprobeqcflagupdated,  eval = FALSE}
+# If you need to update the thresholds, just rerun the setBioProbeQCFlags function and set the cutoffs
 demoData <- setBioProbeQCFlags(demoData,
-                               qcCutoffs=list(minProbeRatio=0.1,                      
+                               qcCutoffs=list(minProbeRatio=0.1,
                                               percentFailGrubbs=20))
 ```
 
-##### Exclude targets that did not pass Biological Probe QC
+
+##### Exclude targets that did not pass Global Biological Probe QC
 
 ```{r}  
-#Subset object to exclude all that did not pass Bioprobe QC
-ProbeQCResultsIndex <- which(apply(fData(demoData)[["QCFlags"]], 1L , 
-                                   function(x) sum(x) == 0L))
-ProbeQCPassed <- demoData[ProbeQCResultsIndex,]
-dim(ProbeQCPassed) 
+#Subset object to exclude all that did not pass Global Bioprobe QC and Outlier Ratio QC
+ProbeQCPassed <- subset(demoData, 
+                     fData(demoData)[["QCFlags"]][,c("LowProbeRatio")]== FALSE &
+                       fData(demoData)[["QCFlags"]][,c("GlobalGrubbsOutlier")]== FALSE)
+dim(ProbeQCPassed)
+demoData <- ProbeQCPassed 
 ```
 
 ## Collapse to Target
@@ -439,7 +387,6 @@ After cleaning the object from low counts, the counts can be collapsed to Target
 using aggregateCounts function.
 
 ```{r, eval = TRUE}
-#demoData <- ProbeQCPassed
 # Check how many unique targets the object has
 length(unique(featureData(demoData)[["TargetName"]]))
 
@@ -447,6 +394,19 @@ length(unique(featureData(demoData)[["TargetName"]]))
 target_demoData <- aggregateCounts(demoData)
 dim(target_demoData)
 exprs(target_demoData)[1:5, 1:5]
+
+TargetCountMatrix <- exprs(target_demoData)
+
+# Add annotations (scan name, roi, segment, aoi) 
+# Access Count matrix With Probe information (AOIs are rows and targets as columns)
+TargetCountMatrix <- (munge(target_demoData, mapping = ~ exprs + `roi` + 
+                              `slide name` + `segment` + `aoi` ))
+# convert the results above to wide format
+TargetCountMatrix <- tidyr::spread(TargetCountMatrix, FeatureName, exprs)
+dim(TargetCountMatrix)
+TargetCountMatrix[1:4, 1:10]
+
+#write.csv(TargetCountMatrix, "target_count_matrix.csv")
 ```
 
 ## Normalization
@@ -455,35 +415,55 @@ NanoStringGeoMxSet class. This includes the options to normalize on quantile,
 housekeeping or negative normalization.
 
 ```{r normalizeObject, eval = TRUE}
+# Q3 norm (75th percentile) for WTA/CTA  with or without custom spike-ins
 target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="quant", 
-                      desiredQuantile = .9, toElt = "q_norm")
+                      desiredQuantile = .75, toElt = "q_norm")
+
+# Background normalization for WTA/CTA without custom spike-in
 target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="neg", 
                              fromElt="exprs",  toElt="neg_norm")
-target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="hk", 
-                             fromElt="exprs", toElt="hk_norm")
+# Note that Negative normalization is not acceptable for custom spike-ins in this R pipeline
+
 assayDataElement( target_demoData , elt = "q_norm" )[1:3, 1:2]
-assayDataElement( target_demoData , elt = "hk_norm" )[1:3, 1:2]
 assayDataElement( target_demoData , elt = "neg_norm" )[1:3, 1:2]
+NormCountMatrix <- assayDataElement(target_demoData, "q_norm")
+
+# Add annotations (scan name, roi, segment, aoi) 
+# Access Count matrix With Probe information (AOIs are rows and targets as columns)
+NormCountMatrix <- munge(target_demoData, mapping = ~q_norm + `roi` + 
+                           `slide name` + `segment` + `aoi` )
+# convert the results above to wide format
+NormCountMatrix <- tidyr::spread(NormCountMatrix, FeatureName, q_norm)
+dim(NormCountMatrix)
+NormCountMatrix[1:4, 1:10]
+
+# write.csv(NormCountMatrix", norm_count_matrix.csv")
 ```
 
 #### Normalization Plots
 To help you decide which is the best normalization to use, you can plot the 
 normalization factors using heatmap option in the autoplot function
 
-```{r normalizePlot, fig.width=5, fig.height=4, eval = FALSE}
+```{r normalizePlot, fig.width=4.5, fig.height=4, eval = TRUE}
 # Run to generate plots to compare normalization heatmap 
 p_qnorm <- autoplot(target_demoData, type = "heatmap-genes",  elt = "q_norm",
                         log2scale = FALSE, heatmapGroup = c("class", "pathology", "region")
                        )
+p_qnorm
+
+```
+
+```{r normalizePlot2, fig.width=4.5, fig.height=4, eval = TRUE}
 p_negnorm <- autoplot(target_demoData, type = "heatmap-genes",  elt = "neg_norm",
                         log2scale = FALSE, heatmapGroup = c("class", "pathology", "region")
                         )
+p_negnorm
 
-#p_qnorm
+# You can use the munge function to add annotation to your data for plotting purposes
+NormCountMatrix <- munge(target_demoData, mapping = ~q_norm + `roi` + 
+                           `slide name` + `segment` + `aoi` )
+# ggplot(NormCountMatrix, aes(x = `slide name`, y = q_norm)) + geom_boxplot() + geom_jitter()
 ```
-
-
-
 
 ```{r}
 sessionInfo()
