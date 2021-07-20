@@ -160,7 +160,7 @@ print(QC_Summary) # Format table later
 
 To view the distribution of these statistics we will generate a few graphs with a quick function to draw histograms of our data using `ggplot2`.
 
-``` {r qcflaghistograms,  eval = TRUE}
+``` {r qcflag histograms, fig.dim = c(4,6), opt.width = .3, eval = TRUE}
 
 # Graphical summaries of QC statistics
 QC_histogram <- function(assay_data = NULL,
@@ -199,7 +199,7 @@ QC_histogram(sData(demoData), 'nuclei', 'region', 20)
 
 ###  Exclude samples that did not pass Sequencing QC
 
-```{r removeQCSampleProbe,  eval = TRUE}
+```{r remove QCSampleProbe, eval = TRUE}
 QCResultsIndex <- which(apply(protocolData(demoData)[["QCFlags"]], 
                               1L , function(x) sum(x) == 0L))
 QCPassed <- demoData[, QCResultsIndex]
@@ -236,7 +236,7 @@ data.frame(Passed = sum(rowSums(ProbeQCResults[, -1]) == 0),
 
 #### Exclude Outlier Probes
 
-```{r}  
+```{r excludeOutlierProbes}  
 #Subset object to exclude all that did not pass Global Bioprobe QC and Outlier Ratio QC
 ProbeQCPassed <- subset(demoData, 
                      fData(demoData)[["QCFlags"]][,c("LowProbeRatio")]== FALSE &
@@ -251,7 +251,7 @@ In addition to outlier detection, we must now determine the limit of quantificat
 
 In the example below we use 2 geometric standard deviations (n = 2) above the geometric mean as the cutoff, which is recommended for most use cases. We also recommend that a minimum LOQ of 2 be used even if the LOQ calculated to be below this threshold.
 
-``` {r, eval = TRUE}
+``` {r calculateLOQ, eval = TRUE}
 # Create a function to define and calculate the LOQ:
 calc_LOQ <- function(object = NULL,
                      cutoff = 2,
@@ -269,7 +269,7 @@ pData(demoData)$LOQ <- calc_LOQ(demoData)
 
 After calculating the LOQ we will generate a target count matrix. This will summarize all multi-probe targets into a single value represented as the geometric mean of those probes.
 
-```{r, eval = TRUE}
+```{r aggregateCounts, eval = TRUE}
 # Check how many unique targets the object has
 length(unique(featureData(demoData)[["TargetName"]]))
 
@@ -307,7 +307,7 @@ After filtering segments with poor detection, we recommend removing genes which 
 
 First we will determine the number of genes detected at various cutoffs across our dataset. For each gene will will determine how many segments have expression > LOQ, and plot this information to help select a cutpoint for minimal detection. We will also show you how to determine for genes of interest how many AOIs it's detected in.
 
-``` {r, eval = TRUE}
+``` {r geneDetectionRate, eval = TRUE}
 
 pData(target_demoData)$LOQ <- pData(demoData)$LOQ
 
@@ -318,7 +318,7 @@ fData(target_demoData)$DetectedSegments <- rowSums(LOQ_Mat, na.rm = TRUE)
 fData(target_demoData)$DetectionRate <- fData(target_demoData)$DetectedSegments / nrow(pData(target_demoData))
 
 # Gene of interest detection table:
-goi <- c('PDCD1','CD274','IFNG','CD8A','CD68','EPCAM','KRT18','NPHS1','CALB1','CLDN8')
+goi <- c('PDCD1','CD274','IFNG','CD8A','CD68','EPCAM','KRT18','NPHS1','NPHS2','CALB1','CLDN8')
 data.frame(Gene = goi,
            Detection = fData(target_demoData)[goi, 'DetectedSegments'],
            Rate = round(fData(target_demoData)[goi, 'DetectionRate'] * 100, 1))
@@ -349,7 +349,7 @@ ggplot(plot_detect, aes(x = as.factor(Freq), y = Rate, fill = Rate)) +
 
 As we have confirmed that all target genes of interest are detected at > 5% of AOIs, we will out genes detected in < 5% of segments. If a target gene was detected in < 5% of AOIs, it could be manually saved or a lower threshold could be selected.
 
-``` {r, eval = TRUE}
+``` {r subsetGenes, eval = TRUE}
 
 # Subset to target genes detected in at least 5% of the samples.
 target_demoData <- target_demoData[fData(target_demoData)$DetectionRate > 0.05, ]
@@ -366,7 +366,7 @@ Before we choose a normalization factor to use, we will explore the relationship
 
 For additional guidance, please refer to our [Data Analysis & Normalization White Paper for DSP-NGS Assays](whitepaper url)
 
-``` {r, Review normalization factors, eval = TRUE}
+``` {r, previewNF, eval = TRUE}
 
 # Graph Q3 value vs negGeoMean of Negatives
 ann_of_interest <- 'region'
@@ -485,7 +485,7 @@ ggplot(pData(target_demoData),
 
 A common method for understanding distinctions between sets of segments or patients is to perform differential expression analysis. While more advanced methods for modeling the underlying count distribution are being actively developed, a simple approach to performing differential expression testing is to use a mixed-effect regression to estimate differences in mean expression between groups of ROIs, while accounting for the fact that the groups may have slide-specific effects using a random slope or random slope & intercept based on slide or sample. Essentially, the random slope or intercept is used to control for slide-specific effects, while modeling distinctions in the test of interest. Below we use the package `lme4` to model the data and `lmerTest` to estimate the significance of interactions. For more information about mixed effect modes please see [the original lme4 documentation](link to LME4).
 
-``` {r DE}
+``` {r DE, eval = TRUE}
 library(lme4)
 library(lmerTest)
 
@@ -533,7 +533,7 @@ plt <- ggplot(results,
                                 `P < 0.05` = 'orange2',
                                 `NS or FC < 0.5` = 'gray')) +
   scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
-  geom_text_repel(data = subset(results, `Pr(>|t|)` < 1e-13),
+  geom_text_repel(data = subset(results, `Pr(>|t|)` < 1e-15),
                   size = 3.5, point.padding = 0.15, color = 'black',
                   min.segment.length = .1, box.padding = .2, lwd = 2) +
   theme_bw()
@@ -566,11 +566,11 @@ print(plt)
 
 [TEXT HERE]
 
-``` {r boxplot}
+``` {r boxplot, eval = TRUE}
 # show expression for a single target: NPHS1
 ggplot(pData(target_demoData),
        aes(x = region, fill = region,
-           y = assayDataElement(target_demoData['NPHS1', ], elt = 'neg_norm'))) +
+           y = assayDataElement(target_demoData['NPHS2', ], elt = 'q_norm'))) +
   geom_boxplot() +
   labs(y = 'NPHS1') +
   scale_y_continuous(trans = 'log2') +
@@ -580,7 +580,7 @@ ggplot(pData(target_demoData),
 
 [TEXT HERE]
 
-``` {r heatmap}
+``` {r heatmap, eval = TRUE}
 library(pheatmap)
 
 # select top significant genes based on significance & filter any with NA's
@@ -594,13 +594,14 @@ pheatmap(assayDataElement(target_demoData[GOI, ], elt = 'q_norm'),
          border_color = NA,
          clustering_distance_rows = 'correlation',
          clustering_distance_cols = 'correlation',
-         clustering_method = 'average',
+         clustering_method = 'complete',
          breaks = seq(-3, 3, 0.05),
          color = colorRampPalette(c('purple3','black','yellow2'))(120),
          annotation_col = pData(target_demoData)[, c('region','class')])
 
 # The GeomxTools package also includes heatmap functionality in the graph
 # autoplot as a simple additional method for graphing your data
+dev.off()
 autoplot(target_demoData[GOI, ], type = 'heatmap-genes',
          elt = 'q_norm', heatmapGroup = c('region','class'))
 
