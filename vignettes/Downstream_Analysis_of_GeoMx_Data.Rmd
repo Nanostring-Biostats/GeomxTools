@@ -362,7 +362,7 @@ We will now normalize the GeoMx data for downstream visualizations and different
 
 Both of these normalization methods rely on the distribution of the data to estimate a normalization factor to roughly bring the data distributions together. More advanced methods for normalization and modelings are under active development, however, for most projects these methods are sufficient for understanding differences between biological classes of segments and samples. Additionally other packages such as `limma` and `voom` may also be appropriate in some cases.
 
-Before we choose a normalization factor to use, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. We'd ideally like there to be separation between these two values before normalizing to one of them.
+Before we choose a normalization factor to use, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. We'd ideally like there to be separation between these two values before normalizing to one of them. If you do not see sufficient seperation between these values, you may need to be more aggressive with filtering out low-expressing genes.
 
 For additional guidance, please refer to our [Data Analysis & Normalization White Paper for DSP-NGS Assays](whitepaper url)
 
@@ -402,7 +402,7 @@ ggplot(Stat_data, aes(x = NegProbe, y = Q3/NegProbe, color = Annotation)) +
   scale_y_continuous(trans = 'log2') +
   labs(x = 'Negative Probe GeoMean, Counts', y = 'Upper Quartile/NegProbe Value, Counts')
 
-rm(c('Stat_data','Stat_data_m'))
+rm(list = c('Stat_data','Stat_data_m'))
 
 ```
 
@@ -416,8 +416,8 @@ target_demoData <- normalize(target_demoData , data_type = "RNA", norm_method = 
                              fromElt = "exprs",  toElt = "neg_norm")
 
 # Note that Negative normalization is not acceptable for custom spike-ins in this R pipeline {is this true?}
-assayDataElement(target_demoData , elt = "q_norm")[1:3, 1:2]
-assayDataElement(target_demoData , elt = "neg_norm")[1:3, 1:2]
+assayDataElement(target_demoData , elt = "q_norm")[1:5, 1:5]
+assayDataElement(target_demoData , elt = "neg_norm")[1:5, 1:5]
 NormCountMatrix <- assayDataElement(target_demoData, "q_norm")
 
 # Add annotations (scan name, roi, segment, aoi) 
@@ -430,10 +430,11 @@ dim(NormCountMatrix)
 NormCountMatrix[1:4, 1:10]
 
 # visualize the first 10 segments with each normalization method
-boxplot(exprs(target_demoData)[,1:10], log = 'y', names = 1:10, xlab = 'Segment', ylab = 'Counts, Raw')
-boxplot(assayDataElement(target_demoData[,1:10], elt = 'q_norm'),
+boxplot(exprs(target_demoData)[,1:10], col = '#9EDAE5', main = 'Raw Counts',
+        log = 'y', names = 1:10, xlab = 'Segment', ylab = 'Counts, Raw')
+boxplot(assayDataElement(target_demoData[,1:10], elt = 'q_norm'), col = '#2CA02C', main = 'Q3 Norm Counts',
         log = 'y', names = 1:10, xlab = 'Segment', ylab = 'Counts, Q3 Normalized')
-boxplot(assayDataElement(target_demoData[,1:10], elt = 'neg_norm'),
+boxplot(assayDataElement(target_demoData[,1:10], elt = 'neg_norm'), col = '#FF7F0E', main = 'Neg Norm Counts',
         log = 'y', names = 1:10, xlab = 'Segment', ylab = 'Counts, Neg. Normalized')
 
 ```
@@ -453,7 +454,7 @@ custom_umap <- umap.defaults
 custom_umap$random_state <- 42
 
 # run UMAP
-umap_out <- umap(t(na.omit(log2(assayDataElement(target_demoData , elt = "neg_norm")))),  
+umap_out <- umap(t(na.omit(log2(assayDataElement(target_demoData , elt = "q_norm")))),  
                  config = custom_umap)
 pData(target_demoData)$UMAP1 <- umap_out$layout[,1]
 pData(target_demoData)$UMAP2 <- umap_out$layout[,2]
@@ -469,7 +470,7 @@ ggplot(pData(target_demoData),
 
 library(Rtsne)
 # run UMAP
-tsne_out <- Rtsne(t(na.omit(log2(assayDataElement(target_demoData , elt = "neg_norm")))), perplexity = 20)
+tsne_out <- Rtsne(t(na.omit(log2(assayDataElement(target_demoData , elt = "q_norm")))), perplexity = 15)
 pData(target_demoData)$tSNE1 <- tsne_out$Y[,1]
 pData(target_demoData)$tSNE2 <- tsne_out$Y[,2]
 
@@ -488,23 +489,27 @@ A common method for understanding distinctions between sets of segments or patie
 library(lme4)
 library(lmerTest)
 
-# DE results are just returned as a table here, but could also be stored in fData
-# Use cases:
+##NOTE: monocole includes a multi-core application of esApply. writing qNorm to
+##the primary data slot for exprs might allow this to be used instead of
+##assayDataApply which in theory would be able to speed this up some.
+##   https://rdrr.io/bioc/monocle/man/mcesApply.html
 
-# Test 1:
-# Glom vs Tubules - mixed slope + intercept because the test is performed
+# DE results are just returned as a table here, but could also be stored in fData
+
+# Use case:
+# Glomeruli vs Tubules - mixed slope + intercept because the test is performed
 #     comparing paired ROIs within a slide 
 
-# between structure (glomerulus vs tubules), across samples:
 lmm <- function(y) {
   coef(summary(lmer(log2(y) ~ region + (1 + `slide name`| `slide name`))))[2, c(1,5)]
 }
 results <- t(suppressMessages(assayDataApply(target_demoData,
-                                             elt = "neg_norm", MARGIN = 1, lmm)))
+                                             elt = "q_norm", MARGIN = 1, lmm)))
 results <- as.data.frame(results)
 results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
 head(results)
 
+# Categorize Results based on P-value & FDR for plotting
 results$Color <- 'NS or FC < 0.5'
 results$Color[results$P < 0.05] <- 'P < 0.05'
 results$Color[results$FDR < 0.05] <- 'FDR < 0.05'
@@ -513,6 +518,7 @@ results$Color[abs(results$Estimate) < 0.5] <- 'NS or FC < 0.5'
 results$Color <- factor(results$Color, levels = c('NS or FC < 0.5', 'P < 0.05', 'FDR < 0.05', 'FDR < 0.001'))
 results$Gene <- rownames(results)
 
+# Graph results
 plt <- ggplot(results,
               aes(x = Estimate, y = -log10(`Pr(>|t|)`),
                   color = Color, label = Gene)) +
@@ -534,25 +540,25 @@ plt <- ggplot(results,
 
 print(plt)
 
-# Test 2: [[[THIS SECTION ISN"T FINISHED YET]]]
-# Glom - disease vs normal - subset & then DE mixed slope only, as this is
-#     a test of groups of slides
-
-# within structure disease vs normal
-lmm <- function(y) {
-  coef(summary(lmer(log2(y) ~ class + (1 | `slide name`))))[2, c(1,5)]
-}
-
-results_t2 <- c()
-for(structure in unique(pData(target_demoData)$region)) {
-  tmp_res <- t(assayDataApply(target_demoData[1:100, target_demoData$region == structure],
-                              elt = "neg_norm", MARGIN = 1, lmm))
-  tmp_res <- as.data.frame(tmp_res)
-  tmp_res$FDR <- p.adjust(tmp_res$`Pr(>|t|)`, method = 'fdr')
-  tmp_res$Structure <- structure
-  results_t2 <- rbind(tmp_res, results_t2)
-}
-
+# # Test 2: [[[THIS SECTION ISN"T FINISHED YET]]]
+# # Glom - disease vs normal - subset & then DE mixed slope only, as this is
+# #     a test of groups of slides
+# 
+# # within structure disease vs normal
+# lmm <- function(y) {
+#   coef(summary(lmer(log2(y) ~ class + (1 | `slide name`))))[2, c(1,5)]
+# }
+# 
+# results_t2 <- c()
+# for(structure in unique(pData(target_demoData)$region)) {
+#   tmp_res <- t(assayDataApply(target_demoData[1:100, target_demoData$region == structure],
+#                               elt = "neg_norm", MARGIN = 1, lmm))
+#   tmp_res <- as.data.frame(tmp_res)
+#   tmp_res$FDR <- p.adjust(tmp_res$`Pr(>|t|)`, method = 'fdr')
+#   tmp_res$Structure <- structure
+#   results_t2 <- rbind(tmp_res, results_t2)
+# }
+# 
 
 ```
 
@@ -579,9 +585,9 @@ library(pheatmap)
 
 # select top significant genes based on significance & filter any with NA's
 GOI <- subset(results, `Pr(>|t|)` < 1e-10)$Gene
-any_NA <- rowSums(is.na(assayDataElement(target_demoData[GOI, ], elt = 'neg_norm')))
+any_NA <- rowSums(is.na(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')))
 GOI <- GOI[any_NA == 0]
-pheatmap(assayDataElement(target_demoData[GOI, ], elt = 'neg_norm'),
+pheatmap(assayDataElement(target_demoData[GOI, ], elt = 'q_norm'),
          scale = 'row', 
          show_rownames = FALSE,
          show_colnames = FALSE,
@@ -595,9 +601,8 @@ pheatmap(assayDataElement(target_demoData[GOI, ], elt = 'neg_norm'),
 
 # The GeomxTools package also includes heatmap functionality in the graph
 # autoplot as a simple additional method for graphing your data
-autoplot(target_demoData[GOI, ], type = 'heatmap-genes', elt = 'neg_norm', heatmapGroup = c('region','class'))
-
-
+autoplot(target_demoData[GOI, ], type = 'heatmap-genes',
+         elt = 'q_norm', heatmapGroup = c('region','class'))
 
 ```
 
