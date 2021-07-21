@@ -129,7 +129,7 @@ demoData <- shiftCountsOne(demoData, elt = "exprs", useDALogic = TRUE)
 
 With the `demoData`, you have just created your first *GeoMxSet Object*. These objects are how we manage expression data, annotations, and meta-data about the probes and study throughout an experiment when working with `GeomxTools`. They are based on `ExpressionSet` objects, and have many similar functions as those described [on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf). All of this information is linked and stored together, and there are a few key ways to access the data now that we have created a GeoMxSet Object. Below is a schematic overview of some of the data and functions we will use in the rest of the vignette.
 
-![GeoMxSet Object Overview](./GeomxSetStructure.png){width=50%}
+![GeoMxSet Object Overview](./GeomxSetStructure.png){width=60%}
 
 As is shown above the GeoMxSet object consists of 3 or more elements.
 
@@ -151,10 +151,10 @@ demoData <- setSegmentQCFlags(demoData,
                               qcCutoffs = list(minSegmentReads = 1000, # Minimum number of reads
                                                percentAligned = 75,    # Minimum % of reads aligned to known targets
                                                percentSaturation = 50, # Minimum sequencing saturation
-                                               minNegativeCount = 5,   # Minimum negative control counts
+                                               minNegativeCount = 2,   # Minimum negative control counts
                                                maxNTCCount = 1000,     # Maximum counts observed in NTC well
-                                               minNuclei = 15000,      # <- this is swapped?
-                                               minArea = 20))          # <- this is swapped?
+                                               minNuclei = 20,         # Minimum # of cells observed in a segment
+                                               minArea = 5000))        # Minimum segment size
 prData <- protocolData(demoData)
 QCResults <- prData[["QCFlags"]]
 QCResults <- as.data.frame(QCResults)
@@ -220,12 +220,11 @@ plts[[1]] <- QC_histogram(sData(demoData), 'Aligned (%)', 'region', 80, c(0,100)
 plts[[2]] <- QC_histogram(sData(demoData), 'Stitched (%)', 'region', 80, c(0,100))
 plts[[3]] <- QC_histogram(sData(demoData), 'Trimmed (%)', 'region', 80, c(0,100))
 plts[[4]] <- QC_histogram(sData(demoData), 'Saturated (%)', 'region', 80, c(0,100))
-plts[[5]] <- QC_histogram(sData(demoData), 'NegGeoMean', 'region', 5)
+plts[[5]] <- QC_histogram(sData(demoData), 'NegGeoMean', 'region', 2)
 plts[[6]] <- QC_histogram(sData(demoData), 'area', 'region', 15000)
 plts[[7]] <- QC_histogram(sData(demoData), 'nuclei', 'region', 20)
 
 plot_grid(plotlist = plts[1:7], nrow = 2, ncol = 4)
-
 # show all NTC values sorted from highest to lowest:
 sort(unique(QCResults$NTC))
 ```
@@ -409,28 +408,28 @@ Stat_data <- data.frame(row.names = colnames(exprs(target_demoData)),
 Stat_data_m <- melt(Stat_data, measure.vars = c('Q3','NegProbe'),
                     variable.name = 'Statistic', value.name = 'Value')
 
-plts <- list()
-plt1 <- ggplot(Stat_data, aes(x = NegProbe, y = Q3, color = Annotation)) +
+plt1 <- ggplot(Stat_data_m, aes(x = Value, fill = Statistic)) +
+  geom_histogram(bins = 40) + theme_bw() + scale_x_continuous(trans = 'log2') +
+  facet_wrap(~Annotation, nrow = 1) + 
+  scale_fill_brewer(palette = 3, type = 'qual') +
+  labs(x = 'Counts', y = 'AOIs, #')
+
+plt2 <- ggplot(Stat_data, aes(x = NegProbe, y = Q3, color = Annotation)) +
   geom_abline(intercept = 0, slope = 1, lty = 'dashed', color = 'darkgray') +
   geom_point() + guides(color = 'none') + theme_bw() +
   scale_x_continuous(trans = 'log2') + scale_y_continuous(trans = 'log2') +
   theme(aspect.ratio = 1) +
   labs(x = 'Negative Probe GeoMean, Counts', y = 'Q3 Value, Counts')
 
-plt2 <- ggplot(Stat_data, aes(x = NegProbe, y = Q3/NegProbe, color = Annotation)) +
+plt3 <- ggplot(Stat_data, aes(x = NegProbe, y = Q3/NegProbe, color = Annotation)) +
   geom_hline(yintercept = 1, lty = 'dashed', color = 'darkgray') +
-  geom_point() + guides(color = 'none') + theme_bw() +
+  geom_point() + theme_bw() +
   scale_x_continuous(trans = 'log2') + scale_y_continuous(trans = 'log2') +
   theme(aspect.ratio = 1) +
   labs(x = 'Negative Probe GeoMean, Counts', y = 'Q3/NegProbe Value, Counts')
 
-plt3 <- ggplot(Stat_data_m, aes(x = Value, fill = Statistic)) +
-  geom_histogram(bins = 40) + theme_bw() + scale_x_continuous(trans = 'log2') +
-  facet_wrap(~Annotation, nrow = 5) +
-  labs(x = 'Counts', y = 'AOIs, #')
-
-top_row <- plot_grid(plt1, plt2, nrow = 1, labels = c('A','B'))
-plot_grid(top_row, plt3, ncol = 1, labels = c('','C'))
+btm_row <- plot_grid(plt2, plt3, nrow = 1, labels = c('B',''), rel_widths = c(0.4,0.6))
+plot_grid(plt1, btm_row, ncol = 1, labels = c('A',''))
 ```
 
 [TEXT HERE]
@@ -512,7 +511,7 @@ pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
          clustering_method = 'average',
          clustering_distance_rows = 'correlation',
          clustering_distance_cols = 'correlation',
-         cutree_cols = 2,
+         cutree_cols = 2, cutree_rows = 2,
          breaks = seq(-3, 3, 0.05),
          color = colorRampPalette(c('purple3','black','yellow2'))(120),
          annotation_col = pData(target_demoData)[, c('class','segment','region')])
@@ -548,7 +547,7 @@ colnames(results) <- c('Gene','Estimate','Pr(>|t|)','FDR')
 rownames(results) <- results$Gene
 ```
 
-To calculate a LMM looking for variation on a patient level, for example, between diabetic kidney disease and normal patients within the glomeruli you would use the following code. As this is a more common scenario for analysis, note that in this set up without a random slope variable, just a random intercept.
+To calculate a LMM looking for variation on a patient level, for example, between diabetic kidney disease and normal patients within the glomeruli you would use the following code. As this is a more common scenario for analysis, note that in this set up without a random slope variable, just a random intercept. [ADD TEXT HERE]
 
 ``` {r DEsimple, eval = FALSE}
 lmm <- function(y) {
@@ -563,6 +562,10 @@ results_disease <- t(suppressMessages(assayDataApply(target_demoData[glom, ],
 results_disease <- cbind(data.frame(Gene = rownames(results_disease)),
                  as.data.frame(results_disease))
 results_disease$FDR <- p.adjust(results_disease$`Pr(>|t|)`, method = 'fdr')
+```
+
+``` {r glomindex, eval = TRUE, echo = FALSE}
+glom <- pData(target_demoData)$region == 'glomerulus'
 ```
 
 Going back to the test for distinctions between glomeruli & tubules, let's take a look at our genes of interest and what their log~2~ fold change (`Estimate`), P-value (`Pr(>|t|)`), and FDR are. We can do this by simply subsetting the results table we just generated by typing `results[goi, ]`. 
