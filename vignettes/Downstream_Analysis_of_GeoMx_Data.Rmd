@@ -89,10 +89,11 @@ Seven tissue slides were analyzed, 4 diabetic kidney disease (DKD) and 3 healthy
 Download the zipped demo data [at this link](http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip)
 
 Within the zip file you will find the minimal components necessary for analysis. These three data components are DCCs, PKCs, and the annotation file:
-
 * DCCs contain the expression count data
 * PKCs contain information about how each probe is associated with a given target gene or portein and any additional panel metadata
 * Annotation file specifies useful tissue/ROI/AOI information, including the type of ROI selected, the number of nuclei within an AOI, and other characteristics of the samples.
+
+
 
 ```{r quickstart, message=FALSE, warning=FALSE}
 # Unzip and place the downloaded Kidney Dataset files
@@ -115,11 +116,7 @@ demoData <-
                                           protocolDataColNames = c("aoi", "roi"),
                                           experimentDataColNames = c("panel",
                                                                      "instrument_type")))
-```
 
-After loading we shift counts with 0 detection to 1 so that during downstream processing and transformations we do not end up with -Inf values in our tables.
-
-``` {r shiftCounts, eval = TRUE}
 # Shift counts to one
 demoData <- shiftCountsOne(demoData, elt="exprs", useDALogic=TRUE) 
 ```
@@ -169,6 +166,7 @@ QC_Summary['Total Flags', ] <- c(sum(QCResults[, 'QCStatus'] == 'PASS'),
 
 
 ```{r QCSummaryTable, echo = FALSE, results = 'asis'}
+# 
 kable(QC_Summary, format = 'html', 
       caption = 'QC Summary Table for each Segment',
       align = 'c')
@@ -192,7 +190,7 @@ QC_histogram <- function(assay_data = NULL,
                 aes_string(x = paste0('unlist(`', annotation, '`)'),
                            fill = fill_by)) +
     geom_histogram(bins = 50) +
-    geom_vline(xintercept = thr, lty = 'dashed', color = 'black') +
+    geom_vline(xintercept = thr, lty = 'dashed', color = 'orange2') +
     theme_bw() +
     facet_wrap(as.formula(paste('~', fill_by)), nrow = 8) +
     xlim(xlims) +
@@ -235,11 +233,9 @@ dim(demoData)
 
 ### Biological Probe QC 
 
-In some GeoMx assays we rely on multiple probes per target to represent expression of a given gene. Across all NGS read-out assays, there are multiple probes representing our negative controls, which should not bind to any sequence in the genome. Before we summarize our data into a count matrix, we will remove probes for which we observe expression that appears spurious. This process is called outlier removal, which is performed on either a per gene (global) or per gene per AOI (local) basis. This process is only performed for targets where there are multiple ISH probes related to that target, so for our example data it will only be performed on the negative control probes. This process will always leave at least one probe representing the gene or biological target class in the dataset after the process.
+In some GeoMx assays we rely on multiple probes per target to represent expression of a given gene. Across all NGS read-out assays, there are multiple probes representing our negative controls, which should not bind to any sequence in the human genome. Before we summarize our data into a count matrix, we will remove probes for which we observe expression that appears spurious. This process is called global and local outlier removal, which is performed on either a per gene (global) or per gene per AOI (local) basis, filtering out outlier probes that do no behave consistently. This process is only performed for genes where there are multiple ISH probes related to that target, so for our example data it will only be performed on the negative control probes. This process will always leave at least one probe representing the gene or biological target class in the dataset after the process.
 
-#### Set Biological Probe QC flags using default settings
-
-[text describing defaults & rationale]
+#### Set Biological Probe QC flags using default settings from DSPDA
 
 ```{r setbioprobeqcflag,  eval = TRUE}
 # Generally keep the qcCutoffs parameters unchanged. Set removeLocalOutliers to 
@@ -261,6 +257,8 @@ qc_df <- data.frame(Passed = sum(rowSums(ProbeQCResults[, -1]) == 0),
 kable(qc_df, caption = 'Probes flagged or passed as outliers')
 
 ```
+
+#### Exclude Outlier Probes
 
 ```{r excludeOutlierProbes}  
 #Subset object to exclude all that did not pass Global Bioprobe QC and Outlier Ratio QC
@@ -318,7 +316,7 @@ We recommend removing poor performing AOIs before further analysis as they may u
 
 After filtering segments with poor detection, we recommend removing genes which were poorly detected. This helps improve performance during downstream statistical tests, decreases multiple testing penalties, and may prevent interpreting stochastic expression of genes near the LOQ as biological signal.
 
-First we will determine the number of genes detected at various cutoffs across our dataset. For each gene will will determine how many segments have expression > LOQ, and plot this information to help select a cut-point for minimal detection. We will also show you how to examine the detection rates of genes of interest, saved here as a list of gene symbols.
+First we will determine the number of genes detected at various cutoffs across our dataset. For each gene will will determine how many segments have expression > LOQ, and plot this information to help select a cut-point for minimal detection. We will also show you how to determine for genes of interest how many AOIs it's detected in.
 
 ```{r geneDetectionRate, eval = TRUE}
 pData(target_demoData)$LOQ <- pData(demoData)$LOQ
@@ -368,12 +366,10 @@ ggplot(plot_detect, aes(x = as.factor(Freq), y = Rate, fill = Rate)) +
 As we have confirmed that most of the target genes of interest are detected at > 10% of AOIs, we will out genes detected in < 10% of segments. If a target gene was detected in < 10% of AOIs, it could be manually saved or a lower threshold could be selected.
 
 ``` {r subsetGenes, eval = TRUE}
-# Subset to target genes detected in at least 10% of the samples.
-#   Also manually include the negative control probe, for downstream use
+# Subset to target genes detected in at least 10% of the samples. Also white-list the negative control probe
 neg_probe <- rownames(exprs(target_demoData))[grepl('Neg', rownames(target_demoData@assayData$exprs))]
 target_demoData <- target_demoData[fData(target_demoData)$DetectionRate > 0.1 |
                                      fData(target_demoData)$TargetName == neg_probe, ]
-goi <- goi[goi %in% results$Gene] # remove genes we filtered out above for later use
 ```
 
 ## Normalization
@@ -401,27 +397,33 @@ plts <- list()
 plt1 <- ggplot(Stat_data, aes(x = NegProbe, y = Q3, color = Annotation)) +
   geom_abline(intercept = 0, slope = 1, lty = 'dashed', color = 'darkgray') +
   geom_point() + guides(color = 'none') + theme_bw() +
-  scale_x_continuous(trans = 'log2') + scale_y_continuous(trans = 'log2') +
+  scale_x_continuous(trans = 'log2') +
+  scale_y_continuous(trans = 'log2') +
   theme(aspect.ratio = 1) +
-  labs(x = 'Negative Probe GeoMean, Counts', y = 'Q3 Value, Counts')
+  labs(x = 'Negative Probe GeoMean, Counts', y = 'Upper Quartile Value, Counts')
 
 plt2 <- ggplot(Stat_data, aes(x = NegProbe, y = Q3/NegProbe, color = Annotation)) +
   geom_hline(yintercept = 1, lty = 'dashed', color = 'darkgray') +
   geom_point() + guides(color = 'none') + theme_bw() +
-  scale_x_continuous(trans = 'log2') + scale_y_continuous(trans = 'log2') +
+  scale_x_continuous(trans = 'log2') +
+  scale_y_continuous(trans = 'log2') +
   theme(aspect.ratio = 1) +
-  labs(x = 'Negative Probe GeoMean, Counts', y = 'Q3/NegProbe Value, Counts')
+  labs(x = 'Negative Probe GeoMean, Counts', y = 'Upper Quartile/NegProbe Value, Counts')
 
 plt3 <- ggplot(Stat_data_m, aes(x = Value, fill = Statistic)) +
-  geom_histogram(bins = 40) + theme_bw() + scale_x_continuous(trans = 'log2') +
+  geom_histogram(bins = 40) + 
+  theme_bw() +
   facet_wrap(~Annotation, nrow = 5) +
+  scale_x_continuous(trans = 'log2') +
   labs(x = 'Counts', y = 'AOIs, #')
 
-top_row <- plot_grid(plt1, plt2, nrow = 1, labels = c('A','B'))
-plot_grid(top_row, plt3, ncol = 1, labels = c('','C'))
-```
 
-[TEXT HERE]
+plotr <- align_plots(plt3, plt2, align = 'v', axis = 'r')
+top_row <- plot_grid(plt1, plotr[[2]], nrow = 1)
+plot_grid(top_row, plt3, ncol = 1)
+
+
+```
 
 ```{r normalizeObject, opt.width = .5, eval = TRUE}
 # Q3 norm (75th percentile) for WTA/CTA  with or without custom spike-ins
@@ -447,9 +449,9 @@ boxplot(assayDataElement(target_demoData[,1:10], elt = 'neg_norm'), col = '#FF7F
 
 ### Dimension Reduction: UMAP & t-SNE
 
-One common approach to understanding the data after normalization is to plot the data in a reduced dimensionality space. Two common methods for this are UMAP and tSNE projections, which are non-orthogonally constrained projections which can cluster samples based on overall gene expression rates. In this example we see that by either UMAP (from the `umap` package) or tSNE (from the `Rtsne` package) we see 3 distinct clusters of samples: tubules, healthy (normal) glomeruli, and abnormal (disease-like) glomeruli.
+One common approach to understanding the data after normalization is to plot the data in a reduced dimensionality space. Two common methods for this are UMAP and tSNE projections, which are non-orthogonally constrained projections which can cluster samples based on overall gene expression rates. 
 
-``` {r dimReduction, eval = TRUE, out.width=c('50%', '50%'), fig.show='hold'}
+``` {r umap, eval = TRUE}
 # update defaults for umap to contain a stable random_state (seed)
 custom_umap <- umap.defaults
 custom_umap$random_state <- 42
@@ -464,7 +466,9 @@ ggplot(pData(target_demoData),
        aes(x = UMAP1, y = UMAP2, color = region, shape = pathology)) +
   geom_point(size = 3) +
   theme_bw()
+```
 
+``` {r tsne, eval = TRUE}
 # run tSNE
 tsne_out <- Rtsne(t(na.omit(log2(assayDataElement(target_demoData , elt = "q_norm")))), perplexity = 5)
 pData(target_demoData)$tSNE1 <- tsne_out$Y[,1]
@@ -478,13 +482,18 @@ ggplot(pData(target_demoData),
 
 ### Differential Expression
 
-A common method for understanding distinctions between groups of segments or patients is to perform differential expression analysis. While more advanced methods for modeling the underlying count distribution are being actively developed, a common approach to performing differential expression testing is to use a mixed-effect regression. These regressions use additional information to control for batch-specific effects which may confound the results otherwise. For GeoMx, we use random slopes or intercepts to control for slide-specific effects, setting our fixed effect to the variable we want to model explicitly. Below we use the package `lme4` to model the data and `lmerTest` to estimate the significance of interactions. For more information about mixed effect models please see [the original lme4 documentation](link to LME4).
-
-Because we aren't explicitly factoring our test, or fixed effect, variable, the code will have run factor on the test variable (region). By default this will end up putting which means negative values of the Estimate (log~2~ FC) will be enriched in glomeruli, and postive values will be enriched in tubules. To control the order and interpretation of an lmm it may be worthwhile to create a new annotation column that is a factor not a string by calling:<\br>
-`pData(target_demoDate)$Test <- factor(pData(target_demoData), levels = c('glomerulus','tubule')`
+A common method for understanding distinctions between sets of segments or patients is to perform differential expression analysis. While more advanced methods for modeling the underlying count distribution are being actively developed, a simple approach to performing differential expression testing is to use a mixed-effect regression to estimate differences in mean expression between groups of ROIs, while accounting for the fact that the groups may have slide-specific effects using a random slope or random slope & intercept based on slide or sample. Essentially, the random slope or intercept is used to control for slide-specific effects, while modeling distinctions in the test of interest. Below we use the package `lme4` to model the data and `lmerTest` to estimate the significance of interactions. For more information about mixed effect modes please see [the original lme4 documentation](link to LME4).
 
 ``` {r DE, eval = TRUE, warning = FALSE, message = FALSE}
-# Analysis example:
+
+##NOTE: monocole includes a multi-core application of esApply. writing qNorm to
+##the primary data slot for exprs might allow this to be used instead of
+##assayDataApply which in theory would be able to speed this up some.
+##   https://rdrr.io/bioc/monocle/man/mcesApply.html
+
+# DE results are just returned as a table here, but could also be stored in fData
+
+# Use case:
 # Glomeruli vs Tubules - mixed slope + intercept because the test is performed
 #     comparing paired ROIs within a slide 
 # NOTE: if using a comparison between exclusively between different slides:
@@ -496,27 +505,13 @@ lmm <- function(y) {
 }
 results <- t(suppressMessages(assayDataApply(target_demoData,
                                              elt = "q_norm", MARGIN = 1, lmm)))
-
-# DE results are just stored as a table here, but could also be stored in fData
-results <- cbind(data.frame(Gene = rownames(results)),
-                 as.data.frame(results))
+results <- as.data.frame(results)
 results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
+head(results)
 
-## below is work-around text to quick load DE results from a saved csv for convenience:
-# results <- read.csv('~/DE_results_for_testing.csv')
-# colnames(results) <- c('Gene','Estimate','Pr(>|t|)','FDR')
-# rownames(results) <- results$Gene
 ```
 
-Let's take a look at our genes of interest and what their log~2~ fold change (`Estimate`), P-value (`Pr(>|t|)`), and FDR are. We can do this by simply subsetting the results table we just generated by typing `results[goi, ]`. 
-
-``` {r DEtable, echo = FALSE, results = 'asis', }
-kable(results[goi[goi %in% rownames(results)], ], digits = 3,  caption = 'DE results for Genes of Interest', align = 'lc')
-```
-
-Now let's code a simple `ggplot2` graph for a volcano plot, which will color based on various cuts in the significance threshold and label genes with a P-value of < 1e-15. 
-
-``` {r volcanoPlot, fig.width = 10, fig.height = 8}
+``` {r volcanoPlot, figure.width = 10, figure.height = 10}
 # Categorize Results based on P-value & FDR for plotting
 results$Color <- 'NS or FC < 0.5'
 results$Color[results$P < 0.05] <- 'P < 0.05'
@@ -524,6 +519,7 @@ results$Color[results$FDR < 0.05] <- 'FDR < 0.05'
 results$Color[results$FDR < 0.001] <- 'FDR < 0.001'
 results$Color[abs(results$Estimate) < 0.5] <- 'NS or FC < 0.5'
 results$Color <- factor(results$Color, levels = c('NS or FC < 0.5', 'P < 0.05', 'FDR < 0.05', 'FDR < 0.001'))
+results$Gene <- rownames(results)
 
 # Graph results
 plt <- ggplot(results,
@@ -546,13 +542,14 @@ plt <- ggplot(results,
   theme_bw()
 
 print(plt)
+
 ```
 
 ### Visualizing differentially expressed genes
 
 [TEXT HERE]
 
-``` {r targetExprs, eval = TRUE, out.width=c('50%', '50%'), fig.show='hold'}
+``` {r boxplot, eval = TRUE}
 # show expression for a single target: NPHS2
 ggplot(pData(target_demoData),
        aes(x = region, fill = region,
@@ -562,40 +559,43 @@ ggplot(pData(target_demoData),
   scale_y_continuous(trans = 'log2') +
   theme_bw()
 
-# show expression of NPHS2 vs CD24
-glom <- pData(target_demoData)$region == 'glomerulus'
 ggplot(pData(target_demoData),
-       aes(x = assayDataElement(target_demoData['CD24', ], elt = 'q_norm'),
-           y = assayDataElement(target_demoData['NPHS2', ], elt = 'q_norm'),
+       aes(x = assayDataElement(target_demoData['NPHS2', ], elt = 'q_norm'),
+           y = assayDataElement(target_demoData['PAX8', ], elt = 'q_norm'),
            color = region, shape = pathology)) +
-  geom_vline(xintercept = max(assayDataElement(target_demoData['CD24', glom], elt = 'q_norm')),
-             lty = 'dashed', col = 'darkgray') +
-  geom_hline(yintercept = max(assayDataElement(target_demoData['NPHS2', !glom], elt = 'q_norm')),
-             lty = 'dashed', col = 'darkgray') +
-  geom_point(size = 3) +
+  geom_point() +
   theme_bw() +
-  scale_x_continuous(trans = 'log2') + scale_y_continuous(trans = 'log2') +
-  labs(x = 'CD24, Q3 Counts', y = 'NPHS2, Q3 Counts')
+  labs(x = 'NPHS2, Q3 Counts', y = 'PAX8, Q3 Counts')
 
 ```
 
 [TEXT HERE]
 
 ``` {r heatmap, eval = TRUE, fig.width = 8, fig.height = 6.5}
-# select top significant genes based on significance, plot with pheatmap
+
+# select top significant genes based on significance & filter any with NA's
 GOI <- subset(results, `Pr(>|t|)` < 1e-10)$Gene
-pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
+any_NA <- rowSums(is.na(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')))
+GOI <- GOI[any_NA == 0]
+pheatmap(assayDataElement(target_demoData[GOI, ], elt = 'q_norm'),
          scale = 'row', 
-         show_rownames = FALSE, show_colnames = FALSE,
+         show_rownames = FALSE,
+         show_colnames = FALSE,
          border_color = NA,
+         clustering_distance_rows = 'correlation',
+         clustering_distance_cols = 'correlation',
+         clustering_method = 'complete',
          breaks = seq(-3, 3, 0.05),
          color = colorRampPalette(c('purple3','black','yellow2'))(120),
          annotation_col = pData(target_demoData)[, c('region','class')])
+
 ```
 
 ``` {r autoheatmap, eval = TRUE, fig.width = 8, fig.height = 6.5}
+
 # The GeomxTools package also includes heatmap functionality in the graph
 # autoplot as a simple additional method for graphing your data
 autoplot(target_demoData[GOI, ], type = 'heatmap-genes',
          elt = 'q_norm', heatmapGroup = c('region','class'))
+
 ```
