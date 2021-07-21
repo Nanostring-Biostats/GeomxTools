@@ -1,6 +1,6 @@
 ---
 title: "Analyzing GeoMx-NGS Data with GeomxTools"
-author: "David Henderson, Nicole Ortogero, Jason Reeves, Prajan Divaker, Zhi Yang, Rona Vitancol, Maddy Griswold"
+author: "Jason Reeves, Prajan Divaker, David Henderson, Nicole Ortogero, Zhi Yang, Rona Vitancol, Maddy Griswold"
 date: "`r Sys.Date()`"
 output: 
   prettydoc::html_pretty:
@@ -77,6 +77,7 @@ library(cowplot)   # for plot_grid
 
 ```
 
+## Loading Data
 
 ### Dataset Introduction
 
@@ -84,7 +85,7 @@ For this demo analysis, we will use a kidney dataset profiled with human whole t
 
 Seven tissue slides were analyzed, 4 diabetic kidney disease (DKD) and 3 healthy kidney. Regions of Interest (ROI) focused on two different kidney structures: tubules or glomeruli. Individual glomeruli were identified by a pathologist as either behaving relatively healthy or diseased regardless on if the tissue was DKD or healthy. One glomerulus ROI contains the entirety of a glomerulus. Tubule ROIs were segmented into distal (PanCK+) and proximal (PanCK-) tubule areas of interest (AOI). While both distal and proximal tubules are called tubules, they perform very different functions in the kidney. 
 
-## Loading Data: DCC files, PKC files and annotation file
+### DCC files, PKC files and annotation file
 
 Download the zipped demo data [at this link](http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip)
 
@@ -117,12 +118,27 @@ demoData <-
                                                                      "instrument_type")))
 ```
 
-After loading we shift counts with 0 detection to 1 so that during downstream processing and transformations we do not end up with -Inf values in our tables.
+After loading we shift counts with 0 detection to 1 so that during downstream processing and transformations we do not end up with `-Inf` values in our tables. This uses the `shiftCountsOne` function, so that no additional coding is necessary.
 
 ``` {r shiftCounts, eval = TRUE}
 # Shift counts to one
-demoData <- shiftCountsOne(demoData, elt="exprs", useDALogic=TRUE) 
+demoData <- shiftCountsOne(demoData, elt = "exprs", useDALogic = TRUE) 
 ```
+
+### GeoMxSet Object Overview
+
+With the `demoData`, you have just created your first *GeoMxSet Object*. These objects are how we manage expression data, annotations, and meta-data about the probes and study throughout an experiment when working with `GeomxTools`. They are based on `ExpressionSet` objects, and have many similar functions as those described [on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf). All of this information is linked and stored together, and there are a few key ways to access the data now that we have created a GeoMxSet Object. Below is a schematic overview of some of the data and functions we will use in the rest of the vignette.
+
+![GeoMxSet Object Overview](./GeomxSetStructure.png){width=50%, fig.align = 'center'}
+
+As is shown above the GeoMxSet object consists of 3 or more elements.
+
+* Expression count matrices are the primary data that will be used for analysis - accessed with `exprs(object)` to return the matrix.
+* As we progress through the data we will add new expression matrices to expression slots, or elements (elt), which can be accessed with `assayDataElement(object, elt = ...)`
+* Segment & Sample annotations are managed - accessed with `pData(object)`
+* Probe & Target annotations & meta-data - accessed with `fData(object)`
+
+The package uses `esApply` to load in feature or phenotypic data for use with a standard matrix `apply` function. We will demonstrate it's use several times below. In addition to the `esApply` function defined by the `ExpressionSet` class, we have also added the `assayDataApply` function to allow you to select which expression matrix you wish to use with the `esApply` function.
 
 ## Quality Control Assessment
 
@@ -183,8 +199,7 @@ QC_histogram <- function(assay_data = NULL,
                          annotation = NULL,
                          fill_by = NULL,
                          thr = NULL,
-                         xlims = NULL,
-                         guides = FALSE) {
+                         xlims = NULL) {
   if(is.null(xlims)) {
     xlims <- range(assay_data[, annotation])
   }
@@ -193,13 +208,10 @@ QC_histogram <- function(assay_data = NULL,
                            fill = fill_by)) +
     geom_histogram(bins = 50) +
     geom_vline(xintercept = thr, lty = 'dashed', color = 'black') +
-    theme_bw() +
+    theme_bw() + guides(fill = 'none') +
     facet_wrap(as.formula(paste('~', fill_by)), nrow = 8) +
     xlim(xlims) +
     labs(x = annotation, y = 'AOIs, #', title = annotation)
-  if(!guides) {
-    plt <- plt + guides(fill = 'none')
-  }
   plt
 }
 
@@ -233,11 +245,11 @@ dim(demoData)
 
 ```
 
-### Biological Probe QC 
+### Probe QC
 
 In some GeoMx assays we rely on multiple probes per target to represent expression of a given gene. Across all NGS read-out assays, there are multiple probes representing our negative controls, which should not bind to any sequence in the genome. Before we summarize our data into a count matrix, we will remove probes for which we observe expression that appears spurious. This process is called outlier removal, which is performed on either a per gene (global) or per gene per AOI (local) basis. This process is only performed for targets where there are multiple ISH probes related to that target, so for our example data it will only be performed on the negative control probes. This process will always leave at least one probe representing the gene or biological target class in the dataset after the process.
 
-#### Set Biological Probe QC flags using default settings
+#### Set Probe QC Flags
 
 [text describing defaults & rationale]
 
@@ -271,11 +283,11 @@ dim(ProbeQCPassed)
 demoData <- ProbeQCPassed 
 ```
 
-### Calculate Limit of Quantification
+### Limit of Quantification
 
-In addition to outlier detection, we must now determine the limit of quantification. This is calculated based on the distribution of negative control probes, and is intended to represent the quantifiable limit of gene expression per segment, under which gene expression is no longer reliable. Please note that this process is more stable in larger segments, and AOIs with low area, and subsequently low negative control probe distributions, the LOQ may not be accurately reflective of true signal detection rates. The formula for calculating the LOQ in the _i_^th^ segment/AOI is: $$LOQ_{i} = geomean(NegProbe_{i}) * geoSD(NegProbe_{i})^{n}$$
+In addition to outlier detection, we must now determine the limit of quantification. This is calculated based on the distribution of negative control probes, and is intended to represent the quantifiable limit of gene expression per segment, under which gene expression is no longer reliable. Please note that this process is more stable in larger segments, and AOIs with low area, and subsequently low negative control probe distributions, the LOQ may not be accurately reflective of true signal detection rates. The formula for calculating the LOQ in the $i^{th}$ segment/AOI is: $$LOQ_{i} = geomean(NegProbe_{i}) * geoSD(NegProbe_{i})^{n}$$
 
-In the example below we use 2 geometric standard deviations (n = 2) above the geometric mean as the cutoff, which is recommended for most use cases. We also recommend that a minimum LOQ of 2 be used even if the LOQ calculated to be below this threshold.
+In the example below we use 2 geometric standard deviations ($n = 2$) above the geometric mean as the cutoff, which is recommended for most use cases. We also recommend that a minimum LOQ of 2 be used even if the LOQ calculated to be below this threshold.
 
 ``` {r calculateLOQ, eval = TRUE}
 # Create a function to define and calculate the LOQ:
@@ -306,13 +318,13 @@ exprs(target_demoData)[1:5, 1:2]
 
 ```
 
-### Segment/AOI Filtering
+<!--### Segment/AOI Filtering
 
 We recommend removing poor performing AOIs before further analysis as they may unduly influence interpretation downstream. Please note that if there are rare segment classes that are only represented by a few AOIs, that you may want to skip this section, but that interpretation of these segments should primarily be qualitative, not quantitative to prevent biased interpretation of the data.
 
 {Include section on Segment filtering - Q90 distribution?}
 
-// need input from team here on what to show or if we should skip this section
+// need input from team here on what to show or if we should skip this section-->
 
 ### Gene Filtering 
 
@@ -373,14 +385,15 @@ As we have confirmed that most of the target genes of interest are detected at >
 neg_probe <- rownames(exprs(target_demoData))[grepl('Neg', rownames(target_demoData@assayData$exprs))]
 target_demoData <- target_demoData[fData(target_demoData)$DetectionRate > 0.1 |
                                      fData(target_demoData)$TargetName == neg_probe, ]
-goi <- goi[goi %in% results$Gene] # remove genes we filtered out above for later use
+# remove genes we filtered out from goi list
+goi <- goi[goi %in% rownames(target_demoData@assayData$exprs)]
 ```
 
 ## Normalization
 
 We will now normalize the GeoMx data for downstream visualizations and differential expression. Two common methods for normalization are i) Quartile 3 or ii) background normalization.
 
-Both of these normalization methods rely on the distribution of the data to estimate a normalization factor to roughly bring the data distributions together. More advanced methods for normalization and modelings are under active development, however, for most projects these methods are sufficient for understanding differences between biological classes of segments and samples. Additionally other packages such as `limma` and `voom` may also be appropriate in some cases.
+Both of these normalization methods rely on the distribution of the data to estimate a normalization factor to roughly bring the data distributions together. More advanced methods for normalization and modelings are under active development, however, for most projects these methods are sufficient for understanding differences between biological classes of segments and samples. Additionally other packages such as `limma` may also be appropriate in some cases.
 
 Before we choose a normalization factor to use, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. We'd ideally like there to be separation between these two values before normalizing to one of them. If you do not see sufficient seperation between these values, you may need to be more aggressive with filtering out low-expressing genes.
 
@@ -433,6 +446,8 @@ target_demoData <- normalize(target_demoData , data_type = "RNA", norm_method = 
 # visualize the first 10 segments with each normalization method
 ```
 
+[TEXT HERE]
+
 ```{r normplot, out.width=c('33%', '33%', '33%'), fig.show='hold'}
 boxplot(exprs(target_demoData)[,1:10], col = '#9EDAE5', main = 'Raw Counts',
         log = 'y', names = 1:10, xlab = 'Segment', ylab = 'Counts, Raw')
@@ -447,7 +462,7 @@ boxplot(assayDataElement(target_demoData[,1:10], elt = 'neg_norm'), col = '#FF7F
 
 ### Dimension Reduction: UMAP & t-SNE
 
-One common approach to understanding the data after normalization is to plot the data in a reduced dimensionality space. Two common methods for this are UMAP and tSNE projections, which are non-orthogonally constrained projections which can cluster samples based on overall gene expression rates. In this example we see that by either UMAP (from the `umap` package) or tSNE (from the `Rtsne` package) we see 3 distinct clusters of samples: tubules, healthy (normal) glomeruli, and abnormal (disease-like) glomeruli.
+One common approach to understanding the data after normalization is to plot the data in a reduced dimensionality space. Two common methods for this are UMAP and tSNE projections, which are non-orthogonally constrained projections which can cluster samples based on overall gene expression rates. In this example we see that by either UMAP (from the `umap` package) or tSNE (from the `Rtsne` package) we see clusters of segments related to morphology and disease status (normal & diabetic kidney disease (DKD)).
 
 ``` {r dimReduction, eval = TRUE, out.width=c('50%', '50%'), fig.show='hold'}
 # update defaults for umap to contain a stable random_state (seed)
@@ -461,7 +476,7 @@ pData(target_demoData)$UMAP1 <- umap_out$layout[,1]
 pData(target_demoData)$UMAP2 <- umap_out$layout[,2]
 
 ggplot(pData(target_demoData),
-       aes(x = UMAP1, y = UMAP2, color = region, shape = pathology)) +
+       aes(x = UMAP1, y = UMAP2, color = region, shape = class)) +
   geom_point(size = 3) +
   theme_bw()
 
@@ -471,44 +486,87 @@ pData(target_demoData)$tSNE1 <- tsne_out$Y[,1]
 pData(target_demoData)$tSNE2 <- tsne_out$Y[,2]
 
 ggplot(pData(target_demoData),
-       aes(x = tSNE1, y = tSNE2, color = region, shape = pathology)) +
+       aes(x = tSNE1, y = tSNE2, color = region, shape = class)) +
   geom_point(size = 3) +
   theme_bw()
 ```
 
+### Clustering high CV Genes
+
+One way to visualize the clusters observed above is to calculate the coefficient of variation (CV), for each AOI ($i$) using the formula $CV = SD_i/mean_i$. After calculating we can look for genes with high CVs which should have large differences across the various segments that we have profiles. This is an unbiased way of showing the genes driving structure within the dataset.
+
+
+``` {r CVheatmap, eval = TRUE, fig.width = 8, fig.height = 6.5}
+calc_CV <- function(x) {
+  sd(log2(x)) / mean(log2(x))
+}
+CV_dat <- assayDataApply(target_demoData, elt = 'q_norm', MARGIN = 1, calc_CV)
+# show the highest CD genes and their CV values
+sort(CV_dat, decreasing = TRUE)[1:5]
+
+# Identify genes in the top 3rd of the CV values
+GOI <- names(CV_dat)[CV_dat > quantile(CV_dat, 0.66)]
+pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
+         scale = 'row', 
+         show_rownames = FALSE, show_colnames = FALSE,
+         border_color = NA,
+         clustering_method = 'average',
+         clustering_distance_rows = 'correlation',
+         clustering_distance_cols = 'correlation',
+         cutree_cols = 2,
+         breaks = seq(-3, 3, 0.05),
+         color = colorRampPalette(c('purple3','black','yellow2'))(120),
+         annotation_col = pData(target_demoData)[, c('class','segment','region')])
+```
+
 ### Differential Expression
 
-A common method for understanding distinctions between groups of segments or patients is to perform differential expression analysis. While more advanced methods for modeling the underlying count distribution are being actively developed, a common approach to performing differential expression testing is to use a mixed-effect regression. These regressions use additional information to control for batch-specific effects which may confound the results otherwise. For GeoMx, we use random slopes or intercepts to control for slide-specific effects, setting our fixed effect to the variable we want to model explicitly. Below we use the package `lme4` to model the data and `lmerTest` to estimate the significance of interactions. For more information about mixed effect models please see [the original lme4 documentation](link to LME4).
+A common method for understanding distinctions between groups of segments or patients is to perform differential expression analysis. While more advanced methods for modeling the underlying count distribution are being actively developed, a common approach to performing differential expression testing is to use a linear mixed-effect model (LMM). These regressions use additional information to control for batch-specific effects which may confound the results otherwise. For GeoMx, we use random slopes or intercepts to control for slide-specific effects, setting our fixed effect to the variable we want to model explicitly. Below we use the package `lme4` to model the data and `lmerTest` to estimate the significance of interactions. For more information about mixed effect models please see [the original lme4 documentation](link to LME4).
 
-Because we aren't explicitly factoring our test, or fixed effect, variable, the code will have run factor on the test variable (region). By default this will end up putting which means negative values of the Estimate (log~2~ FC) will be enriched in glomeruli, and postive values will be enriched in tubules. To control the order and interpretation of an lmm it may be worthwhile to create a new annotation column that is a factor not a string by calling:<\br>
+Because we did not explicitly factor our test, or fixed effect, variable, the code will have run factor on the test variable (region). By default this will end up putting which means negative values of the Estimate (log~2~ FC) will be enriched in glomeruli, and postive values will be enriched in tubules. To control the order and interpretation of an lmm it may be worthwhile to create a new annotation column that is a factor not a string by calling:
+  
 `pData(target_demoDate)$Test <- factor(pData(target_demoData), levels = c('glomerulus','tubule')`
 
-``` {r DE, eval = TRUE, warning = FALSE, message = FALSE}
+``` {r DEComplex, eval = TRUE, warning = FALSE, message = FALSE}
 # Analysis example:
 # Glomeruli vs Tubules - mixed slope + intercept because the test is performed
 #     comparing paired ROIs within a slide 
-# NOTE: if using a comparison between exclusively between different slides:
-#    e.g. disease status, only a random intercept is recommended such that the formula
-#    would be lmer(log2(y) ~ disease + (1|`slide name`)) instead
 
-lmm <- function(y) {
-  coef(summary(lmer(log2(y) ~ region + (1 + `slide name`| `slide name`))))[2, c(1,5)]
-}
-results <- t(suppressMessages(assayDataApply(target_demoData,
-                                             elt = "q_norm", MARGIN = 1, lmm)))
+# lmm <- function(y) {
+#   coef(summary(lmer(log2(y) ~ region + (1 + `slide name`| `slide name`))))[2, c(1,5)]
+# }
+# results <- t(suppressMessages(assayDataApply(target_demoData,
+#                                              elt = "q_norm", MARGIN = 1, lmm)))
+# 
+# # DE results are just stored as a table here, but could also be stored in fData
+# results <- cbind(data.frame(Gene = rownames(results)),
+#                  as.data.frame(results))
+# results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
 
-# DE results are just stored as a table here, but could also be stored in fData
-results <- cbind(data.frame(Gene = rownames(results)),
-                 as.data.frame(results))
-results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
-
-## below is work-around text to quick load DE results from a saved csv for convenience:
-# results <- read.csv('~/DE_results_for_testing.csv')
-# colnames(results) <- c('Gene','Estimate','Pr(>|t|)','FDR')
-# rownames(results) <- results$Gene
+# below is work-around text to quick load DE results from a saved csv for convenience:
+results <- read.csv('~/DE_results_for_testing.csv')
+colnames(results) <- c('Gene','Estimate','Pr(>|t|)','FDR')
+rownames(results) <- results$Gene
 ```
 
-Let's take a look at our genes of interest and what their log~2~ fold change (`Estimate`), P-value (`Pr(>|t|)`), and FDR are. We can do this by simply subsetting the results table we just generated by typing `results[goi, ]`. 
+To calculate a LMM looking for variation on a patient level, for example, between diabetic kidney disease and normal patients within the glomeruli you would use the following code. As this is a more common scenario for analysis, note that in this set up without a random slope variable, just a random intercept.
+
+``` {r DEsimple, eval = FALSE}
+lmm <- function(y) {
+  coef(summary(lmer(log2(y) ~ region + (1| `slide name`))))[2, c(1,5)]
+}
+# identify the glomeruli regions
+glom <- pData(target_demoData)$region == 'glomerulus'
+results_disease <- t(suppressMessages(assayDataApply(target_demoData[glom, ], 
+                                                     elt = "q_norm", MARGIN = 1, lmm)))
+
+# DE results are just stored as a table here, but could also be stored in fData
+results_disease <- cbind(data.frame(Gene = rownames(results_disease)),
+                 as.data.frame(results_disease))
+results_disease$FDR <- p.adjust(results_disease$`Pr(>|t|)`, method = 'fdr')
+```
+
+Going back to the test for distinctions between glomeruli & tubules, let's take a look at our genes of interest and what their log~2~ fold change (`Estimate`), P-value (`Pr(>|t|)`), and FDR are. We can do this by simply subsetting the results table we just generated by typing `results[goi, ]`. 
 
 ``` {r DEtable, echo = FALSE, results = 'asis', }
 kable(results[goi[goi %in% rownames(results)], ], digits = 3,  caption = 'DE results for Genes of Interest', align = 'lc')
@@ -563,7 +621,6 @@ ggplot(pData(target_demoData),
   theme_bw()
 
 # show expression of NPHS2 vs CD24
-glom <- pData(target_demoData)$region == 'glomerulus'
 ggplot(pData(target_demoData),
        aes(x = assayDataElement(target_demoData['CD24', ], elt = 'q_norm'),
            y = assayDataElement(target_demoData['NPHS2', ], elt = 'q_norm'),
@@ -588,14 +645,11 @@ pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
          scale = 'row', 
          show_rownames = FALSE, show_colnames = FALSE,
          border_color = NA,
+         clustering_method = 'average',
+         clustering_distance_rows = 'correlation',
+         clustering_distance_cols = 'correlation',
+         cutree_cols = 2, cutree_rows = 2,
          breaks = seq(-3, 3, 0.05),
          color = colorRampPalette(c('purple3','black','yellow2'))(120),
          annotation_col = pData(target_demoData)[, c('region','class')])
-```
-
-``` {r autoheatmap, eval = TRUE, fig.width = 8, fig.height = 6.5}
-# The GeomxTools package also includes heatmap functionality in the graph
-# autoplot as a simple additional method for graphing your data
-autoplot(target_demoData[GOI, ], type = 'heatmap-genes',
-         elt = 'q_norm', heatmapGroup = c('region','class'))
 ```
