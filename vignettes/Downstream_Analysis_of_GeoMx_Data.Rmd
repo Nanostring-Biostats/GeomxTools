@@ -1,9 +1,10 @@
 ---
-title: "Analyzing GeoMx-NGS RNA Data with GeomxTools"
+title: "Analyzing GeoMx-NGS Data with GeomxTools"
 author: "David Henderson, Nicole Ortogero, Jason Reeves, Prajan Divaker, Zhi Yang, Rona Vitancol, Maddy Griswold"
 date: "`r Sys.Date()`"
 output: 
-  rmarkdown::html_vignette:
+  prettydoc::html_pretty:
+    theme: cayman
     toc: true
     self_contained: false
     fig_width: 5
@@ -15,7 +16,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r setup, include = FALSE}
@@ -37,30 +38,43 @@ GeoMx profiles expression by staining and processing standard histological slide
 ### Motivation & Scope
 
 The intent of this vignette is to enable an analyst to work with GeoMx data and understand how workflow of a standard data analysis. This vignette will cover how to:
+
 * Read in GeoMx count files and metadata (DCC, PKC and annotation file)
 * Perform QC and normalization to prepare the data for analysis
 * Perform downstream analysis and visualize the results including:
-  + Dimension reduction with UMAP or t-SNE
-  + Differential expression analysis with mixed effect models
-  + Generate a heatmap of expression results
-  + Pathway analysis based on GSEA 
-  + Cell deconvolution 
+    + Dimension reduction with UMAP or t-SNE
+    + Differential expression analysis with mixed effect models
+    + Generate a heatmap of expression results
+    + Pathway analysis based on GSEA 
+    + Cell deconvolution 
 
 ## Install and load R Packages/libraries 
 
 Let's install and load `GeomxTools` package and other required packages. We are installing from the `dev` branch of the `Geomxtools` package, but in future releases we will demonstrate how to load the code directly from [Bioconductor](https://www.bioconductor.org/packages/release/bioc/html/GeomxTools.html).
 
-```{r libs, message=FALSE, warning=FALSE }
+```{r installPackages, message = FALSE, warning = FALSE, eval = FALSE}
 # If you have not done so, install devtools to install needed R packages
 
 install.packages("devtools")
 devtools::install_github("Nanostring-Biostats/NanoStringNCTools")
 devtools::install_github("Nanostring-Biostats/GeomxTools", ref = "dev")
 
+```
+
+```{r libs, message = FALSE, warning = FALSE, eval = TRUE}
 library(NanoStringNCTools)
 library(GeomxTools)
 library(EnvStats)
-library(ggiraph)
+library(ggrepel)   # for ggplot graphs
+library(reshape2)  # for melt
+library(umap)      # for umap
+library(Rtsne)     # for Rtsne
+library(lme4)      # for lmer
+library(lmerTest)  # for p-values for lmer
+library(pheatmap)  # for pheatmap
+library(knitr)     # for kable
+library(cowplot)   # for plot_grid
+
 ```
 
 
@@ -72,8 +86,7 @@ Seven tissue slides were analyzed, 4 diabetic kidney disease (DKD) and 3 healthy
 
 ## Loading Data: DCC files, PKC files and annotation file
 
-Download the demo data here:
-[http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip](http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip)
+Download the zipped demo data [at this link](http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip)
 
 Within the zip file you will find the minimal components necessary for analysis. These three data components are DCCs, PKCs, and the annotation file:
 * DCCs contain the expression count data
@@ -83,30 +96,28 @@ Within the zip file you will find the minimal components necessary for analysis.
 
 
 ```{r quickstart, message=FALSE, warning=FALSE}
-
 # Unzip and place the downloaded Kidney Dataset files
 # The downloaded dataset contains three folders each containing the respective metadata. 
 # We copy the folder path for the downloaded dataset folder titled, 'Kidney_Dataset", as the datadir below and change the 'slash' orientation from 
 # "/" instead of "\"
 
-datadir <- file.path( "C:/Users/MyPC/Downloads/Kidney_Dataset_for_GeomxTools/Kidney_Dataset")
+datadir <- file.path("~/DA Vignettes/Kidney_Dataset_for_GeomxTools/Kidney_Dataset/")
 
 DCCFiles <- dir(file.path(datadir, "dccs"), pattern=".dcc$", full.names=TRUE, recursive=TRUE)
 PKCFiles <- dir(file.path(datadir, "pkcs"), pattern=".pkc$", full.names=TRUE, recursive=TRUE)
 SampleAnnotationFile <- dir(file.path(datadir, "annotation"), pattern=".xlsx$", full.names=TRUE, recursive=TRUE)
 
 demoData <-
-  readNanoStringGeoMxSet(dccFiles = DCCFiles,   # !! Prajan/Rona - suppress warnings should be an option in readNanoStringGeoMxSet
-                         pkcFiles = PKCFiles,
-                         phenoDataFile = SampleAnnotationFile,
-                         phenoDataSheet = "Template",
-                         phenoDataDccColName = "Sample_ID",
-                         protocolDataColNames = c("aoi", 
-                                                  "roi"),
-                         experimentDataColNames = c("panel",
-                                                    "instrument_type"))
+  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                                          pkcFiles = PKCFiles,
+                                          phenoDataFile = SampleAnnotationFile,
+                                          phenoDataSheet = "Template",
+                                          phenoDataDccColName = "Sample_ID",
+                                          protocolDataColNames = c("aoi", "roi"),
+                                          experimentDataColNames = c("panel",
+                                                                     "instrument_type")))
 
-# Shift counts to one to mimic how DSPDA handles zero counts
+# Shift counts to one
 demoData <- shiftCountsOne(demoData, elt="exprs", useDALogic=TRUE) 
 ```
 
@@ -125,8 +136,6 @@ demoData <- setSegmentQCFlags(demoData,
                                                maxNTCCount = 150,      # Maximum counts observed in NTC well
                                                minNuclei = 15000,      # <- this is swapped?
                                                minArea = 20))          # <- this is swapped?
-summary(sData(demoData)[["QCFlags"]])
-
 prData <- protocolData(demoData)
 QCResults <- prData[["QCFlags"]]
 QCResults <- as.data.frame(QCResults)
@@ -144,30 +153,36 @@ QCResults$QCStatus <- apply(prData[["QCFlags"]], 1L, function(x) {
         y <- ifelse(y, "PASS", "WARNING")
         return(y)
     })
-
 QCResults <- cbind(QCResults, sData(demoData)[c("aoi", "roi", "slide name")])
 
-## produce QC Table here
+# produce QC Table here
 flag_columns <- c(colnames(QCResults)[grepl('Low', colnames(QCResults))],
                   colnames(QCResults)[grepl('High', colnames(QCResults))])
 QC_Summary <- data.frame(Pass = colSums(!QCResults[, flag_columns]),
                          Warning = colSums(QCResults[, flag_columns]))
 QC_Summary['Total Flags', ] <- c(sum(QCResults[, 'QCStatus'] == 'PASS'),
                                 sum(QCResults[, 'QCStatus'] == 'WARNING'))
-print(QC_Summary) # Format table later
+```
 
+
+```{r QCSummaryTable, echo = FALSE, results = 'asis'}
+# 
+kable(QC_Summary, format = 'html', 
+      caption = 'QC Summary Table for each Segment',
+      align = 'c')
 ```
 
 To view the distribution of these statistics we will generate a few graphs with a quick function to draw histograms of our data using `ggplot2`.
 
-``` {r qcflag histograms, fig.dim = c(4,6), opt.width = .3, eval = TRUE}
+``` {r qcflag histograms, fig.width = 10, fig.height = 8, eval = TRUE, warning = FALSE, message = FALSE}
 
 # Graphical summaries of QC statistics
 QC_histogram <- function(assay_data = NULL,
                          annotation = NULL,
                          fill_by = NULL,
                          thr = NULL,
-                         xlims = NULL) {
+                         xlims = NULL,
+                         guides = FALSE) {
   if(is.null(xlims)) {
     xlims <- range(assay_data[, annotation])
   }
@@ -180,20 +195,25 @@ QC_histogram <- function(assay_data = NULL,
     facet_wrap(as.formula(paste('~', fill_by)), nrow = 8) +
     xlim(xlims) +
     labs(x = annotation, y = 'AOIs, #', title = annotation)
-  suppressWarnings(print(plt))
+  if(!guides) {
+    plt <- plt + guides(fill = 'none')
+  }
+  plt
 }
 
 ## Troubleshoot error:
 ##   Warning message:
 ##   Removed 8 rows containing missing values (geom_bar).
+plts <- list()
+plts[[1]] <- QC_histogram(sData(demoData), 'Aligned (%)', 'region', 80, c(0,100))
+plts[[2]] <- QC_histogram(sData(demoData), 'Stitched (%)', 'region', 80, c(0,100))
+plts[[3]] <- QC_histogram(sData(demoData), 'Trimmed (%)', 'region', 80, c(0,100))
+plts[[4]] <- QC_histogram(sData(demoData), 'Saturated (%)', 'region', 80, c(0,100))
+plts[[5]] <- QC_histogram(sData(demoData), 'NegGeoMean', 'region', 5)
+plts[[6]] <- QC_histogram(sData(demoData), 'area', 'region', 15000)
+plts[[7]] <- QC_histogram(sData(demoData), 'nuclei', 'region', 20)
 
-QC_histogram(sData(demoData), 'Aligned (%)', 'region', 80, c(0,100))
-QC_histogram(sData(demoData), 'Stitched (%)', 'region', 80, c(0,100))
-QC_histogram(sData(demoData), 'Trimmed (%)', 'region', 80, c(0,100))
-QC_histogram(sData(demoData), 'Saturated (%)', 'region', 80, c(0,100))
-QC_histogram(sData(demoData), 'NegGeoMean', 'region', 5)
-QC_histogram(sData(demoData), 'area', 'region', 15000)
-QC_histogram(sData(demoData), 'nuclei', 'region', 20)
+plot_grid(plotlist = plts[1:7], nrow = 2, ncol = 4)
 
 ```
 
@@ -228,9 +248,13 @@ demoData <- setBioProbeQCFlags(demoData,
 ProbeQCResults <- fData(demoData)[["QCFlags"]]
 
 # Define QC table for Probe QC
-data.frame(Passed = sum(rowSums(ProbeQCResults[, -1]) == 0),
-           Global = sum(ProbeQCResults$GlobalGrubbsOutlier),
-           Local = sum(rowSums(ProbeQCResults[, -2:-1])>0))
+qc_df <- data.frame(Passed = sum(rowSums(ProbeQCResults[, -1]) == 0),
+                    Global = sum(ProbeQCResults$GlobalGrubbsOutlier),
+                    Local = sum(rowSums(ProbeQCResults[, -2:-1])>0))
+```
+
+```{r bioprobeQCTable, echo = FALSE, results = 'asis'}
+kable(qc_df, caption = 'Probes flagged or passed as outliers')
 
 ```
 
@@ -276,20 +300,7 @@ length(unique(featureData(demoData)[["TargetName"]]))
 # collapse to targets
 target_demoData <- aggregateCounts(demoData)
 dim(target_demoData)
-exprs(target_demoData)[1:5, 1:5]
-
-# I believe the rest of the code in this block is un-used except for demonstration purposes???
-# 
-# TargetCountMatrix <- exprs(target_demoData)
-# 
-# # Add annotations (scan name, roi, segment, aoi) 
-# # Access Count matrix With Probe information (AOIs are rows and targets as columns)
-# TargetCountMatrix <- (munge(target_demoData, mapping = ~ exprs + `roi` + 
-#                               `slide name` + `segment` + `aoi` ))
-# # convert the results above to wide format
-# TargetCountMatrix <- tidyr::spread(TargetCountMatrix, FeatureName, exprs)
-# dim(TargetCountMatrix)
-# TargetCountMatrix[1:4, 1:10]
+exprs(target_demoData)[1:5, 1:2]
 
 ```
 
@@ -305,24 +316,30 @@ We recommend removing poor performing AOIs before further analysis as they may u
 
 After filtering segments with poor detection, we recommend removing genes which were poorly detected. This helps improve performance during downstream statistical tests, decreases multiple testing penalties, and may prevent interpreting stochastic expression of genes near the LOQ as biological signal.
 
-First we will determine the number of genes detected at various cutoffs across our dataset. For each gene will will determine how many segments have expression > LOQ, and plot this information to help select a cutpoint for minimal detection. We will also show you how to determine for genes of interest how many AOIs it's detected in.
+First we will determine the number of genes detected at various cutoffs across our dataset. For each gene will will determine how many segments have expression > LOQ, and plot this information to help select a cut-point for minimal detection. We will also show you how to determine for genes of interest how many AOIs it's detected in.
 
-``` {r geneDetectionRate, eval = TRUE}
-
+```{r geneDetectionRate, eval = TRUE}
 pData(target_demoData)$LOQ <- pData(demoData)$LOQ
+loq_test <- function(x) {x > LOQ}
+LOQ_Mat <- t(esApply(target_demoData, MARGIN=1, FUN=loq_test))
 
-LOQ_Mat <- esApply(target_demoData, MARGIN=2, FUN=function(x) {
-  x > LOQ})
+# Save detection rate information to pheno & feature data
 pData(target_demoData)$GenesDetected <- colSums(LOQ_Mat, na.rm = TRUE)
 fData(target_demoData)$DetectedSegments <- rowSums(LOQ_Mat, na.rm = TRUE)
 fData(target_demoData)$DetectionRate <- fData(target_demoData)$DetectedSegments / nrow(pData(target_demoData))
 
-# Gene of interest detection table:
+# Gene of interest detection table
 goi <- c('PDCD1','CD274','IFNG','CD8A','CD68','EPCAM','KRT18','NPHS1','NPHS2','CALB1','CLDN8')
-data.frame(Gene = goi,
-           Detection = fData(target_demoData)[goi, 'DetectedSegments'],
-           Rate = round(fData(target_demoData)[goi, 'DetectionRate'] * 100, 1))
+goi_df <- data.frame(Gene = goi,
+                     Detection = fData(target_demoData)[goi, 'DetectedSegments'],
+                     Rate = round(fData(target_demoData)[goi, 'DetectionRate'] * 100, 1))
+```
 
+```{r tableGOI, echo = FALSE, results = 'asis'}
+kable(goi_df, caption = 'Detection rate for Genes of Interest', align = 'c')
+```
+
+```{r plotDetectionRate, eval = TRUE}
 # Plot detection rate:
 plot_detect <- data.frame(Freq = c(1, 5, 10, 20, 30, 50))
 plot_detect$Number <-
@@ -334,26 +351,25 @@ rownames(plot_detect) <- plot_detect$Freq
 ggplot(plot_detect, aes(x = as.factor(Freq), y = Rate, fill = Rate)) +
     geom_bar(stat = 'identity') +
     geom_text(aes(label = formatC(Number, format = 'd', big.mark = ',')),
-              vjust=1.6, color = 'black', size = 5) +
+              vjust=1.6, color = 'black', size = 4) +
     scale_fill_gradient2(low = 'orange2', mid = 'lightblue',
                          high = 'dodgerblue3', midpoint = 0.65,
                          limits = c(0,1),
                          labels = scales::percent) +
-    theme_bw(base_size = 15) +
+    theme_bw() +
     scale_y_continuous(labels = scales::percent, limits = c(0,1),
                        expand = expansion(mult = c(0, 0))) +
     labs(x = '% of Segments',
          y = 'Genes Detected, % of Panel > LOQ')
-
 ```
 
-As we have confirmed that all target genes of interest are detected at > 5% of AOIs, we will out genes detected in < 5% of segments. If a target gene was detected in < 5% of AOIs, it could be manually saved or a lower threshold could be selected.
+As we have confirmed that most of the target genes of interest are detected at > 10% of AOIs, we will out genes detected in < 10% of segments. If a target gene was detected in < 10% of AOIs, it could be manually saved or a lower threshold could be selected.
 
 ``` {r subsetGenes, eval = TRUE}
-
-# Subset to target genes detected in at least 5% of the samples.
-target_demoData <- target_demoData[fData(target_demoData)$DetectionRate > 0.05, ]
-
+# Subset to target genes detected in at least 10% of the samples. Also white-list the negative control probe
+neg_probe <- rownames(exprs(target_demoData))[grepl('Neg', rownames(target_demoData@assayData$exprs))]
+target_demoData <- target_demoData[fData(target_demoData)$DetectionRate > 0.1 |
+                                     fData(target_demoData)$TargetName == neg_probe, ]
 ```
 
 ## Normalization
@@ -366,11 +382,9 @@ Before we choose a normalization factor to use, we will explore the relationship
 
 For additional guidance, please refer to our [Data Analysis & Normalization White Paper for DSP-NGS Assays](whitepaper url)
 
-``` {r, previewNF, eval = TRUE}
-
+``` {r, previewNF, fig.width = 8, fig.height = 6.5, eval = TRUE}
 # Graph Q3 value vs negGeoMean of Negatives
 ann_of_interest <- 'region'
-neg_probe <- rownames(exprs(target_demoData))[grepl('Neg', rownames(target_demoData@assayData$exprs))]
 Stat_data <- data.frame(row.names = colnames(exprs(target_demoData)),
                         AOI = colnames(exprs(target_demoData)),
                         Annotation = pData(target_demoData)[, ann_of_interest],
@@ -379,57 +393,49 @@ Stat_data <- data.frame(row.names = colnames(exprs(target_demoData)),
 Stat_data_m <- melt(Stat_data, measure.vars = c('Q3','NegProbe'),
                     variable.name = 'Statistic', value.name = 'Value')
 
-ggplot(Stat_data_m, aes(x = Value, fill = Statistic)) +
+plts <- list()
+plt1 <- ggplot(Stat_data, aes(x = NegProbe, y = Q3, color = Annotation)) +
+  geom_abline(intercept = 0, slope = 1, lty = 'dashed', color = 'darkgray') +
+  geom_point() + guides(color = 'none') + theme_bw() +
+  scale_x_continuous(trans = 'log2') +
+  scale_y_continuous(trans = 'log2') +
+  theme(aspect.ratio = 1) +
+  labs(x = 'Negative Probe GeoMean, Counts', y = 'Upper Quartile Value, Counts')
+
+plt2 <- ggplot(Stat_data, aes(x = NegProbe, y = Q3/NegProbe, color = Annotation)) +
+  geom_hline(yintercept = 1, lty = 'dashed', color = 'darkgray') +
+  geom_point() + guides(color = 'none') + theme_bw() +
+  scale_x_continuous(trans = 'log2') +
+  scale_y_continuous(trans = 'log2') +
+  theme(aspect.ratio = 1) +
+  labs(x = 'Negative Probe GeoMean, Counts', y = 'Upper Quartile/NegProbe Value, Counts')
+
+plt3 <- ggplot(Stat_data_m, aes(x = Value, fill = Statistic)) +
   geom_histogram(bins = 40) + 
   theme_bw() +
   facet_wrap(~Annotation, nrow = 5) +
   scale_x_continuous(trans = 'log2') +
   labs(x = 'Counts', y = 'AOIs, #')
 
-ggplot(Stat_data, aes(x = NegProbe, y = Q3, color = Annotation)) +
-  geom_abline(intercept = 0, slope = 1, lty = 'dashed', color = 'darkgray') +
-  geom_point() + 
-  theme_bw() +
-  scale_x_continuous(trans = 'log2') +
-  scale_y_continuous(trans = 'log2') +
-  labs(x = 'Negative Probe GeoMean, Counts', y = 'Upper Quartile Value, Counts')
 
-ggplot(Stat_data, aes(x = NegProbe, y = Q3/NegProbe, color = Annotation)) +
-  geom_hline(yintercept = 1, lty = 'dashed', color = 'darkgray') +
-  geom_point() + 
-  theme_bw() +
-  scale_x_continuous(trans = 'log2') +
-  scale_y_continuous(trans = 'log2') +
-  labs(x = 'Negative Probe GeoMean, Counts', y = 'Upper Quartile/NegProbe Value, Counts')
+plotr <- align_plots(plt3, plt2, align = 'v', axis = 'r')
+top_row <- plot_grid(plt1, plotr[[2]], nrow = 1)
+plot_grid(top_row, plt3, ncol = 1)
 
-rm(list = c('Stat_data','Stat_data_m'))
 
 ```
 
-```{r normalizeObject, eval = TRUE}
+```{r normalizeObject, opt.width = .5, eval = TRUE}
 # Q3 norm (75th percentile) for WTA/CTA  with or without custom spike-ins
 target_demoData <- normalize(target_demoData , data_type = "RNA", norm_method = "quant", 
                              desiredQuantile = .75, toElt = "q_norm")
-
 # Background normalization for WTA/CTA without custom spike-in
 target_demoData <- normalize(target_demoData , data_type = "RNA", norm_method = "neg", 
                              fromElt = "exprs",  toElt = "neg_norm")
-
-# Note that Negative normalization is not acceptable for custom spike-ins in this R pipeline {is this true?}
-assayDataElement(target_demoData , elt = "q_norm")[1:5, 1:5]
-assayDataElement(target_demoData , elt = "neg_norm")[1:5, 1:5]
-NormCountMatrix <- assayDataElement(target_demoData, "q_norm")
-
-# Add annotations (scan name, roi, segment, aoi) 
-# Access Count matrix With Probe information (AOIs are rows and targets as columns)
-NormCountMatrix <- munge(target_demoData, mapping = ~q_norm + `roi` + 
-                           `slide name` + `segment` + `aoi` )
-# convert the results above to wide format
-NormCountMatrix <- tidyr::spread(NormCountMatrix, FeatureName, q_norm)
-dim(NormCountMatrix)
-NormCountMatrix[1:4, 1:10]
-
 # visualize the first 10 segments with each normalization method
+```
+
+```{r normplot, out.width=c('33%', '33%', '33%'), fig.show='hold'}
 boxplot(exprs(target_demoData)[,1:10], col = '#9EDAE5', main = 'Raw Counts',
         log = 'y', names = 1:10, xlab = 'Segment', ylab = 'Counts, Raw')
 boxplot(assayDataElement(target_demoData[,1:10], elt = 'q_norm'), col = '#2CA02C', main = 'Q3 Norm Counts',
@@ -446,9 +452,6 @@ boxplot(assayDataElement(target_demoData[,1:10], elt = 'neg_norm'), col = '#FF7F
 One common approach to understanding the data after normalization is to plot the data in a reduced dimensionality space. Two common methods for this are UMAP and tSNE projections, which are non-orthogonally constrained projections which can cluster samples based on overall gene expression rates. 
 
 ``` {r umap, eval = TRUE}
-# !!!!things to update: q3 accession - something is wrong above and q3 is failing
-
-library(umap)
 # update defaults for umap to contain a stable random_state (seed)
 custom_umap <- umap.defaults
 custom_umap$random_state <- 42
@@ -463,14 +466,11 @@ ggplot(pData(target_demoData),
        aes(x = UMAP1, y = UMAP2, color = region, shape = pathology)) +
   geom_point(size = 3) +
   theme_bw()
-
 ```
 
 ``` {r tsne, eval = TRUE}
-
-library(Rtsne)
-# run UMAP
-tsne_out <- Rtsne(t(na.omit(log2(assayDataElement(target_demoData , elt = "q_norm")))), perplexity = 15)
+# run tSNE
+tsne_out <- Rtsne(t(na.omit(log2(assayDataElement(target_demoData , elt = "q_norm")))), perplexity = 5)
 pData(target_demoData)$tSNE1 <- tsne_out$Y[,1]
 pData(target_demoData)$tSNE2 <- tsne_out$Y[,2]
 
@@ -478,16 +478,13 @@ ggplot(pData(target_demoData),
        aes(x = tSNE1, y = tSNE2, color = region, shape = pathology)) +
   geom_point(size = 3) +
   theme_bw()
-
 ```
 
 ### Differential Expression
 
 A common method for understanding distinctions between sets of segments or patients is to perform differential expression analysis. While more advanced methods for modeling the underlying count distribution are being actively developed, a simple approach to performing differential expression testing is to use a mixed-effect regression to estimate differences in mean expression between groups of ROIs, while accounting for the fact that the groups may have slide-specific effects using a random slope or random slope & intercept based on slide or sample. Essentially, the random slope or intercept is used to control for slide-specific effects, while modeling distinctions in the test of interest. Below we use the package `lme4` to model the data and `lmerTest` to estimate the significance of interactions. For more information about mixed effect modes please see [the original lme4 documentation](link to LME4).
 
-``` {r DE, eval = TRUE}
-library(lme4)
-library(lmerTest)
+``` {r DE, eval = TRUE, warning = FALSE, message = FALSE}
 
 ##NOTE: monocole includes a multi-core application of esApply. writing qNorm to
 ##the primary data slot for exprs might allow this to be used instead of
@@ -499,6 +496,9 @@ library(lmerTest)
 # Use case:
 # Glomeruli vs Tubules - mixed slope + intercept because the test is performed
 #     comparing paired ROIs within a slide 
+# NOTE: if using a comparison between exclusively between different slides:
+#    e.g. disease status, only a random intercept is recommended such that the formula
+#    would be lmer(log2(y) ~ disease + (1|`slide name`)) instead
 
 lmm <- function(y) {
   coef(summary(lmer(log2(y) ~ region + (1 + `slide name`| `slide name`))))[2, c(1,5)]
@@ -509,6 +509,9 @@ results <- as.data.frame(results)
 results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
 head(results)
 
+```
+
+``` {r volcanoPlot, figure.width = 10, figure.height = 10}
 # Categorize Results based on P-value & FDR for plotting
 results$Color <- 'NS or FC < 0.5'
 results$Color[results$P < 0.05] <- 'P < 0.05'
@@ -540,48 +543,35 @@ plt <- ggplot(results,
 
 print(plt)
 
-# # Test 2: [[[THIS SECTION ISN"T FINISHED YET]]]
-# # Glom - disease vs normal - subset & then DE mixed slope only, as this is
-# #     a test of groups of slides
-# 
-# # within structure disease vs normal
-# lmm <- function(y) {
-#   coef(summary(lmer(log2(y) ~ class + (1 | `slide name`))))[2, c(1,5)]
-# }
-# 
-# results_t2 <- c()
-# for(structure in unique(pData(target_demoData)$region)) {
-#   tmp_res <- t(assayDataApply(target_demoData[1:100, target_demoData$region == structure],
-#                               elt = "neg_norm", MARGIN = 1, lmm))
-#   tmp_res <- as.data.frame(tmp_res)
-#   tmp_res$FDR <- p.adjust(tmp_res$`Pr(>|t|)`, method = 'fdr')
-#   tmp_res$Structure <- structure
-#   results_t2 <- rbind(tmp_res, results_t2)
-# }
-# 
-
 ```
 
-### Visualizing differentially expressed genes with boxplots and heatmaps
+### Visualizing differentially expressed genes
 
 [TEXT HERE]
 
 ``` {r boxplot, eval = TRUE}
-# show expression for a single target: NPHS1
+# show expression for a single target: NPHS2
 ggplot(pData(target_demoData),
        aes(x = region, fill = region,
            y = assayDataElement(target_demoData['NPHS2', ], elt = 'q_norm'))) +
   geom_boxplot() +
-  labs(y = 'NPHS1') +
+  labs(y = 'NPHS2') +
   scale_y_continuous(trans = 'log2') +
   theme_bw()
+
+ggplot(pData(target_demoData),
+       aes(x = assayDataElement(target_demoData['NPHS2', ], elt = 'q_norm'),
+           y = assayDataElement(target_demoData['PAX8', ], elt = 'q_norm'),
+           color = region, shape = pathology)) +
+  geom_point() +
+  theme_bw() +
+  labs(x = 'NPHS2, Q3 Counts', y = 'PAX8, Q3 Counts')
 
 ```
 
 [TEXT HERE]
 
-``` {r heatmap, eval = TRUE}
-library(pheatmap)
+``` {r heatmap, eval = TRUE, fig.width = 8, fig.height = 6.5}
 
 # select top significant genes based on significance & filter any with NA's
 GOI <- subset(results, `Pr(>|t|)` < 1e-10)$Gene
@@ -599,14 +589,13 @@ pheatmap(assayDataElement(target_demoData[GOI, ], elt = 'q_norm'),
          color = colorRampPalette(c('purple3','black','yellow2'))(120),
          annotation_col = pData(target_demoData)[, c('region','class')])
 
+```
+
+``` {r autoheatmap, eval = TRUE, fig.width = 8, fig.height = 6.5}
+
 # The GeomxTools package also includes heatmap functionality in the graph
 # autoplot as a simple additional method for graphing your data
-dev.off()
 autoplot(target_demoData[GOI, ], type = 'heatmap-genes',
          elt = 'q_norm', heatmapGroup = c('region','class'))
 
 ```
-
-### Pathway analysis & Cell Decon [Stretch]
-
-``` {r }
