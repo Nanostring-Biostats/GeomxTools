@@ -152,7 +152,7 @@ demoData <- setSegmentQCFlags(demoData,
                                                percentAligned = 75,    # Minimum % of reads aligned to known targets
                                                percentSaturation = 50, # Minimum sequencing saturation
                                                minNegativeCount = 5,   # Minimum negative control counts
-                                               maxNTCCount = 150,      # Maximum counts observed in NTC well
+                                               maxNTCCount = 1000,     # Maximum counts observed in NTC well
                                                minNuclei = 15000,      # <- this is swapped?
                                                minArea = 20))          # <- this is swapped?
 prData <- protocolData(demoData)
@@ -215,9 +215,6 @@ QC_histogram <- function(assay_data = NULL,
   plt
 }
 
-## Troubleshoot error:
-##   Warning message:
-##   Removed 8 rows containing missing values (geom_bar).
 plts <- list()
 plts[[1]] <- QC_histogram(sData(demoData), 'Aligned (%)', 'region', 80, c(0,100))
 plts[[2]] <- QC_histogram(sData(demoData), 'Stitched (%)', 'region', 80, c(0,100))
@@ -229,6 +226,8 @@ plts[[7]] <- QC_histogram(sData(demoData), 'nuclei', 'region', 20)
 
 plot_grid(plotlist = plts[1:7], nrow = 2, ncol = 4)
 
+# show all NTC values sorted from highest to lowest:
+sort(unique(QCResults$NTC))
 ```
 
 ###  Exclude samples that did not pass Sequencing QC
