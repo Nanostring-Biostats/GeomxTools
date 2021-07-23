@@ -28,7 +28,8 @@ knitr::opts_chunk$set(
   dpi=200
 )
 ```
-``` {r backgroundLibraries, echo = FALSE, eval = TRUE}
+
+``` {r backgroundLibraries, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
 library(knitr)     # for kable
 library(EnvStats)  # is this needed?
 
@@ -38,7 +39,9 @@ library(EnvStats)  # is this needed?
 
 The GeoMx Digital Spatial Profiler (DSP) is platform for capturing protein or gene expression in a spatially resolved manner [Merritt et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32393914/). This vignette walks through analysis of data collected by GeoMx starting from raw count files through downstream biological analysis and interpretation.
 
-<!--GeoMx profiles expression by staining and processing standard histological slides, including fixed-frozen (FF) or formalin-fixed paraffin-embedded (FFPE) tissue sections. Tissue sections are stained with barcoded in-situ hybridization probes that bind to mRNA transcripts or oligo-labeled antibodies which bind to epitopes throughout the tissue. The slide is visualized using up to 4 immunoflorescent (IF) markers which can be IF-labeled antibodies or RNA Scope ISH probes. The user then selects regions of the interest (ROI) based on tissue morphology; if desired, each ROI can be further sub-divided into segments which will be sequentially profiled and are referred to as areas of illumination (AOI). The instrument then collects expression barcodes for each AOI individually, which are sequenced and processed. The final result are expression count files which can contain >18,000 quantified genes for every respective AOI profiled.-->
+<!--PRAJAN: this is commented - not sure if it's needed. Remove the <!--  and - -> surrounding it if you want to uncomment
+
+GeoMx profiles expression by staining and processing standard histological slides, including fixed-frozen (FF) or formalin-fixed paraffin-embedded (FFPE) tissue sections. Tissue sections are stained with barcoded in-situ hybridization probes that bind to mRNA transcripts or oligo-labeled antibodies which bind to epitopes throughout the tissue. The slide is visualized using up to 4 immunoflorescent (IF) markers which can be IF-labeled antibodies or RNA Scope ISH probes. The user then selects regions of the interest (ROI) based on tissue morphology; if desired, each ROI can be further sub-divided into segments which will be sequentially profiled and are referred to as areas of illumination (AOI). The instrument then collects expression barcodes for each AOI individually, which are sequenced and processed. The final result are expression count files which can contain >18,000 quantified genes for every respective AOI profiled.-->
 
 ### Motivation & Scope
 
@@ -53,7 +56,9 @@ The intent of this vignette is to enable an analyst to work with GeoMx data and 
 
 ## Getting started 
 
-<!--Let's install and load `GeomxTools` package and other required packages.
+<!--SECTION commented - just put a link to install instructions???
+
+Let's install and load `GeomxTools` package and other required packages. 
 
 ```{r installPackages, message = FALSE, warning = FALSE, eval = FALSE}
 # If you have not done so, install devtools to install needed R packages
@@ -73,13 +78,13 @@ For this tutorial we will use a kidney dataset profiled with human whole transcr
 
 ### Loading the Demo Data
 
-We will start by loading the data. the `readNanoStringGeoMxSet`**LINK NEEDED** function loads in all the necessary components, returning a structured R object that collates this information. The key data files are:
+We will start by loading the data. The key data files are:
 
 * DCCs files - expression count data
 * PKCs file - probe metadata describing the probes present in the data
 * Annotation file - useful sample information, including the type of regions profiled, and other characteristics of the samples.
 
-The section below will load data based on each being in separate folders within one central location. It will search through the folder to identify only the files with the appropriate extensions.
+The section below will look up all the files related to the project. To use a different folder, change the `file.path` to look elsewhere on your machine.
 
 ```{r quickstart, message=FALSE, warning=FALSE}
 # Main folder containing the data files
@@ -89,7 +94,11 @@ datadir <- file.path("~/DA Vignettes/Kidney_Dataset_for_GeomxTools/Kidney_Datase
 DCCFiles <- dir(file.path(datadir, "dccs"), pattern=".dcc$", full.names=TRUE, recursive=TRUE)
 PKCFiles <- dir(file.path(datadir, "pkcs"), pattern=".pkc$", full.names=TRUE, recursive=TRUE)
 SampleAnnotationFile <- dir(file.path(datadir, "annotation"), pattern=".xlsx$", full.names=TRUE, recursive=TRUE)
+```
 
+After locating your files we'll load these into a GeoMxSet using the `readNanoStringGeoMxSet` function returning a structured R object that collates this information. 
+
+``` {r loadData, message = FALSE, warning = FALSE}
 # load data
 demoData <- readNanoStringGeoMxSet(dccFiles = DCCFiles,
                                    pkcFiles = PKCFiles,
@@ -102,11 +111,38 @@ demoData <- readNanoStringGeoMxSet(dccFiles = DCCFiles,
 
 <!--Seven tissue slides were analyzed, 4 diabetic kidney disease (DKD) and 3 healthy kidney. Regions of Interest (ROI) focused on two different kidney structures: tubules or glomeruli. Individual glomeruli were identified by a pathologist as either behaving relatively healthy or diseased regardless on if the tissue was DKD or healthy. One glomerulus ROI contains the entirety of a glomerulus. Tubule ROIs were segmented into distal (PanCK+) and proximal (PanCK-) tubule areas of interest (AOI). While both distal and proximal tubules are called tubules, they perform very different functions in the kidney.-->
 
+Now that we've loaded the data, let's look at the different types of regions and samples that have been profiled in the dataset. We will use `dplyr` and `ggforce` to aggregate the dataset information into a Sankey diagram which shows the breakdown of samples and how they are a related to each other.
+
+``` {r sampleFlow, fig.width = 10, fig.height = 4, message = FALSE, warning = FALSE}
+library(dplyr)
+library(ggforce)
+
+# select the annotations we want to show, use `` to surround column names with spaces or special symbols
+count_mat <- count(pData(demoData), `slide name`, class, region, segment)
+# simplify the slide names
+count_mat$`slide name` <-  gsub('disease','d', gsub('normal','n', count_mat$`slide name`))
+# gather the data and plot in the graph in the order: class, slide name, region, segment
+test_gr <- gather_set_data(count_mat, 1:4)
+test_gr$x <- factor(test_gr$x, levels = c('class','slide name','region','segment'))
+ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
+  geom_parallel_sets(aes(fill = region), alpha = 0.5, axis.width = 0.1) +
+  geom_parallel_sets_axes(axis.width = 0.2) +
+  geom_parallel_sets_labels(color = 'white', size = 3) +
+  theme_classic(base_size = 13) + theme(axis.ticks.y = element_blank(), axis.line = element_blank(), axis.text.y = element_blank()) +
+  scale_y_continuous(expand = expansion(0)) + scale_x_discrete(expand = expansion(0)) + labs(x = '', y = '') +
+  annotate(geom = 'segment', x = 4.25, xend = 4.25, y = 20, yend = 120, lwd = 2) +
+  annotate(geom = 'text', x = 4.19, y = 70, angle = 90, size = 4, hjust = 0.5, label = '100 segments')
+```
+
 ### GeoMxSet Object Overview
 
 The `demoData` object is stored now as a *GeoMxSet Object*. A `GeoMxSet` Object are based on `ExpressionSet` objects, and have many similar functions as those described [on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf). All of expression, annotation, and probe information is linked and stored together as shown in the image below. There are a few key ways to access the data now that we have created a GeoMxSet Object. We will use these throughout the tutorial.
 
-![](./GeomxSetStructure.png){width=60%}
+<center>
+
+![](./GeomxSetStructure.png){width=70%}
+
+</center>
 
 As is shown above the GeoMxSet object consists of 3 or more elements.
 
@@ -114,19 +150,25 @@ As is shown above the GeoMxSet object consists of 3 or more elements.
     + As we progress through the analysis we will add new expression matrices to expression slots, or elements (`elt`), which can be accessed with `assayDataElement(object, elt = ...)`
 * Segment & Sample annotations - accessed with `pData(object)`
 * Probe & Target information - accessed with `fData(object)`
-* To learn more about other accessor functions type: `?GeomxTools::sData`
+* To learn more about other accessory functions type: `?GeomxTools::sData`
 
-Both eSets and GeoMxSets use `esApply` to extend [`apply`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/apply) function to such objects. In addition to the `esApply` function defined by the `ExpressionSet` class, we have built the `assayDataApply` function to allow you to select which expression matrix `elt` you wish to use with the `esApply` function. We will demonstrate the use of these functions below. 
+Both eSets and GeoMxSets use `esApply` to extend the [`apply`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/apply) function to such objects. In addition to the `esApply` function defined by the `ExpressionSet` class, we have built the `assayDataApply` function to allow you to select which expression matrix `elt` you wish to use with the `esApply` function. We will demonstrate the use of these functions below. 
 
 ## Quality Control & Pre-processing
 
-The steps below encompass the standard pre-processing workflow for scRNA-seq data in Seurat. These represent the selection and filtration of cells based on QC metrics, data normalization and scaling, and the detection of highly variable features
+<center>
 
-First we will shift counts with 0 detection to 1 to prevent `-Inf` in downstream transformations. This uses the `shiftCountsOne` function.
+![](./GeomxQCWorkflow.png){width=65%}
+
+</center>
+
+The steps above encompass the standard pre-processing workflow for GeoMx data in with GeomxTools. 
+
+Before we begin we will shift counts with 0 detection to 1 to prevent `-Inf` in downstream transformations. This uses the `shiftCountsOne` function. We'll also calculate the geometric mean of the negative controls for use in QC, by subsetting the data using `negativeControlSubset`.
 
 ``` {r shiftCounts, eval = TRUE}
 # Shift counts to one
-demoData <- shiftCountsOne(demoData, useDALogic = TRUE) 
+demoData <- shiftCountsOne(demoData, useDALogic = TRUE)
 ```
 
 ### Segment QC 
@@ -143,6 +185,7 @@ demoData <- setSegmentQCFlags(demoData,
                                                minNuclei = 20,         # Minimum # of cells observed in a segment
                                                minArea = 5000))        # Minimum segment size
 QCResults <- protocolData(demoData)[["QCFlags"]]
+flag_columns <- colnames(QCResults)
 QC_Summary <- data.frame(Pass = colSums(!QCResults[, flag_columns]),
                          Warning = colSums(QCResults[, flag_columns]))
 QCResults$QCStatus <- apply(QCResults, 1L, function(x) {
@@ -150,12 +193,6 @@ QCResults$QCStatus <- apply(QCResults, 1L, function(x) {
 })
 QC_Summary['TOTAL FLAGS', ] <- c(sum(QCResults[, 'QCStatus'] == 'PASS'),
                                 sum(QCResults[, 'QCStatus'] == 'WARNING'))
-```
-
-```{r QCSummaryTable, echo = FALSE, results = 'asis'}
-kable(QC_Summary, format = 'html', 
-      caption = 'QC Summary Table for each Segment',
-      align = 'c')
 ```
 
 To view the distribution of these statistics we will generate a few graphs with a quick function to draw histograms of our data using `ggplot2` and collate them with `cowplots::plot_grid`.
@@ -190,13 +227,22 @@ plts[[1]] <- QC_histogram(sData(demoData), 'Aligned (%)', 'region', 75, c(0,100)
 plts[[2]] <- QC_histogram(sData(demoData), 'Stitched (%)', 'region', 75, c(0,100))
 plts[[3]] <- QC_histogram(sData(demoData), 'Trimmed (%)', 'region', 75, c(0,100))
 plts[[4]] <- QC_histogram(sData(demoData), 'Saturated (%)', 'region', 50, c(0,100))
-plts[[5]] <- QC_histogram(sData(demoData), 'NegGeoMean', 'region', 2)
-plts[[6]] <- QC_histogram(sData(demoData), 'area', 'region', 5000)
+plts[[5]] <- QC_histogram(sData(demoData), 'NegGeoMean', 'region', 2) + scale_x_continuous(trans = 'log10')
+plts[[6]] <- QC_histogram(sData(demoData), 'area', 'region', 5000) + scale_x_continuous(trans = 'log10')
 plts[[7]] <- QC_histogram(sData(demoData), 'nuclei', 'region', 20)
 plot_grid(plotlist = plts[1:7], nrow = 2, ncol = 4)
 # show all NTC values sorted from highest to lowest:
 sort(unique(sData(demoData)$NTC))
 ```
+
+
+```{r QCSummaryTable, echo = FALSE, results = 'asis'}
+kable(QC_Summary, format = 'html', 
+      caption = 'QC Summary Table for each Segment',
+      align = 'c')
+```
+
+
 
 ###  Exclude samples that did not pass Sequencing QC
 
@@ -257,12 +303,15 @@ calc_LOQ <- function(object = NULL,
                      cutoff = 2,
                      minLOQ = 2) {
   negativeObject <- negativeControlSubset(object)
+       # to fix known bug for multiple panels:
+       # esBy(negativeObject, GROUP = "Module", 
+       #      function(x) {assayDataApply(x, MARGIN = 2, elt = "exprs",
+       #                             FUN = function(y) {pmax(ngeoMean(y) * ngeoSD(y) ^ cutoff, minLOQ)})})
   esApply(negativeObject, MARGIN=2, FUN=function(x) {
     pmax(ngeoMean(x) * ngeoSD(x) ^ cutoff, minLOQ)})
 }
 
 pData(demoData)$LOQ <- calc_LOQ(demoData)
-
 ```
 
 #### Create Gene-level Count Data
@@ -307,7 +356,7 @@ goi_df <- data.frame(Gene = goi,
 kable(goi_df, caption = 'Detection rate for Genes of Interest', align = 'c')
 ```
 
-```{r plotDetectionRate, eval = TRUE}
+```{r plotDetectionRate, eval = TRUE, out.width = '50%'}
 # Plot detection rate:
 plot_detect <- data.frame(Freq = c(1, 5, 10, 20, 30, 50))
 plot_detect$Number <-
@@ -339,6 +388,8 @@ As we have confirmed that most of the target genes of interest are detected at >
 neg_probe <- rownames(exprs(target_demoData))[grepl('Neg', rownames(target_demoData@assayData$exprs))]
 target_demoData <- target_demoData[fData(target_demoData)$DetectionRate > 0.1 |
                                      fData(target_demoData)$TargetName == neg_probe, ]
+dim(target_demoData)
+
 # remove genes we filtered out from goi list
 goi <- goi[goi %in% rownames(target_demoData@assayData$exprs)]
 ```
@@ -349,7 +400,7 @@ We will now normalize the GeoMx data for downstream visualizations and different
 
 Both of these normalization methods rely on the distribution of the data to estimate a normalization factor to roughly bring the data distributions together. More advanced methods for normalization and modelings are under active development, however, for most projects these methods are sufficient for understanding differences between biological classes of segments and samples. Additionally other packages such as `limma` may also be appropriate in some cases.
 
-Before normalization, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. We'd ideally like there to be separation between these two values before normalizing to one of them. If you do not see sufficient seperation between these values, you may need to be more aggressive with filtering out low-expressing genes.
+Before normalization, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. We'd ideally like there to be separation between these two values before normalizing to one of them. If you do not see sufficient separation between these values, you may need to be more aggressive with filtering out low-expressing genes.
 
 For additional guidance, please refer to our [Data Analysis White Paper for DSP-NGS Assays](https://www.nanostring.com/resources/geomx-cta-data-whitepaper/)
 
@@ -391,19 +442,19 @@ plot_grid(plt1, btm_row, ncol = 1, labels = c('A',''))
 
 [TEXT HERE]
 
-```{r normalizeObject, opt.width = .5, eval = TRUE}
+```{r normalizeObject, eval = TRUE}
 # Q3 norm (75th percentile) for WTA/CTA  with or without custom spike-ins
 target_demoData <- normalize(target_demoData , data_type = "RNA", norm_method = "quant", 
                              desiredQuantile = .75, toElt = "q_norm")
 # Background normalization for WTA/CTA without custom spike-in
 target_demoData <- normalize(target_demoData , data_type = "RNA", norm_method = "neg", 
                              fromElt = "exprs",  toElt = "neg_norm")
-# visualize the first 10 segments with each normalization method
 ```
 
 [TEXT HERE]
 
 ```{r normplot, out.width=c('33%', '33%', '33%'), fig.show='hold'}
+# visualize the first 10 segments with each normalization method
 boxplot(exprs(target_demoData)[,1:10], col = '#9EDAE5', main = 'Raw Counts',
         log = 'y', names = 1:10, xlab = 'Segment', ylab = 'Counts, Raw')
 boxplot(assayDataElement(target_demoData[,1:10], elt = 'q_norm'), col = '#2CA02C', main = 'Q3 Norm Counts',
@@ -419,18 +470,18 @@ boxplot(assayDataElement(target_demoData[,1:10], elt = 'neg_norm'), col = '#FF7F
 
 One common approach to understanding the data after normalization is to plot the data in a reduced dimensionality space. Two common methods for this are UMAP and tSNE projections, which are non-orthogonally constrained projections which can cluster samples based on overall gene expression rates. In this example we see that by either UMAP (from the `umap` package) or tSNE (from the `Rtsne` package) we see clusters of segments related to morphology and disease status (normal & diabetic kidney disease (DKD)).
 
+``` {r silentSeed, eval = TRUE, echo = FALSE}
+# update defaults for umap to contain a stable random_state (seed)
+custom_umap <- umap::umap.defaults
+custom_umap$random_state <- 42
+```
+
 ``` {r dimReduction, eval = TRUE, out.width=c('50%', '50%'), fig.show='hold'}
 library(umap)
-# update defaults for umap to contain a stable random_state (seed)
-custom_umap <- umap.defaults
-custom_umap$random_state <- 42
-
 # run UMAP
-umap_out <- umap(t(na.omit(log2(assayDataElement(target_demoData , elt = "q_norm")))),  
+umap_out <- umap(t(log2(assayDataElement(target_demoData , elt = "q_norm"))),  
                  config = custom_umap)
-pData(target_demoData)$UMAP1 <- umap_out$layout[,1]
-pData(target_demoData)$UMAP2 <- umap_out$layout[,2]
-
+pData(target_demoData)[, c('UMAP1','UMAP2')] <- umap_out$layout[, c(1,2)]
 ggplot(pData(target_demoData),
        aes(x = UMAP1, y = UMAP2, color = region, shape = class)) +
   geom_point(size = 3) +
@@ -438,10 +489,8 @@ ggplot(pData(target_demoData),
 
 library(Rtsne)
 # run tSNE
-tsne_out <- Rtsne(t(na.omit(log2(assayDataElement(target_demoData , elt = "q_norm")))), perplexity = 5)
-pData(target_demoData)$tSNE1 <- tsne_out$Y[,1]
-pData(target_demoData)$tSNE2 <- tsne_out$Y[,2]
-
+tsne_out <- Rtsne(t(log2(assayDataElement(target_demoData , elt = "q_norm"))), perplexity = 5)
+pData(target_demoData)[, c('tSNE1','tSNE2')] <- tsne_out$Y[, c(1,2)]
 ggplot(pData(target_demoData),
        aes(x = tSNE1, y = tSNE2, color = region, shape = class)) +
   geom_point(size = 3) +
@@ -455,9 +504,7 @@ Another unsupervised way to explore the structure of the data is to calculate th
 
 ``` {r CVheatmap, eval = TRUE, fig.width = 8, fig.height = 6.5}
 library(pheatmap)  # for pheatmap
-calc_CV <- function(x) {
-  sd(log2(x)) / mean(log2(x))
-}
+calc_CV <- function(x) {sd(log2(x)) / mean(log2(x))}
 CV_dat <- assayDataApply(target_demoData, elt = 'q_norm', MARGIN = 1, calc_CV)
 # show the highest CD genes and their CV values
 sort(CV_dat, decreasing = TRUE)[1:5]
@@ -479,15 +526,21 @@ pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
 
 ### Differential Expression
 
-A common method for exploring differences between groups of segments or patients is to perform differential expression analysis. While advanced methods for modeling the underlying count distribution are being actively developed, a common way to perform differential expression analysis with GeoMx data is to use a linear mixed-effect model (LMM). LMMs allow the user to account for the fact that we sample multiple times within a slide, rather than assuming that each AOI is independently sampled. These models are broken into 2 components: fixed effects - which represent the hypothesis you are testing, and random effects, which are variables estimating slide-specific variation.
+A common method for exploring differences between groups of segments or patients is to perform differential expression analysis. While advanced methods for modeling the underlying count distribution are being actively developed, a common approach is to use a linear mixed-effect model (LMM). LMMs allow the user to account for the fact that we sample multiple times within a slide, rather than assuming that each AOI is independently sampled. We use the `lme4` and `lmerTest` packages to calculate an LMM. The structure of the LMM prefered depends on the question being investigated. 
 
-For studies where you compare features within slides, we use a complex model to account for shared information shown below. For studies analyzing results between slides we can use a more simplistic model (see the section on between slide analysis). For this analysis we use the package `lme4` to model the data and `lmerTest` to estimate the significance of interactions. For more information about mixed effect models please see [the original lme4 documentation](https://cran.r-project.org/web/packages/lme4/vignettes/lmer.pdf).
+As shown in the diagram below, for studies where you compare features within slides, we use a complex model to account for shared information shown below. For studies analyzing results between slides we can use a more simplistic model.
+
+<center>
+
+![](./GeomxDETypes.png){width=50%}
+
+</center>
 
 #### Within Slide Analysis: Glomeruli vs Tubules
 
-The study we have collected allows us to ask what genes are specifically expressed within unique morphological structures within the kidney, and identify marker genes for either glomeruli or tubules. Because we are comparing structures found within the same slide we will use a complex model defined as the following code: `log2(Gene) ~ Region + (1 + Slide | Slide)`. Region is what we want to test against, and we use the second expression to account for variation within and across slides. This is a model with random effects for both slope (`(1 + slide |`) and intercept (`| Slide)`). In the next example below we change the formula to be less complex.
+First we'll explore differences in morphological structures within the kidney: glomeruli and tubules. Because we are comparing structures found within the same slide we will use the structure outlined in *A* above. Region is what we want to test against, while we control for slide specific sampling using a random slope and intercept. If multiple samples are contained within a slide, we would change the random slope and intercepts to account for sample instead.
 
-In this analysis we save log~2~ fold change estimates and P-values between the regions by accessing the coefficients table of the model using `coef(summary(...))`. If you want additional information about the t-statistics simply change the code below to save all of the coefficients from the lmm by adjusting the reference to `coef(...)[2, ]` instead of `coef(...)[2, c(1,5)]`. We also used a [Benjamini-Hochberg](http://www.math.tau.ac.il/~ybenja/MyPapers/benjamini_hochberg1995.pdf) multiple-test correction for the p-values, but different methods can be used by typing `?p.adjust` to read through options.
+In this analysis we save log~2~ fold change estimates and P-values using `coef(summary(...))`, and use `p.adjust(..., method = 'fdr')` to apply a benjamini-hochberg multiple test correction.
 
 ``` {r cheatDE, eval = TRUE, echo = FALSE}
 # below is work-around text to quick load DE results from a saved csv for convenience
@@ -501,14 +554,13 @@ colnames(results) <- c('Gene','Estimate','Pr(>|t|)','FDR')
 ``` {r DEComplex, eval = FALSE, warning = FALSE, message = FALSE}
 library(lme4)      # for lmer
 library(lmerTest)  # for p-values for lmer
-
-# Analysis example:
-# Glomeruli vs Tubules - mixed slope + intercept because the test is performed
-#     comparing paired ROIs within a slide 
-
+# Create a factor level for testing, this ensures appropriate directionality:
+#   FC < 0 is enriched in glomeruli
+#   FC > 0 is enriched in tubules
+pData(target_demoData)$testRegion <- factor(pData(target_demoData)$region, c('glomerulus','tubule'))
 # Define statistical test
-lmm <- function(y) {
-  coef(summary(lmer(log2(y) ~ region + (1 + `slide name`| `slide name`))))[2, c(1,5)]
+lmm <- function(gene) {
+  coef(summary(lmer(log2(gene) ~ testRegion + (1 + `slide name`| `slide name`))))[2, c(1,5)]
 }
 # Run tests
 results <- t(suppressMessages(assayDataApply(target_demoData,
@@ -527,12 +579,16 @@ write.csv(results, '~/DE_results_for_testing.csv')
 
 #### Between Slide Analysis: Diabetic Kidney Disease Glomeruli vs Healthy Glomeruli
 
-Another common use case it to look for differences between patients or sample specimens. Below is an example of our to code an LMM looking for variation on between patients, in this example using the `class` variable which contains disease status. Before running this model we will subset the data to only compare the glomeruli between patient classes. As mentioned before we have changed our model to be of the format `log2(Gene) ~ Class + (1 | Slide)`. This now only uses a random intercept during the analysis. More complex models can incorporate the location as well, but they are beyond the scope of this vignette.
+Another common use case it to look for differences between patients or sample specimens, as shown in *B* in the figure above. Below is an example of our to code an LMM looking for variation on between patients, in this example using the `class` variable which contains disease status. Before running this model we will subset the data to only compare the glomeruli between patient classes. More complex models could be used to model both structures at once are beyond the scope of this tutorial.
 
 ``` {r DEsimple, eval = FALSE}
+# Create a factor level for testing, this ensures appropriate directionality:
+#   FC < 0 is enriched in normal tissue
+#   FC > 0 is enriched in DKD tissue
+pData(target_demoData)$testClass <- factor(pData(target_demoData)$class, c('normal','DKD'))
 # Define statistical test
-lmm <- function(y) {
-  coef(summary(lmer(log2(y) ~ class + (1 | `slide name`))))[2, c(1,5)]
+lmm <- function(gene) {
+  coef(summary(lmer(log2(gene) ~ class + (1 | `slide name`))))[2, c(1,5)]
 }
 # Identify the glomeruli regions
 glom <- pData(target_demoData)$region == 'glomerulus'
@@ -553,7 +609,7 @@ glom <- pData(target_demoData)$region == 'glomerulus'
 
 #### Interpreting the results table
 
-Going back to the test for distinctions between glomeruli & tubules, the table produced captures 2 of the key features for DE. It saved the log~2~ fold change value, called `Estimate` in the table, and the P-value, called `Pr(>|t|)`. Let's take a look at our genes of interest and what their log~2~ fold change (`Estimate`), P-value (`Pr(>|t|)`), and FDR are. We can do this by simply subsetting the results table we just generated by typing `results[goi, ]`. 
+Going back to the first test between glomeruli & tubules, the table produced captures 2 of the key features for DE. It saved the log~2~ fold change value, called `Estimate` in the table, and the P-value, called `Pr(>|t|)`. Let's take a look at our genes of interest and what their log~2~ fold change (`Estimate`), P-value (`Pr(>|t|)`), and FDR are. We can do this by simply subsetting the results table we just generated by typing `results[goi, ]`. 
 
 ``` {r DEtable, echo = FALSE, results = 'asis', }
 kable(results[goi, ], digits = 3, caption = 'DE results for Genes of Interest', align = 'lc')
@@ -603,6 +659,13 @@ ggplot(results,
   theme_bw()
 ```
 
+Here we can also compare the expression of these genes to those in other databases. The human protein atlas is a key resource for understanding protein localization. In each case the qualified expression by structure is concordant with these results:
+
+* [PODXL Expression in Kidney Glomeruli](https://www.proteinatlas.org/ENSG00000128567-PODXL/tissue/kidney)
+* [KRT8 Expression in Kidney Tubules](https://www.proteinatlas.org/ENSG00000170421-KRT8/tissue/kidney)
+
+In the next section we'll explore these genes further.
+
 #### Plotting individual gene expression values
 
 Now that we know the top deferentially expressed genes, we can explore the expression of individual genes from the volcano plot. First we'll create a boxplot of a gene enriched within the glomeruli, PODXL (Podocalyxin-Like). Using `ggplot2` we attach the phenotypic data (`pData`) so all of those variables are available for use, and manually call the expression data using `assayDataElement(..., elt = 'q_norm')`.
@@ -613,7 +676,7 @@ In the second graph we plot two genes on opposite sides of the volcano plot agai
 # show expression for a single target: PODXL
 ggplot(pData(target_demoData),
        aes(x = region, fill = region,
-           y = assayDataElement(target_demoData['KRT8', ], elt = 'q_norm'))) +
+           y = assayDataElement(target_demoData['PODXL', ], elt = 'q_norm'))) +
   geom_boxplot() +
   labs(y = 'PODXL Expression') +
   scale_y_continuous(trans = 'log2') +
@@ -632,13 +695,7 @@ ggplot(pData(target_demoData),
   theme_bw() +
   scale_x_continuous(trans = 'log2') + scale_y_continuous(trans = 'log2') +
   labs(x = 'KRT8 Expression', y = 'PODXL Expression')
-
 ```
-
-Here we can also compare the expression of these genes to those in other databases. The human protein atlas is a key resource for understanding protein localization. In each case the qualified expression by structure is concordant with these results:
-
-* [PODXL Expression in Kidney Glomeruli](https://www.proteinatlas.org/ENSG00000128567-PODXL/tissue/kidney)
-* [KRT8 Expression in Kidney Tubules](https://www.proteinatlas.org/ENSG00000170421-KRT8/tissue/kidney)
 
 #### Heatmap of Significant Genes
 
@@ -664,7 +721,7 @@ pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
 
 While this vignette has focused on the full workflow of analysis we have also created vignettes that thoroughly describe the functionals and tools built into the `GeomxTools` package that more advanced users may be interested in. Please see the [Vignette name](Vignette link) *NEEDS LINK* vignette for more detailed information on all `GeomxTools` functionality.
 
-#### Links from within Vignette
+#### Links & References
 
 GeoMx Background:
 
