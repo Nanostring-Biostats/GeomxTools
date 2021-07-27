@@ -80,8 +80,6 @@ mixedModelDE <- function(object, elt = "exprs", modelFormula = NULL,
       mixedOut <- parLapply(cl, featureNames(object), deFunc, groupVar, pDat, formula(paste("expr", as.character(modelFormula)[2], sep = " ~ ")), exprs, pairwise)
       suppressWarnings(stopCluster(cl))
     }
-    #mixedOut <- rbind(array(unlist(lapply(mixedOut, function(x) x[["anova"]]))),
-    #                  array(lapply(mixedOut, function(x) x[["lsmeans"]])))
     mixedOut <- rbind(array(lapply(mixedOut, function(x) x[["anova"]])),
                       array(lapply(mixedOut, function(x) x[["lsmeans"]])))
     colnames(mixedOut) <- featureNames(object)
@@ -98,7 +96,6 @@ mixedModelDE <- function(object, elt = "exprs", modelFormula = NULL,
       }
       lmOut <- matrix(anova(lmOut)[groupVar, "Pr(>F)"], ncol = 1, dimnames = list(groupVar, "Pr(>F)"))
       lsmOut <- matrix(cbind(lsm[,1], lsm[,2]), ncol = 2, dimnames = list(gsub(groupVar, "", rownames(lsm)), c("Estimate", "PR(>|t|)")))
-      #lsmOut <- matrix(lsm[, c("Estimate", "Pr(>|t|)")], ncol = 2, dimnames = list(gsub(groupVar, "", rownames(lsm)), c("Estimate", "PR(>|t|)")))
       return(list(anova = lmOut, lsmeans = lsmOut))
     }
     mixedOut <- assayDataApply(object, 1, deFunc, groupVar, pDat, formula(paste("expr", as.character(modelFormula)[2], sep = " ~ ")), pairwise,  elt = elt)
