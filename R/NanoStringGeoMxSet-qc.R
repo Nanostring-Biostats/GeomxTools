@@ -1,6 +1,6 @@
 DEFAULTS <- list(minSegmentReads=1000, percentTrimmed=80, percentStitched=80, 
     percentAligned=80, percentSaturation=50, minNegativeCount=10, 
-    maxNTCCount=60, minNuclei=16000, minArea=20, minProbeCount=10, 
+    maxNTCCount=60, minNuclei=200, minArea=16000, minProbeCount=10, 
     minProbeRatio=0.1, outlierTestAlpha=0.01, percentFailGrubbs=20, 
     loqCutoff=1.0, highCountCutoff=10000)
 
