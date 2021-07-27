@@ -95,6 +95,9 @@ if (length(unique(fData(target_demoData)[["Module"]]) > 1)){
   expectedOutputData <- (cbind("VnV_GeoMx_Hs_CTA_v1.2" = expectedOutputData_1,
                                "Six-gene_test_v1_v1.1" = expectedOutputData_2))
   actualOutputData <- pData(target_demoData)[["neg_norm_negFactors"]]
+  dimnames(expectedOutputData) <- NULL
+  dimnames(actualOutputData) <- NULL
+
 }
 test_that("negative norm factors for multipanel are correct", {
   expect_equal(expectedOutputData, actualOutputData)
