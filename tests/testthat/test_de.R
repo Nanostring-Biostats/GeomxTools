@@ -71,7 +71,7 @@ mixedOutmc <- mixedModelDE(target_demoData,
 mixedOutp <- mixedModelDE(target_demoData,
                           elt = "exprs_norm",
                           modelFormula = NULL,
-                          groupVar = "cell_line",
+                          groupVar = "pool_rep",
                           nCores = 12,
                           multiCore = FALSE,
                           pAdjust = NULL

@@ -44,7 +44,7 @@ exportMethods(NanoStringGeoMxSet, show,
               sData, svarLabels, dimLabels, "dimLabels<-",
               featureType, "featureType<-",
               signatures, "signatures<-", signatureScores,
-              design, "design<-", signatureGroups, 
+              design, "design<-", signatureGroups,
               checkQCFlags, normalize)
 
 
@@ -68,6 +68,7 @@ export(setGeoMxQCFlags)
 export(setSeqQCFlags)
 export(shiftCountsOne)
 export(summarizeNegatives)
+export(mixedModelDE)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S3 methods
