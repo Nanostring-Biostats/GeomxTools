@@ -6,7 +6,7 @@ HOUSEKEEPERS <- c(
 #' @description normalize GeoMxSet using different normalization methods
 #' @param object name of the object class to perform normalization on
 #' @param norm_method the normalization method to be applied on the object
-#' @param data_type the data type of the object. Values maybe RNA, protein. 
+#' @param data_type the data type of the object. Values maybe RNA, protein.
 #' @param fromElt name of the assayDataElement to normalize
 #' @param toElt name of the assayDataElement to store normalized values
 #' @return a NanoStringGeoMxSet object with normalized counts and normalized factors
@@ -140,7 +140,6 @@ hkNorm <- function(object, data_type, toElt, fromElt, housekeepers) {
     } else {
       pData(object)[["hknormFactors"]] <- hks / ngeoMean(hks)
     }
-
     assayDataElement(object, toElt) <- sweep(assayDataElement(object, fromElt), 2L, hks / ngeoMean(hks), FUN = "/")
     return(object)
   }
@@ -164,16 +163,15 @@ subtractBackground <- function(object, data_type, toElt, fromElt) {
 #' Check QC Flags in the GeoMxSet and removes the probe or sample from the object
 #' @rdname checkQCFlags
 #' @param object name of the NanoStringGeoMxSet object to check the QC Flags
-#' @param ...  for other arguments 
+#' @param ...  for other arguments
 #' @return a NanoStringGeoMxSet object probes and samples failing QC removed
 #' @export
-#' @examples 
+#' @examples
 #' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
 #'   package = "GeomxTools"
 #' )
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' DemoData <- checkQCFlags(Demodata)
-
 setGeneric("checkQCFlags",
   signature = c("object"),
   function(object, ...) {
@@ -183,7 +181,7 @@ setGeneric("checkQCFlags",
 
 
 #' checkQCFlags
-#' @param NanoStringGeoMxSet 
+#' @param NanoStringGeoMxSet
 #' @param removeLowLocalOutliers logical, if TRUE it sets outlier counts to zero,  default is FALSE,
 #' @return NanoStringGeoMxSet
 #' @export
@@ -194,7 +192,6 @@ setGeneric("checkQCFlags",
 #' )
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' QCobject <- checkQCFlags(demoData)
-
 setMethod(
   "checkQCFlags", "NanoStringGeoMxSet",
   function(object, removeLowLocalOutliers = FALSE, ...) {
@@ -226,4 +223,3 @@ setMethod(
     return(object)
   }
 )
-

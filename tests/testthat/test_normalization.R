@@ -17,7 +17,7 @@ target_demoData <- aggregateCounts(demoData)
 ########### Quantile Normalization test
 #### req 1 check that normfactors are in in pData of demoData
 test_that("quantile norm factors are present", {
-  expect_true(length(demoData@phenoData@data[["q_norm_qFactors"]]) == dim(demoData@assayData$exprs)[2]) 
+  expect_true(length(demoData@phenoData@data[["q_norm_qFactors"]]) == dim(demoData@assayData$exprs)[2])
   expect_true(length(demoData@phenoData@data[["normFactors"]]) == dim(demoData@assayData$exprs)[2])
 })
 
@@ -63,6 +63,8 @@ test_that("quantile norm values are correct", {
 
 
 #### req 4 verify calculation of negative norm factors
+#subset dataset for single panel
+sub_target_demoData <- subset(target_demoData, subset = Module == "VnV_GeoMx_Hs_CTA_v1.2")
 #call negative normalization
 sub_target_demoData <- normalize(sub_target_demoData , data_type="RNA", norm_method="neg",
                       toElt = "neg_norm")
@@ -113,7 +115,6 @@ if (length(unique(fData(target_demoData)[["Module"]]) > 1)){
   expectedOutputData <- do.call(rbind, expectedNormMat)
   expectedOutputData <- expectedOutputData[order(row.names(expectedOutputData)), ]
 }
-expectedOutputData <- t(assayDataApply(target_demoData, 1, norm_neg))
 
 # Extract normalized data from object
 actualOutputData <- assayData(target_demoData)[["neg_norm"]]
