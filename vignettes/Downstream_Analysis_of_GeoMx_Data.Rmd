@@ -7,11 +7,11 @@ author:
   - NanoString Technologies, Inc
 - name: Prajan Divaker
   affiliation: NanoString Technologies, Inc
-- name: Nicole Ortegero
+- name: Nicole Ortogero
   affiliation: NanoString Technologies, Inc
 - name: Maddy Griswold
   affiliation: NanoString Technologies, Inc
-- name: Zhi yang
+- name: Zhi Yang
   affiliation: NanoString Technologies, Inc
 - name: Rona Vitancol
   affiliation: NanoString Technologies, Inc
@@ -98,7 +98,15 @@ devtools::install_github("Nanostring-Biostats/NanoStringNCTools")
 devtools::install_github("Nanostring-Biostats/GeomxTools", ref = "dev")
 ```
 -->
-If you haven't done so already, you will need to install the `GeomxTools` package. [Click here for instillation instructions and requirements](). Once you have installed the packages you can load them.
+If you haven't done so already, you will need to install the `GeomxTools` package. To do so from github use the following commands. We'll install from the `dev` branch currently.
+
+```{r libs, echo = TRUE, eval = FALSE}
+install.packages("devtools")
+devtools::install_github("Nanostring-Biostats/NanoStringNCTools")
+devtools::install_github("Nanostring-Biostats/GeomxTools", ref = "dev")
+```
+
+Once you have installed the packages you can load them. Future version of this tutorial will include 
 
 ```{r libs, message = FALSE, warning = FALSE, eval = TRUE}
 library(NanoStringNCTools)
@@ -144,7 +152,7 @@ demoData <- readNanoStringGeoMxSet(dccFiles = DCCFiles,
 <!--Seven tissue slides were analyzed, 4 diabetic kidney disease (DKD) and 3 healthy kidney. Regions of Interest (ROI) focused on two different kidney structures: tubules or glomeruli. Individual glomeruli were identified by a pathologist as either behaving relatively healthy or diseased regardless on if the tissue was DKD or healthy. One glomerulus ROI contains the entirety of a glomerulus. Tubule ROIs were segmented into distal (PanCK+) and proximal (PanCK-) tubule areas of interest (AOI). While both distal and proximal tubules are called tubules, they perform very different functions in the kidney.-->
 ## GeoMxSet Object Overview
 
-The `demoData` object is stored now as a *GeoMxSet Object*. A `GeoMxSet` Object are based on `ExpressionSet` objects, and have many similar functions as those described [on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf). All of expression, annotation, and probe information is linked and stored together as shown in the image below. There are a few key ways to access the data now that we have created a GeoMxSet Object. We will use these throughout the tutorial.
+The `demoData` object is stored now as a *GeoMxSet Object*. A `GeoMxSet` object are based on `ExpressionSet` objects, and have many similar functions as those described [on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf). All of expression, annotation, and probe information is linked and stored together as shown in the image below. There are a few key ways to access the data now that we have created a GeoMxSet Object. We will use these throughout the tutorial.
 
 <center>
 
@@ -163,6 +171,18 @@ As is shown above the GeoMxSet object consists of 3 or more elements.
 Both eSets and GeoMxSets use `esApply` to extend the [`apply`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/apply) function to such objects. In addition to the `esApply` function defined by the `ExpressionSet` class, we have built the `assayDataApply` function to allow you to select which expression matrix `elt` you wish to use with the `esApply` function. We will demonstrate the use of these functions below. 
 
 # Study Design
+
+## Modules Used
+
+First let's access the PKC files, to ensure that the expected PKCs have been loaded for this study. For the demo data we are using the file `TAP_WTA_1.0.pkc`.
+
+``` {r modules}
+pkcs <- annotation(demoData)
+modules <- gsub('.pkc', '', pkcs)
+kable(data.frame(PKCs = pkcs, modules = modules))
+```
+
+## Sample Overview
 
 Now that we've loaded the data, let's look at the different types of regions and samples that have been profiled in the dataset. We will use `dplyr` and `ggforce` to aggregate the dataset information into a Sankey diagram which shows the breakdown of samples and how they are a related to each other.
 
@@ -237,11 +257,13 @@ QC_Summary['TOTAL FLAGS', ] <- c(sum(QCResults[, 'QCStatus'] == 'PASS'),
                                 sum(QCResults[, 'QCStatus'] == 'WARNING'))
 ```
 
-To view the distribution of these statistics we will generate a few graphs with a quick function to draw histograms of our data using `ggplot2` and collate them with `cowplots::plot_grid`.
+To view the distribution of these statistics we will generate a few graphs with a quick function to draw histograms of our data using `ggplot2`. Here we use `col_by` variable to set an annotation column that we'd like to facet our data by.
 
-``` {r qcflag histograms, fig.width = 10, fig.height = 20, fig.wide = TRUE, eval = TRUE, warning = FALSE, message = FALSE}
+``` {r qcflagHistogramsCode, fig.small = TRUE, eval = TRUE, warning = FALSE, message = FALSE}
 library(ggplot2)
 library(cowplot)
+
+col_by <- 'segment'
 
 # Graphical summaries of QC statistics plot function
 QC_histogram <- function(assay_data = NULL,
@@ -250,7 +272,7 @@ QC_histogram <- function(assay_data = NULL,
                          thr = NULL,
                          xlims = NULL) {
   if(is.null(xlims)) {
-    xlims <- range(assay_data[, annotation])
+    xlims <- range(assay_data[[annotation]])
   }
   plt <- ggplot(assay_data,
                 aes_string(x = paste0('unlist(`', annotation, '`)'),
@@ -258,29 +280,43 @@ QC_histogram <- function(assay_data = NULL,
     geom_histogram(bins = 50) +
     geom_vline(xintercept = thr, lty = 'dashed', color = 'black') +
     theme_bw() + guides(fill = 'none') +
-    facet_wrap(as.formula(paste('~', fill_by)), nrow = 8) +
+    facet_wrap(as.formula(paste('~', fill_by)), nrow = 4) +
     xlim(xlims) +
     labs(x = annotation, y = 'AOIs, #', title = annotation)
   plt
 }
 
-plts <- list()
-plts[[1]] <- QC_histogram(sData(demoData), 'Aligned (%)', 'region', 75, c(0,100))
-plts[[2]] <- QC_histogram(sData(demoData), 'Stitched (%)', 'region', 75, c(0,100))
-plts[[3]] <- QC_histogram(sData(demoData), 'Trimmed (%)', 'region', 75, c(0,100))
-plts[[4]] <- QC_histogram(sData(demoData), 'Saturated (%)', 'region', 50, c(0,100))
-plts[[5]] <- QC_histogram(sData(demoData), 'NegGeoMean', 'region', 2) +
+```
+
+Now we'll explore each of the QC metrics to see how many samples were caught by the QC filters
+
+``` {r plotQCHist, fig.small = TRUE}
+QC_histogram(sData(demoData), 'Aligned (%)', col_by, 75, c(0,100))
+QC_histogram(sData(demoData), 'Stitched (%)', col_by, 75, c(0,100))
+QC_histogram(sData(demoData), 'Trimmed (%)', col_by, 75, c(0,100))
+QC_histogram(sData(demoData), 'Saturated (%)', col_by, 50, c(0,100))
+QC_histogram(sData(demoData), 'area', col_by, 5000) +
   scale_x_continuous(trans = 'log10')
-plts[[6]] <- QC_histogram(sData(demoData), 'area', 'region', 5000) +
-  scale_x_continuous(trans = 'log10')
-plts[[7]] <- QC_histogram(sData(demoData), 'nuclei', 'region', 20)
-plot_grid(plotlist = plts[1:7], ncol = 2)
+QC_histogram(sData(demoData), 'nuclei', col_by, 20)
+
+# explicitly copy the Negative geoMeans from sData to pData
+negCols <- paste0('NegGeoMean_', modules)
+pData(demoData)[, negCols] <- sData(demoData)[['NegGeoMean']]
+for(ann in negCols) {
+  plt <- QC_histogram(pData(demoData), ann, col_by, 2) +
+    scale_x_continuous(trans = 'log10') 
+  print(plt)
+}
+# detatch neg_geomean columns ahead of aggregateCounts call
+pData(demoData) <- pData(demoData)[, !colnames(pData(demoData)) %in% negCols]
+
 # show all NTC values sorted from highest to lowest:
 sort(unique(sData(demoData)$NTC))
 ```
 
+Finally we'll plot all of the QC Summary information in a table.
 
-```{r QCSummaryTable, echo = FALSE, results = 'asis'}
+```{r QCSummaryTable, results = 'asis'}
 kable(QC_Summary, caption = 'QC Summary Table for each Segment')
 ```
 
@@ -376,20 +412,27 @@ $$LOQ_{i} = geomean(NegProbe_{i}) * geoSD(NegProbe_{i})^{n}$$
 In the example below we use 2 geometric standard deviations ($n = 2$) above the geometric mean as the cutoff, which is recommended for most use cases. We also recommend that a minimum LOQ of 2 be used even if the LOQ calculated to be below this threshold.
 
 ``` {r calculateLOQ, eval = TRUE}
+
 # Create a function to define and calculate the LOQ:
 calc_LOQ <- function(object = NULL,
                      cutoff = 2,
                      minLOQ = 2) {
   negativeObject <- negativeControlSubset(object)
-       # to fix known bug for multiple panels:
-       # esBy(negativeObject, GROUP = "Module", 
-       #      function(x) {assayDataApply(x, MARGIN = 2, elt = "exprs",
-       #                             FUN = function(y) {pmax(ngeoMean(y) * ngeoSD(y) ^ cutoff, minLOQ)})})
-  esApply(negativeObject, MARGIN=2, FUN=function(x) {
-    pmax(ngeoMean(x) * ngeoSD(x) ^ cutoff, minLOQ)})
+  # to fix known bug for multiple panels:
+  esBy(negativeObject, GROUP = "Module", 
+       function(x) {assayDataApply(x, MARGIN = 2, elt = "exprs",
+                                   FUN = function(y) {
+                                     pmax(ngeoMean(y) * ngeoSD(y) ^ cutoff,
+                                          minLOQ)})})
 }
 
-pData(demoData)$LOQ <- calc_LOQ(demoData)
+pData(demoData)[['LOQ']] <- calc_LOQ(demoData)
+
+# LOQ_cols <- paste0('LOQ_', modules)
+# pData(demoData)[, LOQ_cols] <- calc_LOQ(demoData)
+
+  # esApply(negativeObject, MARGIN=2, FUN=function(x) {
+  #   pmax(ngeoMean(x) * ngeoSD(x) ^ cutoff, minLOQ)})
 ```
 
 ## Create Gene-level Count Data
@@ -414,9 +457,18 @@ After filtering segments with QC flags, we recommend removing genes which were p
 First we will determine the number of genes detected at various cutoffs across our dataset. For each gene will will determine how many segments have expression > LOQ, and plot this information to help select a cut-point for minimal detection. We will also show you how to examine the detection rates of genes of interest, saved here as a list of gene symbols.
 
 ```{r geneDetectionRate, eval = TRUE}
-pData(target_demoData)$LOQ <- pData(demoData)$LOQ
-loq_test <- function(x) {x > LOQ}
-LOQ_Mat <- t(esApply(target_demoData, MARGIN=1, FUN=loq_test))
+pData(target_demoData)[['LOQ']] <- pData(demoData)[['LOQ']] # unclear if needed now
+LOQ_Mat <- c()
+for(i in modules) {
+  ind <- fData(target_demoData)$Module == i
+  Mat_i <- t(esApply(target_demoData[ind, ], MARGIN = 1,
+                   FUN = function(x) {
+                     x > LOQ[, i]
+                   }))
+  LOQ_Mat <- rbind(LOQ_Mat, Mat_i)
+}
+# ensure ordering since this is stored outside of the geomxSet
+LOQ_Mat <- LOQ_Mat[fData(target_demoData)$TargetName, ]
 
 # Save detection rate information to pheno & feature data
 pData(target_demoData)$GenesDetected <- colSums(LOQ_Mat, na.rm = TRUE)
