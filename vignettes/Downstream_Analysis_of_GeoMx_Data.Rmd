@@ -100,7 +100,7 @@ devtools::install_github("Nanostring-Biostats/GeomxTools", ref = "dev")
 -->
 If you haven't done so already, you will need to install the `GeomxTools` package. To do so from github use the following commands. We'll install from the `dev` branch currently.
 
-```{r libs, echo = TRUE, eval = FALSE}
+```{r InstallGeomxTools, echo = TRUE, eval = FALSE}
 install.packages("devtools")
 devtools::install_github("Nanostring-Biostats/NanoStringNCTools")
 devtools::install_github("Nanostring-Biostats/GeomxTools", ref = "dev")
@@ -236,16 +236,17 @@ demoData <- shiftCountsOne(demoData, useDALogic = TRUE)
 First, we will check sequencing quality and adequate tissue sampling for every segment / AOI. For each segment there are several steps along the way to generating a count matrix, each with it's own quality metric associated and recommended threshold. FASTQ files are generated and converted to DCC files, but before we aggregate DCC files we need to check the sequencing quality within the FASTQ files. We will determine if the samples pass QC based on the number of reads per sample, the percent or reads trimmed and aligned, as well as the sequencing saturation (1 - % unique reads). We will also confirm the number of nuclei & area associated with each segment. At the end of this section we will summarize the breakdown of flags observed, and total number of segments/AOIs that have been flagged for QC failures.
 
 ```{r setqcflagupdated,  eval = TRUE}
-demoData <- setSegmentQCFlags(demoData, 
-                              qcCutoffs = list(minSegmentReads = 1000, # Minimum number of reads
-                                            #   percentTrimmed = 80,    # Minimum % of reads trimmed
-                                            #   percentStitched = 80,   # Minimum % of reads stitched
-                                               percentAligned = 75,    # Minimum % of reads aligned to known targets
-                                               percentSaturation = 50, # Minimum sequencing saturation
-                                               minNegativeCount = 2,   # Minimum negative control counts
-                                               maxNTCCount = 1000,     # Maximum counts observed in NTC well
-                                               minNuclei = 20,         # Minimum # of cells observed in a segment
-                                               minArea = 5000))        # Minimum segment size
+demoData <-
+  setSegmentQCFlags(demoData, 
+                    qcCutoffs = list(minSegmentReads = 1000, # Minimum number of reads
+                                     #   percentTrimmed = 80,    # Minimum % of reads trimmed
+                                     #   percentStitched = 80,   # Minimum % of reads stitched
+                                     percentAligned = 75,    # Minimum % of reads aligned to known targets
+                                     percentSaturation = 50, # Minimum sequencing saturation
+                                     minNegativeCount = 2,   # Minimum negative control counts
+                                     maxNTCCount = 1000,     # Maximum counts observed in NTC well
+                                     minNuclei = 20,         # Minimum # of cells observed in a segment
+                                     minArea = 5000))        # Minimum segment size
 QCResults <- protocolData(demoData)[["QCFlags"]]
 flag_columns <- colnames(QCResults)
 QC_Summary <- data.frame(Pass = colSums(!QCResults[, flag_columns]),
@@ -450,11 +451,11 @@ exprs(target_demoData)[1:5, 1:2]
 
 ```
 
-## Gene Filtering
+## Target Detection
 
 After filtering segments with QC flags, we recommend removing genes which were poorly detected. This helps improve performance during downstream statistical tests, decreases multiple testing penalties, and may prevent interpreting stochastic expression of genes near the LOQ as biological signal.
 
-First we will determine the number of genes detected at various cutoffs across our dataset. For each gene will will determine how many segments have expression > LOQ, and plot this information to help select a cut-point for minimal detection. We will also show you how to examine the detection rates of genes of interest, saved here as a list of gene symbols.
+First we will determine the number of genes detected in each ROI and at various cutoffs across our dataset. For each gene will will determine how many segments have expression > LOQ, and plot this information to help select a cut-point for minimal detection. We will also show you how to examine the detection rates of genes of interest, saved here as a list of gene symbols.
 
 ```{r geneDetectionRate, eval = TRUE}
 pData(target_demoData)[['LOQ']] <- pData(demoData)[['LOQ']] # unclear if needed now
@@ -475,7 +476,11 @@ pData(target_demoData)$GenesDetected <- colSums(LOQ_Mat, na.rm = TRUE)
 fData(target_demoData)$DetectedSegments <- rowSums(LOQ_Mat, na.rm = TRUE)
 fData(target_demoData)$DetectionRate <-
   fData(target_demoData)$DetectedSegments / nrow(pData(target_demoData))
+```
 
+Let's review the detection rate of some genes of interest. Here we create a list, `goi` in which we store a handful of genes that we'll review to ensure we get robust detection in our samples.
+
+``` {r goi detection}
 # Gene of interest detection table
 goi <- c('PDCD1','CD274','IFNG','CD8A','CD68','EPCAM',
          'KRT18','NPHS1','NPHS2','CALB1','CLDN8')
