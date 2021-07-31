@@ -20,7 +20,7 @@ author:
 package: GeomxTools
 abstract: >
   Here we walk through an end-to-end gene-level Geomx-NGS analysis workflow using open source packages on top of the GeomxTools object structure. We will start from the count files, show samples and targets are qualified, and prepare gene-level count datasets for downstream analysis. We will explore the relationship between samples, perform dimension reduction analysis, differential gene expression analysis, and visually explore the results.
-date: 26 July 2021
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   BiocStyle::html_document:
     toc: true
@@ -130,29 +130,33 @@ The section below will look up all the files related to the project. To use a di
 datadir <- file.path("~/DA Vignettes/Kidney_Dataset_for_GeomxTools/Kidney_Dataset/")
 
 # automatically list files in each directory for use
-DCCFiles <- dir(file.path(datadir, "dccs"), pattern=".dcc$", full.names=TRUE, recursive=TRUE)
-PKCFiles <- dir(file.path(datadir, "pkcs"), pattern=".pkc$", full.names=TRUE, recursive=TRUE)
-SampleAnnotationFile <- dir(file.path(datadir, "annotation"), pattern=".xlsx$", full.names=TRUE, recursive=TRUE)
+DCCFiles <- dir(file.path(datadir, "dccs"), pattern=".dcc$",
+                full.names=TRUE, recursive=TRUE)
+PKCFiles <- dir(file.path(datadir, "pkcs"), pattern=".pkc$",
+                full.names=TRUE, recursive=TRUE)
+SampleAnnotationFile <- dir(file.path(datadir, "annotation"), pattern=".xlsx$",
+                            full.names=TRUE, recursive=TRUE)
 ```
 
 After locating your files we'll load these into a GeoMxSet using the `readNanoStringGeoMxSet` function returning a structured R object that collates this information. 
 
 ``` {r loadData, message = FALSE, warning = FALSE}
 # load data
-demoData <- readNanoStringGeoMxSet(dccFiles = DCCFiles,
-                                   pkcFiles = PKCFiles,
-                                   phenoDataFile = SampleAnnotationFile,
-                                   phenoDataSheet = "Template",
-                                   phenoDataDccColName = "Sample_ID",
-                                   protocolDataColNames = c("aoi", "roi"),
-                                   experimentDataColNames = c("panel", 
-                                                              "instrument_type"))
+demoData <-
+  readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                         pkcFiles = PKCFiles,
+                         phenoDataFile = SampleAnnotationFile,
+                         phenoDataSheet = "Template",
+                         phenoDataDccColName = "Sample_ID",
+                         protocolDataColNames = c("aoi", "roi"),
+                         experimentDataColNames = c("panel", 
+                                                    "instrument_type"))
 ```
 
 <!--Seven tissue slides were analyzed, 4 diabetic kidney disease (DKD) and 3 healthy kidney. Regions of Interest (ROI) focused on two different kidney structures: tubules or glomeruli. Individual glomeruli were identified by a pathologist as either behaving relatively healthy or diseased regardless on if the tissue was DKD or healthy. One glomerulus ROI contains the entirety of a glomerulus. Tubule ROIs were segmented into distal (PanCK+) and proximal (PanCK-) tubule areas of interest (AOI). While both distal and proximal tubules are called tubules, they perform very different functions in the kidney.-->
 ## GeoMxSet Object Overview
 
-The `demoData` object is stored now as a *GeoMxSet Object*. A `GeoMxSet` object are based on `ExpressionSet` objects, and have many similar functions as those described [on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf). All of expression, annotation, and probe information is linked and stored together as shown in the image below. There are a few key ways to access the data now that we have created a GeoMxSet Object. We will use these throughout the tutorial.
+The `demoData` object is stored now as a `GeoMxSet Object`. `GeoMxSet` objects are based on `ExpressionSet` objects, and have many similar functions as those described [on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf). All of expression, annotation, and probe information is linked and stored together as shown in the image below. There are a few key ways to access the data now that we have created a GeoMxSet Object. We will use these throughout the tutorial.
 
 <center>
 
@@ -174,7 +178,7 @@ Both eSets and GeoMxSets use `esApply` to extend the [`apply`](https://www.rdocu
 
 ## Modules Used
 
-First let's access the PKC files, to ensure that the expected PKCs have been loaded for this study. For the demo data we are using the file `TAP_WTA_1.0.pkc`.
+First let's access the PKC files, to ensure that the expected PKCs have been loaded for this study. For the demo data we are using the file `TAP_H_WTA_1.0.pkc`.
 
 ``` {r modules}
 pkcs <- annotation(demoData)
@@ -260,9 +264,8 @@ QC_Summary['TOTAL FLAGS', ] <- c(sum(QCResults[, 'QCStatus'] == 'PASS'),
 
 To view the distribution of these statistics we will generate a few graphs with a quick function to draw histograms of our data using `ggplot2`. Here we use `col_by` variable to set an annotation column that we'd like to facet our data by.
 
-``` {r qcflagHistogramsCode, fig.small = TRUE, eval = TRUE, warning = FALSE, message = FALSE}
+``` {r qcflagHistogramsCode, eval = TRUE, warning = FALSE, message = FALSE}
 library(ggplot2)
-library(cowplot)
 
 col_by <- 'segment'
 
@@ -291,7 +294,7 @@ QC_histogram <- function(assay_data = NULL,
 
 Now we'll explore each of the QC metrics to see how many samples were caught by the QC filters
 
-``` {r plotQCHist, fig.small = TRUE}
+``` {r plotQCHist, fig.small = TRUE, warning = FALSE, message = FALSE}
 QC_histogram(sData(demoData), 'Aligned (%)', col_by, 75, c(0,100))
 QC_histogram(sData(demoData), 'Stitched (%)', col_by, 75, c(0,100))
 QC_histogram(sData(demoData), 'Trimmed (%)', col_by, 75, c(0,100))
@@ -311,8 +314,8 @@ for(ann in negCols) {
 # detatch neg_geomean columns ahead of aggregateCounts call
 pData(demoData) <- pData(demoData)[, !colnames(pData(demoData)) %in% negCols]
 
-# show all NTC values sorted from highest to lowest:
-sort(unique(sData(demoData)$NTC))
+# show all NTC values, Freq = # of Segments with a given NTC count:
+kable(table(NTC_Count = sData(demoData)$NTC))
 ```
 
 Finally we'll plot all of the QC Summary information in a table.
@@ -528,7 +531,7 @@ Most of the target genes of interest are detected at > 10% of AOIs, and filterin
 negativeObject <- negativeControlSubset(demoData)
 neg_probes <- unique(fData(negativeObject)$TargetName)
 target_demoData <- 
-  target_demoData[fData(target_demoData)$DetectionRate > 0.1 |
+  target_demoData[fData(target_demoData)$DetectionRate >= 0.1 |
                     fData(target_demoData)$TargetName %in% neg_probes, ]
 dim(target_demoData)
 
@@ -542,12 +545,14 @@ We will now normalize the GeoMx data for downstream visualizations and different
 
 Both of these normalization methods rely on the distribution of the data to estimate a normalization factor to roughly bring the data distributions together. More advanced methods for normalization and modelings are under active development, however, for most projects these methods are sufficient for understanding differences between biological classes of segments and samples. Additionally other packages such as `limma` may also be appropriate in some cases.
 
-Before normalization, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. We'd ideally like there to be separation between these two values before normalizing to one of them. If you do not see sufficient separation between these values, you may need to be more aggressive with filtering out low-expressing genes.
+Before normalization, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. We'd ideally like there to be separation between these two values before normalizing to one of them. If you do not see sufficient separation between these values, you may need to be more aggressive with filtering out low-expressing genes. We'll use `reshape2` and `cowplot` to aggregate and plot these statistics in one graph.
 
-For additional guidance, please refer to our [Data Analysis White Paper for DSP-NGS Assays](https://www.nanostring.com/resources/geomx-cta-data-whitepaper/)
+For additional guidance, please refer to our [Data Analysis White Paper for DSP-NGS Assays](https://www.nanostring.com/resources/geomx-cta-data-whitepaper/).
 
-``` {r, previewNF, fig.width = 8, fig.height = 8, fig.wide = TRUE, eval = TRUE}
+``` {r, previewNF, fig.width = 8, fig.height = 8, fig.wide = TRUE, eval = TRUE, warning = FALSE, message = FALSE}
 library(reshape2)  # for melt
+library(cowplot)   # for plot_grid
+
 # Graph Q3 value vs negGeoMean of Negatives
 ann_of_interest <- 'region'
 Stat_data <- 
@@ -587,7 +592,7 @@ plt3 <- ggplot(Stat_data,
   labs(x = 'Negative Probe GeoMean, Counts', y = 'Q3/NegProbe Value, Counts')
 
 btm_row <- plot_grid(plt2, plt3, nrow = 1, labels = c('B',''),
-                     rel_widths = c(0.45,0.55))
+                     rel_widths = c(0.43,0.57))
 plot_grid(plt1, btm_row, ncol = 1, labels = c('A',''))
 ```
 
@@ -722,7 +727,7 @@ pData(target_demoData)$testRegion <-
 # Define statistical test
 lmm <- function(gene) {
   coef(summary(lmer(log2(gene) ~ testRegion + 
-                      (1 + `slide name`| `slide name`))))[2, c(1,5)]
+                      (1 + testRegion | `slide name`))))[2, c(1,5)]
 }
 # Run tests
 results <- t(suppressMessages(assayDataApply(target_demoData,
@@ -735,7 +740,7 @@ results <- cbind(data.frame(Gene = rownames(results)),
 results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
 ```
 
-``` {r saveDETable, eval = FALSE, echo = FALSE}
+``` {r saveDETable, eval = TRUE, echo = FALSE}
 # Save DE table (either same file read in or new calculation)
 write.csv(results, '~/DE_results_for_testing.csv')
 ```
@@ -785,7 +790,7 @@ kable(results[goi, ], digits = 3, caption = 'DE results for Genes of Interest', 
 
 ## Volcano Plots
 
-Let's code a simple `ggplot2` graph for a volcano plot, which will color based on various cuts in the significance threshold and label genes the top 50 genes based on P-value with `ggrepel` on either side of the volcano plot. 
+Let's code a simple `ggplot2` graph for a volcano plot, which will color based on various cuts in the significance threshold and label genes the top 30 genes based on P-value with `ggrepel` on either side of the volcano plot. 
 
 ``` {r volcanoPlot, fig.width = 10, fig.height = 8, fig.wide = TRUE, warning = FALSE, message = FALSE}
 library(ggrepel) 
@@ -802,8 +807,8 @@ results$Color <- factor(results$Color,
 # pick top genes for either side of volcano to label
 # order genes for convenience:
 results$invert_P <- (-log10(results$`Pr(>|t|)`)) * sign(results$Estimate)
-top_g <- c(results$Gene[order(results$invert_P, decreasing = TRUE)[1:50]],
-           results$Gene[order(results$invert_P, decreasing = FALSE)[1:50]])
+top_g <- c(results$Gene[order(results$invert_P, decreasing = TRUE)[1:30]],
+           results$Gene[order(results$invert_P, decreasing = FALSE)[1:30]])
 results <- results[, -1*ncol(results)] # remove invert_P from matrix
 
 # Graph results
@@ -819,29 +824,37 @@ ggplot(results,
   scale_color_manual(values = c(`FDR < 0.001` = 'dodgerblue',
                                 `FDR < 0.05` = 'lightblue',
                                 `P < 0.05` = 'orange2',
-                                `NS or FC < 0.5` = 'gray')) +
+                                `NS or FC < 0.5` = 'gray'),
+                     guide = guide_legend(override.aes = list(size = 4))) +
   scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
   geom_text_repel(data = subset(results, Gene %in% top_g),
                   size = 4, point.padding = 0.15, color = 'black',
                   min.segment.length = .1, box.padding = .2, lwd = 2) +
-  theme_bw(base_size = 16)
+  theme_bw(base_size = 16) +
+  theme(legend.position="bottom")
 ```
+
+The volcano plot shows several genes being significantly differentially expressed between glomeruli and tubules. However, it has a shape that is a different than a volcano plot from a simple linear regression. This is because we used the mixed effect model to account for patient specific variation. There are some genes for which we see high fold change, but lower significance, because these genes appear to be behaving in a patient-specific manner rather than a reproducible manner across all slides. The genes that we see higher on the y-axis are ones we have stronger evidence for consistent behavior.
 
 ## MA Plot
 
-Another common visualization of expression would be to graph a MA plot looking for differences relative to expression within the baseline feature. As we have filtered out genes with low expression, it will not have the traditional shape of an MA plot, but can be useful in identifying targets with relatively high fold change and baseline expression. In the plot below we keep the labels the same as on the volcano plot for reference.
+Another common visualization of expression would be to graph a MA plot looking for differences relative to expression within the baseline feature. As we have filtered out genes with low expression, it will not have the traditional shape of an MA plot, but can be useful in identifying targets with relatively high fold change and baseline expression. In the plot below we keep the labels genes within the top 90th percentile of expression on average with an FDR of < 0.001 and a log2 FC > 0.5.
 
 ``` {r maPlot, fig.width = 10, fig.height = 8, fig.wide = TRUE, warning = FALSE, message = FALSE}
 results$MeanExp <-
   rowMeans(assayDataElement(target_demoData,
                             elt = 'q_norm'))
+
+top_g <- results$Gene[results$FDR < 0.001 &
+                        abs(results$Estimate) > .5 &
+                        results$MeanExp > quantile(results$MeanExp, 0.9)]
+
 ggplot(subset(results, !Gene %in% neg_probes),
        aes(x = MeanExp, y = Estimate,
            size = -log10(`Pr(>|t|)`),
            color = Color, label = Gene)) +
   geom_hline(yintercept = c(0.5, -0.5), lty = 'dashed') +
   scale_x_continuous(trans = 'log2') +
-  # geom_hline(yintercept = -log10(0.05), lty = 'dashed') +
   geom_point(alpha = 0.5) + 
   labs(y = 'Enriched in Glomeruli <- log2(FC) -> Enriched in Tubules',
        x = 'Mean Expression',
@@ -858,60 +871,59 @@ ggplot(subset(results, !Gene %in% neg_probes),
 
 Because we are exploring the relationship between expression and tissue substructure, we can leverage other databses to validate our findings. The [Human Protein Atlas](https://www.proteinatlas.org/) is a key resource for understanding protein localization. While not all markers have identified have been confirmed, as their targets may not have suitable antibodies available, in either side of the analysis we are able to find examples of top or near top hits concordant with these results:
 
-* [PODXL Expression in Kidney Glomeruli](https://www.proteinatlas.org/ENSG00000128567-PODXL/tissue/kidney)
-* [NPHS2 Expression in Kidney Glomeruli](https://www.proteinatlas.org/ENSG00000116218-NPHS2/tissue/kidney)
-* [KRT8 Expression in Kidney Tubules](https://www.proteinatlas.org/ENSG00000170421-KRT8/tissue/kidney)
-* [PIGR expression in Kidney Tubules](https://www.proteinatlas.org/ENSG00000162896-PIGR/tissue/kidney)
-* [SPP1 expression in Kidney Tubules](https://www.proteinatlas.org/ENSG00000118785-SPP1/tissue/kidney)
+* [PLA2R1 Expression in Kidney Glomeruli](https://www.proteinatlas.org/ENSG00000153246-PLA2R1/tissue/kidney)
+* [SNCA Expression in Kidney Glomeruli](https://www.proteinatlas.org/ENSG00000145335-SNCA/tissue/kidney)
+* [ALDOA Expression in Kidney Tubules](https://www.proteinatlas.org/ENSG00000149925-ALDOA/tissue/kidney)
+* [SOD2 Expression in Kidney Tubules](https://www.proteinatlas.org/ENSG00000112096-SOD2/tissue/kidney)
 
-In the next section we'll explore the expression of PODXL & KRT8 further to demonstrate the dynamics of these targets.
+In the next section we'll explore the expression of PLA2R1 & ALDOA further to demonstrate the dynamics of these targets.
 
 ## Plotting Genes of Interest
 
-Now that we know the top deferentially expressed genes, we can explore the expression of individual genes from the volcano plot. First we'll create a boxplot of a gene enriched within the glomeruli, PODXL (Podocalyxin-Like). Using `ggplot2` we attach the phenotypic data (`pData`) so all of those variables are available for use, and manually call the expression data using `assayDataElement(..., elt = 'q_norm')`.
+Now that we know the top deferentially expressed genes, we can explore the expression of individual genes from the volcano plot. First we'll create a boxplot of a gene enriched within the glomeruli, PLA2R1 (Phospholipase A2 receptor 1). Using `ggplot2` we attach the phenotypic data (`pData`) so all of those variables are available for use, and manually call the expression data using `assayDataElement(..., elt = 'q_norm')`.
 
-In the second graph we plot two genes on opposite sides of the volcano plot against each other. While PODXL is highly enriched in the glomeruli, Keratin-8 (KRT8) should show expression very specifically in the tubules. Plotting these against each other should show a mutually exclusive expression pattern that can easily distinguish the two structures. On this graph the dashed vertical lines represent the maximum observed KRT8 expression in glomeruli and and horizontal represent the maximum observed PODXL expression in the tubules.
+In the second graph we plot two genes on opposite sides of the volcano plot against each other. While PODXL is highly enriched in the glomeruli, Aldolase (ALDOA) should show expression very specifically in the tubules. Plotting these against each other should show a mutually exclusive expression pattern that can easily distinguish the two structures. On this graph the dashed vertical lines represent the maximum observed KRT8 expression in glomeruli and and horizontal represent the maximum observed PODXL expression in the tubules.
 
 ``` {r targetExprs, eval = TRUE}
 # show expression for a single target: PODXL
 ggplot(pData(target_demoData),
        aes(x = region, fill = region,
-           y = assayDataElement(target_demoData['PODXL', ],
+           y = assayDataElement(target_demoData['PLA2R1', ],
                                 elt = 'q_norm'))) +
   geom_boxplot() +
-  labs(y = 'PODXL Expression') +
+  labs(y = 'PLA2R1 Expression') +
   scale_y_continuous(trans = 'log2') +
   theme_bw()
 
-# show expression of PODXL vs KRT8
+# show expression of PLA2R1 vs ALDOA
 ggplot(pData(target_demoData),
-       aes(x = assayDataElement(target_demoData['KRT8', ],
+       aes(x = assayDataElement(target_demoData['ALDOA', ],
                                 elt = 'q_norm'),
-           y = assayDataElement(target_demoData['PODXL', ],
+           y = assayDataElement(target_demoData['PLA2R1', ],
                                 elt = 'q_norm'),
            color = region, shape = class)) +
   geom_vline(xintercept =
-               max(assayDataElement(target_demoData['KRT8', glom],
+               max(assayDataElement(target_demoData['ALDOA', glom],
                                     elt = 'q_norm')),
              lty = 'dashed', col = 'darkgray') +
   geom_hline(yintercept =
-               max(assayDataElement(target_demoData['PODXL', !glom],
+               max(assayDataElement(target_demoData['PLA2R1', !glom],
                                     elt = 'q_norm')),
              lty = 'dashed', col = 'darkgray') +
   geom_point(size = 3) +
   theme_bw() +
   scale_x_continuous(trans = 'log2') + 
   scale_y_continuous(trans = 'log2') +
-  labs(x = 'KRT8 Expression', y = 'PODXL Expression')
+  labs(x = 'ALDOA Expression', y = 'PLA2R1 Expression')
 ```
 
 ## Heatmap of Significant Genes
 
-In addition to generating individual gene boxplots or volcano plots, we can again create a heatmap from our data. This time instead of using the CV to select genes, we simply use the P-value or FDR to select Genes. Here we show all genes with an FDR < 1e-5.
+In addition to generating individual gene boxplots or volcano plots, we can again create a heatmap from our data. This time instead of using the CV to select genes, we simply use the P-value or FDR to select Genes. Here we show all genes with an FDR < 0.001.
 
 ``` {r heatmap, eval = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE}
 # select top significant genes based on significance, plot with pheatmap
-GOI <- subset(results, `FDR` < 1e-5)$Gene
+GOI <- subset(results, `FDR` < 0.001)$Gene
 pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
          scale = 'row', 
          show_rownames = FALSE, show_colnames = FALSE,
