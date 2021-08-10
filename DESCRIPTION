@@ -23,6 +23,7 @@ Collate: DccMetadata.R
          NanoStringGeoMxSet-aggregate.R
          NanoStringGeoMxSet-signatures.R
          NanoStringGeoMxSet-normalize.R
+         NanoStringGeoMxSet-de.R
          readDccFile.R
          readPKCFile.R
          readNanoStringGeoMxSet.R
