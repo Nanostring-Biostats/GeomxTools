@@ -339,7 +339,8 @@ setGrubbsFlags <- function(object,
                         }
                         grubbsTest <- 
                             outliers::grubbs.test(z, two.sided=TRUE, type=10)
-                        if(grubbsTest$p.value < alphaCutoff) {
+                        if(grubbsTest$p.value < alphaCutoff & 
+                               !is.null(names(grubbsTest$p.value))) {
                             if (grepl("lowest", tolower(grubbsTest$alternative))) {
                                 outlierDirection <- 
                                     data.frame(LowLocalOutlier=TRUE, 
@@ -357,18 +358,25 @@ setGrubbsFlags <- function(object,
                             return(NA)
                         }
                     })
+                    names(currResult) <- colnames(currExprs)
+                    currResult <- currResult[!is.na(currResult)]
                     appendedResult <-
-                        lapply(names(currResult[!is.na(currResult)]), function(q) {
+                        lapply(names(currResult), function(q) {
                             toAppendResult <- currResult[[q]]
                             toAppendResult[["Sample_ID"]] <- q
                             return(toAppendResult)
                         })
+                    ifelse(length(appendedResult) < 1, 
+                           return(), 
+                           return(do.call(rbind, appendedResult)))
                 })
-            if(!all(is.na(targetOutliers))) {
-                targetOutliers <- do.call(rbind, targetOutliers[!is.na(targetOutliers)])
+            targetOutliers <- 
+                targetOutliers[!targetOutliers %in% list(NULL)]
+            if(length(targetOutliers) > 0) {
+                targetOutliers <- do.call(rbind, targetOutliers)
                 return(targetOutliers)
             } else {
-                return(NA)
+                return()
             }
         })
     
@@ -380,31 +388,42 @@ setGrubbsFlags <- function(object,
                           ncol=dim(object)[2L], 
                           dimnames=list(featureNames(object), sampleNames(object))),
                           check.names=FALSE)
-    if(!all(is.na(grubbsResults))) {
-        grubbsResults <- do.call(rbind, grubbsResults[!is.na(grubbsResults)])
+    
+    grubbsResults <- grubbsResults[!grubbsResults %in% list(NULL)]
+    if(length(grubbsResults) > 0) {
+        grubbsResults <- do.call(rbind, grubbsResults)
         
         outlierFreqs <- table(grubbsResults[["RTS_ID"]]) / dim(object)[2L]
         fData(object)[names(outlierFreqs), "OutlierFrequency"] <- outlierFreqs
-        globalFlags[["GlobalGrubbsOutlier"]] <- 100 * fData(object)[["OutlierFrequency"]] >= percFail
-        
+        globalFlags[["GlobalGrubbsOutlier"]] <- 
+            100 * fData(object)[["OutlierFrequency"]] >= percFail
+       
         subsetOfLocals <- 
             lapply(unique(grubbsResults[["RTS_ID"]]), function(currOut) {
                 currFlags <- localGrubbsFlags[currOut, , drop=FALSE]
-                lowAOIs <- grubbsResults[(grubbsResults[["RTS_ID"]] == currOut & 
-                                          grubbsResults[["LowLocalOutlier"]]), "Sample_ID"]
-                highAOIs <- grubbsResults[(grubbsResults[["RTS_ID"]] == currOut & 
-                                          grubbsResults[["HighLocalOutlier"]]), "Sample_ID"]
-                if (length(lowAOIs) > 0) {currFlags[, lowAOIs] <- rep(TRUE, length(lowAOIs))}
-                if (length(highAOIs) > 0) {currFlags[, highAOIs] <- rep(TRUE, length(highAOIs))}
+                lowAOIs <- 
+                    grubbsResults[(grubbsResults[["RTS_ID"]] == currOut & 
+                                       grubbsResults[["LowLocalOutlier"]]), 
+                                  "Sample_ID"]
+                highAOIs <- 
+                     grubbsResults[(grubbsResults[["RTS_ID"]] == currOut & 
+                                       grubbsResults[["HighLocalOutlier"]]), 
+                                   "Sample_ID"]
+                if (length(lowAOIs) > 0) {currFlags[, lowAOIs] <- 
+                    rep(TRUE, length(lowAOIs))}
+                if (length(highAOIs) > 0) {currFlags[, highAOIs] <- 
+                    rep(TRUE, length(highAOIs))}
                 return(currFlags)
-            })
+        })
         subsetOfLocals <- do.call(rbind, subsetOfLocals)
-        localGrubbsFlags[rownames(subsetOfLocals), colnames(subsetOfLocals)] <- 
-            subsetOfLocals
-        localGrubbsFlags <- localGrubbsFlags[featureNames(object), sampleNames(object)]
+        localGrubbsFlags[rownames(subsetOfLocals), 
+                         colnames(subsetOfLocals)] <- subsetOfLocals
+        localGrubbsFlags <- 
+            localGrubbsFlags[featureNames(object), sampleNames(object)]
     }
     localGrubbsFlags[is.na(localGrubbsFlags)] <- FALSE
-    LocalGrubbsOutlier <- data.frame(LocalGrubbsOutlier=localGrubbsFlags, check.names=FALSE)
+    LocalGrubbsOutlier <- 
+        data.frame(LocalGrubbsOutlier=localGrubbsFlags, check.names=FALSE)
     object <- appendFeatureFlags(object, globalFlags)
     object <- appendFeatureFlags(object, LocalGrubbsOutlier)
     return(object)
