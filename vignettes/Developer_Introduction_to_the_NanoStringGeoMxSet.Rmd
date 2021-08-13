@@ -220,7 +220,7 @@ demoData <- shiftCountsOne(demoData, useDALogic=TRUE)
 demoData <- setSegmentQCFlags(demoData)
 head(protocolData(demoData)[["QCFlags"]])
 demoData <- setBioProbeQCFlags(demoData)
-head(featureData(demoData)[["QCFlags"]])
+featureData(demoData)[["QCFlags"]][1:5, 1:4]
 ```
 
 Probes and Samples that were flagged can be removed from analysis by subsetting. 
