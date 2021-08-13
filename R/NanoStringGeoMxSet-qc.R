@@ -329,7 +329,7 @@ setGrubbsFlags <- function(object,
             assayDataElement(modObject, elt="log10") <- 
                 logtBase(exprs(modObject), base=10)
             targetOutliers <- 
-                esBy(modObject, GROUP="TargetName", FUN=function(y) {
+                esBy(modObject, GROUP="TargetName", simplify=FALSE, FUN=function(y) {
                     currExprs <- assayDataElement(y, elt="log10")
                     currResult <- apply(currExprs, 2, function(z) { 
                         if (max(z) < logtBase(minCount, base=10)) {
