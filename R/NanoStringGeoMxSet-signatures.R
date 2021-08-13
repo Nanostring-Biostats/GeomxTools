@@ -1,44 +1,27 @@
 # signatures Accessor and Replacer
 setGeneric("signatures", signature = "object",
            function(object) standardGeneric("signatures"))
-setMethod("signatures", "NanoStringGeomxSet",
+setMethod("signatures", "NanoStringGeoMxSet",
           function(object) object@signatures)
 
 setGeneric("signatures<-", signature = c("object", "value"),
            function(object, value) standardGeneric("signatures<-"))
-setReplaceMethod("signatures", c("NanoStringGeomxSet", "SignatureSet"),
+setReplaceMethod("signatures", c("NanoStringGeoMxSet", "SignatureSet"),
                  function(object, value) {
                    object@signatures <- value
-                   object
+                   return(object)
                  })
-
-# signatureScores Accessor and Replacer
-.sigCalc <- function(X, sigWeights)
-{
-  t(sapply(sigWeights,
-           function(wts) {
-             if ("(Intercept)" %in% names(wts)) {
-               X <- cbind("(Intercept)" = 1, X)
-             }
-             if (all(names(wts) %in% colnames(X))) {
-               X <- X[, names(wts), drop = FALSE]
-               (X %*% wts)[, 1L]
-             } else {
-               structure(rep.int(NA_real_, nrow(X)), names = rownames(X))
-             }
-           }))
-}
 
 setGeneric("signatureScores", signature = "object",
            function(object, ...) standardGeneric("signatureScores"))
-setMethod("signatureScores", "NanoStringGeomxSet",
+setMethod("signatureScores", "NanoStringGeoMxSet",
           function(object, elt = "exprs") {
             if (length(signatures(object)) == 0L) {
               return(matrix(numeric(), nrow = 0L, ncol = ncol(object),
                             dimnames = list(NULL, colnames(object))))
             }
             exprs <- t(assayDataElement2(object, elt))
-            colnames(exprs) <- featureData(object)[["GeneName"]]
+            colnames(exprs) <- featureData(object)[["TargetName"]]
             sigFuncList <- signatureFuncs( object )
             linWeights <- stats::weights( signatures( object ) )[names( sigFuncList )[which( sigFuncList %in% "default" )]]
             nonLinFuncs <- sigFuncList[which( !( sigFuncList %in% "default" ) )]
@@ -61,19 +44,19 @@ setMethod("signatureScores", "NanoStringGeomxSet",
 
 setGeneric( "signatureGroups" , signature = "object" ,
             function (object , ... ) standardGeneric( "signatureGroups" ) )
-setMethod("signatureGroups", "NanoStringGeomxSet",
+setMethod("signatureGroups", "NanoStringGeoMxSet",
           function( object ) {
-            groups( object@signatures )
+            return( groups( object@signatures ) )
           } )
 
 setGeneric("setSignatureGroups<-", signature = c("object", "value"),
            function(object, value) standardGeneric("setSignatureGroups<-"))
-setReplaceMethod("setSignatureGroups", c("NanoStringGeomxSet", "factor"),
+setReplaceMethod("setSignatureGroups", c("NanoStringGeoMxSet", "factor"),
                  function(object, value) {
                    groups( object@signatures ) <- value
                    return( object )
                  })
-setReplaceMethod("setSignatureGroups", c("NanoStringGeomxSet", "character"),
+setReplaceMethod("setSignatureGroups", c("NanoStringGeoMxSet", "character"),
                  function(object, value) {
                    groups( object@signatures ) <- value
                    return( object )
@@ -81,14 +64,14 @@ setReplaceMethod("setSignatureGroups", c("NanoStringGeomxSet", "character"),
 
 setGeneric( "signatureFuncs" , signature = "object" ,
             function (object , ... ) standardGeneric( "signatureFuncs" ) )
-setMethod("signatureFuncs", "NanoStringGeomxSet",
+setMethod("signatureFuncs", "NanoStringGeoMxSet",
           function( object ) {
-            getSigFuncs( object@signatures )
+            return( getSigFuncs( object@signatures ) )
           } )
 
 setGeneric("setSignatureFuncs<-", signature = c("object", "value"),
            function(object, value) standardGeneric("setSignatureFuncs<-"))
-setReplaceMethod("setSignatureFuncs", c("NanoStringGeomxSet", "character"),
+setReplaceMethod("setSignatureFuncs", c("NanoStringGeoMxSet", "character"),
                  function(object, value) {
                    setSigFuncs( object@signatures ) <- value
                    return( object )

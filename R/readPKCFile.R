@@ -9,20 +9,12 @@ function(file)
                      return(base_pkc_name)
                    }))
   names(pkc_json_list) <- pkc_names
-  rnaid_lookup_df <- generate_pkc_lookup(pkc_json_list)
-  target_notes <- generate_pkc_targ_notes(pkc_json_list, rnaid_lookup_df)
+  rtsid_lookup_df <- generate_pkc_lookup(pkc_json_list)
   # create negative column 
-  rnaid_lookup_df$Negative <- 
-    rnaid_lookup_df$Gene %in% 
-    target_notes[grep("Negative", target_notes$Codeclass), "TargetName"]
-  # Remove codeclass column, only needed for target notes generation
-  rnaid_lookup_df <- 
-    rnaid_lookup_df[, !colnames(rnaid_lookup_df) %in% c("Codeclass", "PoolNum")]
-  # change "RTS00" to "RNA" (only check the first characters, also need to 
-  #   change from RNA to RTS00)
-  rnaid_lookup_df$RTS_ID <- gsub("RTS00", "RNA", rnaid_lookup_df[["RTS_ID"]])
+  rtsid_lookup_df$Negative <- grepl("Negative", rtsid_lookup_df$CodeClass)
+  rtsid_lookup_df$RTS_ID <- gsub("RNA", "RTS00", rtsid_lookup_df[["RTS_ID"]])
   # Coerce output to DataFrame
-  rnaid_lookup_df <- S4Vectors::DataFrame(rnaid_lookup_df)
+  rtsid_lookup_df <- S4Vectors::DataFrame(rtsid_lookup_df)
   
   # Extract header
   header <- list(PKCFileName = sapply(pkc_json_list, function(list) list[["Name"]]),
@@ -33,28 +25,30 @@ function(file)
                  MinNuclei = sapply(pkc_json_list, function(list) list[["MinNuclei"]])  
                  )
   
-  S4Vectors::metadata(rnaid_lookup_df) <- header
+  S4Vectors::metadata(rtsid_lookup_df) <- header
   
-  return(rnaid_lookup_df)
+  return(rtsid_lookup_df)
 }
 
 
 generate_pkc_lookup <- function(jsons_vec) {
   lookup_df <- data.frame(RTS_ID=character(), 
-                          Gene=character(), 
+                          Target=character(), 
                           Module=character(), 
-                          Codeclass=character(),
+                          CodeClass=character(), 
+                          ProbeID=character(),
                           stringsAsFactors=FALSE)
   for (curr_idx in seq_len(length(jsons_vec))) {
     curr_module <- names(jsons_vec)[curr_idx]
     curr_json <- jsons_vec[[curr_idx]]
     for (targ in curr_json[["Targets"]]) {
-      curr_gene <- targ[["DisplayName"]]
-      curr_code_class <- targ[["CodeClass"]]
+      curr_targ <- targ[["DisplayName"]]
+      curr_code_class <- gsub("\\d+$", "", targ[["CodeClass"]])
       for (prb in targ[["Probes"]]) {
         curr_RTS_ID <- prb$RTS_ID
+        curr_probe_ID <- prb$ProbeID
         lookup_df[nrow(lookup_df) + 1, ] <- 
-          list(curr_RTS_ID, curr_gene, curr_module, curr_code_class)
+          list(curr_RTS_ID, curr_targ, curr_module, curr_code_class, curr_probe_ID)
       }
     }
   }
@@ -62,15 +56,15 @@ generate_pkc_lookup <- function(jsons_vec) {
 }
 
 generate_pkc_targ_notes <- function(jsons_vec, lookup_tab) {
-  # Create non-duplicated map from gene to pool and codeclass
+  # Create non-duplicated map from target to pool and codeclass
   sub_lookup <- unique(lookup_tab[, names(lookup_tab) != "RTS_ID"])
-  #rownames(sub_lookup) <- sub_lookup[["Gene"]]
+  #rownames(sub_lookup) <- sub_lookup[["Target"]]
   notes_df <- 
-    data.frame(TargetName=sub_lookup[["Gene"]],
-               HUGOSymbol=sub_lookup[["Gene"]],
+    data.frame(TargetName=sub_lookup[["Target"]],
+               HUGOSymbol=sub_lookup[["Target"]],
                TargetGroup=rep("All Probes", length(rownames(sub_lookup))),
                AnalyteType=rep("RNA", nrow(sub_lookup)),
-               Codeclass=sub_lookup[, "Codeclass"],
+               CodeClass=sub_lookup[, "CodeClass"],
                Pooling=sub_lookup[, "Module"],
                stringsAsFactors=FALSE)
   for (curr_idx in seq_len(length(jsons_vec))) {

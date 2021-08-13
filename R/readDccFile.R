@@ -3,6 +3,18 @@ function(file)
 {
   # Read data from Reporter Code Count (RCC) file
   lines <- trimws(readLines(file))
+  
+  # removing unused dnd program lines and reformat
+  trimGalore <- grep("trimGalore", lines)
+  if (length(trimGalore) > 0) {
+    Raw <- grep("Raw", lines)
+    lines <- lines[-c(trimGalore:(Raw - 1))]
+  }
+  lines <- gsub("SoftwareVersion,\"GeoMx_NGS_Pipeline_ ", "SoftwareVersion,", lines)
+  lines <- gsub("SoftwareVersion,\"GeoMx_NGS_Pipeline_", "SoftwareVersion,", lines)
+  lines <- gsub("SoftwareVersion,DRAGEN_GeoMx_", "SoftwareVersion,", lines)
+  lines[grepl("SoftwareVersion", lines)] <- 
+    gsub("\"", "", lines[grepl("SoftwareVersion", lines)])
 
   # Split data by tags
   tags <- names(.dccMetadata[["schema"]])
@@ -44,8 +56,8 @@ function(file)
 
   # Extract FileVersion for internal checks
   fileVersion <- output[["Header"]][1L, "FileVersion"]
-  if (!(numeric_version(fileVersion) %in% numeric_version(c("0.01"))))
-    stop("\"FileVersion\" in Header section must be 0.01")
+  if (!(numeric_version(fileVersion) %in% numeric_version(c("0.01", "0.02"))))
+    stop("\"FileVersion\" in Header section must be 0.01 or 0.02")
 
   # Check single row attributes
   for (section in c("Header", "Scan_Attributes", "NGS_Processing_Attributes")) {
@@ -61,17 +73,20 @@ function(file)
   # Coerce numeric data in Lane Attributes
   cols <- c( "Raw", "Trimmed", "Stitched", "Aligned", "umiQ30", "rtsQ30" )
   output[["NGS_Processing_Attributes"]][, cols] <-
-    lapply(output[["NGS_Processing_Attributes"]][, cols], as.integer)
+    lapply(output[["NGS_Processing_Attributes"]][, cols], as.numeric)
 
+  # Coerce the column name ID to be SampleID
+  names(output[["Scan_Attributes"]])[names(output[["Scan_Attributes"]]) == "ID"] <- "SampleID"
+  
   # Convert Code_Summary to data.frame object
-  output[["Code_Summary"]] <- paste0("RNAID,Count\n", 
+  output[["Code_Summary"]] <- paste0("RTS_ID,Count\n", 
                                      paste(output[["Code_Summary"]], collapse = "\n"))
   output[["Code_Summary"]] <-
     utils::read.csv(textConnection(output[["Code_Summary"]]),
-             colClasses = c(RNAID = "character", Count = "numeric"))
+             colClasses = c(RTS_ID = "character", Count = "numeric"))
   output[["Code_Summary"]][["Count"]] <-
     as.integer(round(output[["Code_Summary"]][["Count"]]))
-  rn <- output[["Code_Summary"]][["RNAID"]]
+  rn <- output[["Code_Summary"]][["RTS_ID"]]
   if ((ndups <- anyDuplicated(rn)) > 0L) {
     warning(sprintf("removed %d rows from \"Code_Summary\" due to duplicate rownames",
                     ndups))
@@ -81,6 +96,7 @@ function(file)
     output[["Code_Summary"]] <- output[["Code_Summary"]][ok, , drop = FALSE]
   }
   rownames(output[["Code_Summary"]]) <- rn
+  output[["NGS_Processing_Attributes"]][, "DeduplicatedReads"] <- sum(output[["Code_Summary"]][["Count"]])
 
-  output
+  return( output )
 }

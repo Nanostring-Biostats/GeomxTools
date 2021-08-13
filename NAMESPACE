@@ -2,6 +2,7 @@
 ### Imports
 import(S4Vectors)
 import(Biobase)
+import(data.table)
 importClassesFrom(NanoStringNCTools, SignatureSet)
 importClassesFrom(S4Vectors,DataFrame)
 importFrom(NanoStringNCTools, SignatureSet)
@@ -11,38 +12,63 @@ importFrom(EnvStats, geoMean)
 importFrom(reshape2, dcast)
 importFrom(utils, read.csv)
 importFrom(stats, as.formula)
+importFrom(stats, quantile)
 importFrom(stats, weights)
 importFrom(methods, callGeneric)
 importFrom(methods, callNextMethod)
+importFrom(methods, is)
+importFrom(methods, validObject)
+importFrom(utils, write.table)
+importFrom(outliers, grubbs.test)
 importFrom(BiocGenerics, design)
 importFrom(BiocGenerics, "design<-")
-
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
 
-exportClasses(NanoStringGeomxSet)
+exportClasses(NanoStringGeoMxSet)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 generics
 
-
+export(NanoStringGeoMxSet, sData, svarLabels, dimLabels, "dimLabels<-",
+       featureType, "featureType<-",
+       signatures, "signatures<-", signatureScores,
+       design, "design<-", signatureGroups,
+       checkQCFlags)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 methods
 
-exportMethods(show,
+exportMethods(NanoStringGeoMxSet, show,
               sData, svarLabels, dimLabels, "dimLabels<-",
+              featureType, "featureType<-",
               signatures, "signatures<-", signatureScores,
-              design, "design<-", signatureGroups)
+              design, "design<-", signatureGroups,
+              checkQCFlags, normalize)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export non-generic functions
 
-export(readNanoStringGeomxSet,
+export(readNanoStringGeoMxSet,
        readDccFile,
-       readPKCFile)
+       readPKCFile,
+       writeNanoStringGeoMxSet)
+export(aggregateCounts)
+export(checkQCFlags)
+export(countsShiftedByOne)
+export(logtBase)
+export(ngeoMean)
+export(ngeoSD)
+export(setSegmentQCFlags)
+export(setBackgroundQCFlags)
+export(setBioProbeQCFlags)
+export(setGeoMxQCFlags)
+export(setSeqQCFlags)
+export(shiftCountsOne)
+export(summarizeNegatives)
+export(mixedModelDE)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S3 methods

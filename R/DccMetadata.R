@@ -21,28 +21,20 @@
               "NGS_Processing_Attributes" =
                 data.frame(labelDescription =
                              c(NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_,
-                               NA_character_),
-                           minVersion = numeric_version(c(rep("0.01", 13L))),
+                               NA_integer_,
+                               NA_integer_,
+                               NA_integer_,
+                               NA_integer_,
+                               NA_real_,
+                               NA_real_),
+                           minVersion = numeric_version(c(rep("0.01", 7L))),
                            row.names =
-                             c("SeqSetId", "tamperedIni", "trimGaloreOpts", "flash2Opts",
-                               "umiExtractOpts", "bowtie2Opts", "umiDedupOpts",
-                               "Raw", "Trimmed", "Stitched", "Aligned", "umiQ30",
-                               "rtsQ30"),
+                             c("SeqSetId", "Raw", "Trimmed", 
+                               "Stitched", "Aligned", "umiQ30", "rtsQ30"),
                            stringsAsFactors = FALSE),
               "Code_Summary" =
                 data.frame(labelDescription =
-                             c(NA_character_, NA_character_),
+                             c(NA_character_, NA_integer_),
                            minVersion = numeric_version(c(rep("0.01", 2L))),
                            row.names = c("RTS_ID", "Count"),
                            stringsAsFactors = FALSE)
@@ -54,6 +46,8 @@
   do.call(rbind,
           unname(head(.dccMetadata[["schema"]], 3L)))[, "labelDescription",
                                                       drop = FALSE]
+
+rownames(.dccMetadata[["protocolData"]])[rownames(.dccMetadata[["protocolData"]]) == "ID"] <- "SampleID"
 
 
 .codeClassMetadata <-
@@ -90,11 +84,12 @@ function(x, fileVersion,
   section <- match.arg(section)
   schema <- .dccMetadata[["schema"]][[section]]
   expectedNames <- row.names(schema)[schema[,"minVersion"] <= fileVersion]
-  if (identical(colnames(x), expectedNames))
+  if (all(expectedNames %in% colnames(x))) {
     TRUE
-  else
+  } else {
     sprintf("<%s> section must contain %s", section,
             paste0("\"", expectedNames, "\"", collapse = ", "))
+  }
 }
 
 

@@ -20,12 +20,12 @@ readDccFile(file)
   \item{\code{"Header"}}{a \code{data.frame} object containing the protocol and sequencing
     information.}
   \item{\code{"Code_Summary"}}{a \code{data.frame} object containing the
-    gene probe counts.}
+    target probe counts.}
 }
 
 \author{Zhi Yang & Nicole Ortogero}
 
-\seealso{\code{\link{readNanoStringGeomxSet}}}
+\seealso{\code{\link{readNanoStringGeoMxSet}}}
 
 \examples{
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",

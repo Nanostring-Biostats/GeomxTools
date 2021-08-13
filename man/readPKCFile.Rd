@@ -18,7 +18,7 @@ readPKCFile(file)
 \value{
   An instance of the \code{\linkS4class{DataFrame}} class containing columns:
   \item{"RTS_ID"}{unique probe ID}
-  \item{"Gene"}{gene name}
+  \item{"TargetName"}{target or gene name}
   \item{"Module"}{PKC name}
   \item{"Negative"}{negative probe}
   \item{\ldots}{additional columns}
@@ -26,7 +26,7 @@ readPKCFile(file)
 
 \author{Zhi Yang & Nicole Ortogero}
 
-\seealso{\code{\link{readNanoStringGeomxSet}}}
+\seealso{\code{\link{readNanoStringGeoMxSet}}}
 
 \examples{
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
