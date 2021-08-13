@@ -40,17 +40,22 @@ mixed model output list
 Run a mixed model on GeoMxSet
 }
 \examples{
-datadir <- system.file("extdata", "DSP_NGS_Example_Data",
-                       package="GeomxTools")
+datadir <- system.file("extdata", "DSP_NGS_Example_Data", package = "GeomxTools")
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-target_demoDataSub <- aggregateCounts(demoData)
-target_demoDataSub <- target_demoDataSub[1:10, 1:10]
-mixedOutmc <- mixedModelDE(target_demoDataSub,
-                         elt = "q_norm",
-                         modelFormula = ~ pool_rep +  (1 | slide),
-                         groupVar = "pool_rep",
-                         nCores = 12,
-                         multiCore = TRUE,
-                         pAdjust = NULL)
+target_demoData <- aggregateCounts(demoData)
+target_demoData <- normalize(target_demoData, norm_method="quant")
+target_demoData <- target_demoData[1:100, ]
+pData(target_demoData)[["slide"]] <- 
+    factor(pData(target_demoData)[["slide name"]])
+protocolData(target_demoData)[["pool_rep"]] <- 
+    factor(protocolData(target_demoData)[["pool_rep"]])
+mixedOutmc <- mixedModelDE(target_demoData,
+                           elt = "exprs_norm",
+                           modelFormula = ~ pool_rep +  (1 | slide),
+                           groupVar = "pool_rep",
+                           nCores = 12,
+                           multiCore = TRUE,
+                           pAdjust = NULL
+)
 
 }

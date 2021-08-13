@@ -54,7 +54,9 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
 #' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
 #'                        package="GeomxTools")
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-#' demoData <- summarizeNegatives(demoData, functionList = c(mean, min, max))
+#' demoData <- 
+#'     summarizeNegatives(demoData, 
+#'                        functionList=c(mean=mean, min=min, max=max))
 #' 
 #' @export
 #' 
@@ -64,13 +66,13 @@ summarizeNegatives <-
             append(c(NegGeoMean=ngeoMean, NegGeoSD=ngeoSD), functionList)
         negObject <- negativeControlSubset(object)
         summaryList <- 
-            lapply(functionList, function(x) {
+            lapply(functionList, function(currFunc) {
                 esBy(negativeControlSubset(object), 
                      GROUP="Module", 
                      FUN=function(x) { 
                          assayDataApply(x, 
                                         MARGIN = 2,
-                                        FUN=ngeoMean,
+                                        FUN=currFunc,
                                         elt="exprs") 
                      })
             })

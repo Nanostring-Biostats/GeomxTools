@@ -171,7 +171,7 @@ subtractBackground <- function(object, data_type, toElt, fromElt) {
 #'   package = "GeomxTools"
 #' )
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-#' DemoData <- checkQCFlags(Demodata)
+#' QCobject <- checkQCFlags(demoData)
 setGeneric("checkQCFlags",
   signature = c("object"),
   function(object, ...) {
