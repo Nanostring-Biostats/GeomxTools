@@ -320,7 +320,9 @@ setGrubbsFlags <- function(object,
         multiObject <- 
             object[fData(object)[["TargetName"]] %in% multiProbeTargs, ]
     } else {
-        multiObject <- object
+        warning("Object has no targets with at least 3 probes.",
+                "No outlier testing can be performed.")
+        return(object)
     }
 
     grubbsResults <- 

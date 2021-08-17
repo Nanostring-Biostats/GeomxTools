@@ -16,9 +16,36 @@
 #' @export
 #' 
 aggregateCounts <- function(object, FUN=ngeoMean) {
-    object <- summarizeNegatives(object)
-    targetCounts <- do.call(rbind, esBy(object, GROUP = "TargetName", 
+    if(featureType(object) == "Target") {
+        stop("GeoMxSet object feature type is already target-level. ",
+             "No further aggregation can be performed.")
+    }
+
+    # Skip targets with single probe
+    multiProbeTable <- with(object, table(TargetName)) > 1L
+    multiProbeTargs <- 
+        names(multiProbeTable)[which(multiProbeTable, arr.ind=TRUE)]
+    if (length(multiProbeTargs) > 0) {
+        multiObject <- 
+            object[fData(object)[["TargetName"]] %in% multiProbeTargs, ]
+        object <- summarizeNegatives(object)
+    } else {
+        warning("Object has no multiprobe targets. ",
+                "No aggregation was performed.")
+        featureNames(object) <- fData(object)[["TargetName"]]
+        featureType(object) <- "Target"
+        return(object)
+    }
+    
+    targetCounts <- do.call(rbind, esBy(multiObject, GROUP = "TargetName", 
         FUN=function(x) {esApply(x, 2, FUN)}, simplify=FALSE))
+    singleProbeObject <- subset(object, 
+                                subset=!TargetName %in% multiProbeTargs)
+    singleProbeCounts <- exprs(singleProbeObject)
+    rownames(singleProbeCounts) <- fData(singleProbeObject)[["TargetName"]]
+    targetCounts <- rbind(targetCounts, singleProbeCounts)
+    targetCounts <- targetCounts[unique(fData(object)[["TargetName"]]), ]
+        
     targetFeats <- featureData(object)@data
     targetFeats <- 
         targetFeats[!duplicated(targetFeats[["TargetName"]]), ]
@@ -29,6 +56,7 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
     targetFeats <- 
          AnnotatedDataFrame(targetFeats[rownames(targetCounts), ], 
                             dimLabels = c("featureNames", "featureColumns"))
+
     targetObject <- NanoStringGeoMxSet(
         assayData = targetCounts,
         phenoData = phenoData(object),

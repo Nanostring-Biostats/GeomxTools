@@ -21,6 +21,7 @@ function(object) {
     methods::callNextMethod(object)
     cat("feature: ")
     cat(featureType(object))
+    cat("\n")
 })
 
 # Constructors
