@@ -5,6 +5,7 @@ library(EnvStats)
 
 # load data
 demoData <- readRDS(file= system.file("extdata","DSP_NGS_Example_Data", "demoData.rds", package = "GeomxTools"))
+demoData <- shiftCountsOne(demoData)
 demoData <- normalize(demoData , data_type="RNA", norm_method="quant",
                         desiredQuantile = .9, toElt = "q_norm")  ## test with user parameter
 demoData <- normalize(demoData, norm_method="quant") ## test defaults quantile = .75
@@ -25,7 +26,7 @@ test_that("quantile norm factors are present", {
 # Compute normalization factors from demoData
 # compute 90% quantile count for samples and divide by geomean
 thresh <- assayDataApply(demoData, 2, quantile, probs = .9)
-expectedOutputData <- thresh/geoMean(thresh)
+expectedOutputData <- thresh/ngeoMean(thresh)
 expectedOutputData <- unname(expectedOutputData)
 
 # Extract normalized data from object
@@ -37,7 +38,7 @@ test_that("quantile norm factors are correct", {
 #### req 2b verify calculation of q75 norm factors
 # compute 75% quantile norm factors for samples and divide by geomean
 thresh <- assayDataApply(demoData, 2, quantile, probs = .75)
-expectedOutputData <- thresh/geoMean(thresh)
+expectedOutputData <- thresh/ngeoMean(thresh)
 expectedOutputData <- unname(expectedOutputData)
 
 # Extract normalized data from object
@@ -51,7 +52,7 @@ test_that("quantile norm factors for 75% are correct", {
 # compute normalize count for samples and divide by geomean
 thresh <- assayDataApply(demoData, 2, quantile, probs = .75)
 norm_quant <- function(x){
-  x <- x/(thresh/geoMean(thresh))
+  x <- x/(thresh/ngeoMean(thresh))
 }
 expectedOutputData <- t(assayDataApply(demoData, 1, norm_quant))
 
@@ -71,7 +72,7 @@ sub_target_demoData <- normalize(sub_target_demoData , data_type="RNA", norm_met
   # compute negative norm factors for samples and divide by geomean
   negfactors <- assayDataApply(negativeControlSubset(sub_target_demoData), 2, ngeoMean)
   norm_neg <- function(x){
-    x <- x/(negfactors/geoMean(negfactors))}
+    x <- x/(negfactors/ngeoMean(negfactors))}
 expectedOutputData <- t(assayDataApply(sub_target_demoData, 1, norm_neg))
 
 # Extract normalized data from object
@@ -100,7 +101,7 @@ test_that("negative norm factors for multipanel are correct", {
 })
 
 # check the normalized values for multipanel
-if (length(unique(fData(target_demoData)[["Module"]]) > 1)){
+if (length(unique(fData(target_demoData)[["Module"]])) > 1){
   # compute negative norm factors for samples and divide by geomean
   # subset data per module
   pool <- as.list(unique(fData(target_demoData)[["Module"]]))
@@ -108,12 +109,11 @@ if (length(unique(fData(target_demoData)[["Module"]]) > 1)){
     poolSubSet <- subset(target_demoData, subset = Module == x)
     negfactors <- assayDataApply(negativeControlSubset(poolSubSet), 2, ngeoMean)
     norm_neg <- function(x){
-      x <- x/(negfactors/geoMean(negfactors))
+      x <- x/(negfactors/ngeoMean(negfactors))
     }
     expectedNormMat_i <- t(assayDataApply(poolSubSet, 1, norm_neg))
   })
   expectedOutputData <- do.call(rbind, expectedNormMat)
-  expectedOutputData <- expectedOutputData[order(row.names(expectedOutputData)), ]
 }
 
 # Extract normalized data from object
@@ -131,7 +131,7 @@ target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="hk"
 hksubset <- target_demoData[which(featureData(target_demoData)[["TargetName"]] %in% housekeepers),]
 hkfactors <- assayDataApply(hksubset, 2, ngeoMean)
 norm_hk <- function(x){
-  x <- x/(hkfactors/geoMean(hkfactors))
+  x <- x/(hkfactors/ngeoMean(hkfactors))
 }
 expectedOutputData <- t(assayDataApply(target_demoData, 1, norm_hk))
 
