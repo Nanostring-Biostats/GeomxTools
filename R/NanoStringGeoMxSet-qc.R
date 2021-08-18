@@ -342,6 +342,14 @@ setGrubbsFlags <- function(object,
         return(object)
     }
 
+    if (!"ProbeRatio" %in% fvarLabels(object)) {
+        warning("Probe ratio QC has not yet been performed. ",
+                "Suggests running probe ratio QC then re-running Grubbs QC.")
+    } else {
+        multiObject <- 
+            subset(multiObject, subset=QCFlags[["LowProbeRatio"]] == FALSE)
+    }
+
     grubbsResults <- 
         lapply(unique(fData(multiObject)[["Module"]]), FUN=function(x) {
             modObject <- subset(multiObject, subset=Module == x)
