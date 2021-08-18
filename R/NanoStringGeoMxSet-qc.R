@@ -347,7 +347,7 @@ setGrubbsFlags <- function(object,
                 "Suggests running probe ratio QC then re-running Grubbs QC.")
     } else {
         multiObject <- 
-            subset(multiObject, subset=QCFlags[["LowProbeRatio"]] == FALSE)
+            multiObject[!fData(multiObject)[["QCFlags"]][, "LowProbeRatio"], ]
     }
 
     grubbsResults <- 
