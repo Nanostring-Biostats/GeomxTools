@@ -283,24 +283,41 @@ setBioProbeQCFlags <- function(object,
 
 setProbeRatioFlags <- function(object, 
                                cutoff=DEFAULTS[["minProbeRatio"]]) {
-    rawTargetCounts <- collapseCounts(object)
-    rawTargetCounts[["Mean"]] <- 
-        apply(rawTargetCounts[, sampleNames(object)], 
-            MARGIN=1, FUN=ngeoMean)
-    probeMeans <- apply(assayDataElement(object, elt="exprs"), 
+    # Skip targets with single probes
+    multiProbeTable <- with(object, table(TargetName)) > 1L
+    multiProbeTargs <- 
+        names(multiProbeTable)[which(multiProbeTable, arr.ind=TRUE)]
+    if (length(multiProbeTargs) > 0) {
+        multiObject <- 
+            object[fData(object)[["TargetName"]] %in% multiProbeTargs, ]
+    } else {
+        warning("Object has no multi-probe targets. ",
+                "No ratio testing can be performed.")
+        return(object)
+    }
+
+    probeCounts <- data.table(cbind(fData(multiObject)[, c("TargetName", 
+                                                           "Module")],
+                                    list(RTS_ID=featureNames(multiObject)),
+                                    exprs(multiObject)))
+    collapsedCounts <- as.data.frame(probeCounts[, lapply(.SD, ngeoMean),
+                                              .SDcols=!c("RTS_ID"),
+                                              by=c("TargetName", "Module")])
+    targetMeans <- 
+        apply(collapsedCounts[, 
+                  colnames(collapsedCounts) %in% sampleNames(multiObject)],
+                  1, ngeoMean)
+    names(targetMeans) <- collapsedCounts[["TargetName"]]
+
+    probeMeans <- apply(assayDataElement(multiObject, elt="exprs"), 
         MARGIN=1, FUN=ngeoMean)
-    probeRatios <- 
-        lapply(names(probeMeans), function(x) {
-            currTarget <- fData(object)[x, "TargetName"]
-            currModule <- fData(object)[x, "Module"]
-            currTargetMean <- 
-                rawTargetCounts[rawTargetCounts[["TargetName"]] == currTarget & 
-                                rawTargetCounts[["Module"]] == currModule, 
-                                "Mean"]
-            ratios <- probeMeans[[x]] / currTargetMean
-        })
-    probeRatios <- data.frame("ProbeRatio"=unlist(probeRatios), 
-                              row.names=names(probeMeans))
+    multiProbeRatios <- probeMeans / targetMeans[probeCounts$TargetName]
+
+    probeRatios <- data.frame("ProbeRatio"=rep(1, dim(object)[1L]), 
+                              row.names=featureNames(object))
+    probeRatios[names(multiProbeRatios), "ProbeRatio"] <- 
+        multiProbeRatios
+
     featureData(object)[["ProbeRatio"]] <- probeRatios
     probeRatioFlags <- probeRatios <= cutoff
     colnames(probeRatioFlags) <- "LowProbeRatio"
@@ -320,7 +337,7 @@ setGrubbsFlags <- function(object,
         multiObject <- 
             object[fData(object)[["TargetName"]] %in% multiProbeTargs, ]
     } else {
-        warning("Object has no targets with at least 3 probes.",
+        warning("Object has no targets with at least 3 probes. ",
                 "No outlier testing can be performed.")
         return(object)
     }
