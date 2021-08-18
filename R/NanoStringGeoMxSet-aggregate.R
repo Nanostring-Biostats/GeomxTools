@@ -28,7 +28,12 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
     if (length(multiProbeTargs) > 0) {
         multiObject <- 
             object[fData(object)[["TargetName"]] %in% multiProbeTargs, ]
-        object <- summarizeNegatives(object)
+        if ("Negative" %in% unique(fData(object)[["CodeClass"]])) {
+            object <- summarizeNegatives(object)
+        } else {
+            warning("Object has no negatives. ",
+                "No summary statistics for negatives will be calculated.")
+        }
     } else {
         warning("Object has no multiprobe targets. ",
                 "No aggregation was performed.")
