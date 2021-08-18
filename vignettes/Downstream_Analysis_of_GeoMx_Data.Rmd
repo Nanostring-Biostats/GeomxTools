@@ -70,6 +70,20 @@ library(EnvStats)  # is this needed?
 
 The GeoMx Digital Spatial Profiler (DSP) is platform for capturing protein or gene expression in a spatially resolved manner [Merritt et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32393914/). This vignette walks through analysis of data collected by GeoMx starting from raw count files through downstream biological analysis and interpretation.
 
+<!--
+Swap everything to segments
+FDR - soften language around filtering; how to train 
+ROI Filtering
+Slide ID as covariate in mixed model
+DA: if it's local it can't be global ; if global can't be local [issue report]
+check accronym use
+BC360 aesthetic - use theme for CX team
+Mirror to new location - demo dataset
+negControlSubset - 
+probe QC - bar graph of segments
+  -> 
+-->
+
 <!--PRAJAN: this is commented - not sure if it's needed. Remove the <!--  and - -> surrounding it if you want to uncomment
 
 GeoMx profiles expression by staining and processing standard histological slides, including fixed-frozen (FF) or formalin-fixed paraffin-embedded (FFPE) tissue sections. Tissue sections are stained with barcoded in-situ hybridization probes that bind to mRNA transcripts or oligo-labeled antibodies which bind to epitopes throughout the tissue. The slide is visualized using up to 4 immunoflorescent (IF) markers which can be IF-labeled antibodies or RNA Scope ISH probes. The user then selects regions of the interest (ROI) based on tissue morphology; if desired, each ROI can be further sub-divided into segments which will be sequentially profiled and are referred to as areas of illumination (AOI). The instrument then collects expression barcodes for each AOI individually, which are sequenced and processed. The final result are expression count files which can contain >18,000 quantified genes for every respective AOI profiled.-->
@@ -454,11 +468,11 @@ exprs(target_demoData)[1:5, 1:2]
 
 ```
 
-## Target Detection
+## Filtering
 
-After filtering segments with QC flags, we recommend removing genes which were poorly detected. This helps improve performance during downstream statistical tests, decreases multiple testing penalties, and may prevent interpreting stochastic expression of genes near the LOQ as biological signal.
+After creating the target count matrix, we recommend filtering out segments with poor gene detection rates and genes which were consistently poorly detected. This helps improve performance during downstream statistical tests, decreases multiple testing penalties, and may prevent interpreting stochastic expression of genes near the LOQ as biological signal.
 
-First we will determine the number of genes detected in each ROI and at various cutoffs across our dataset. For each gene will will determine how many segments have expression > LOQ, and plot this information to help select a cut-point for minimal detection. We will also show you how to examine the detection rates of genes of interest, saved here as a list of gene symbols.
+First we will determine the number of genes detected in each segment and across the dataset. We will also show you how to examine the detection rates of genes of interest, and performance for each segment and gene.
 
 ```{r geneDetectionRate, eval = TRUE}
 pData(target_demoData)[['LOQ']] <- pData(demoData)[['LOQ']] # unclear if needed now
@@ -477,13 +491,52 @@ LOQ_Mat <- LOQ_Mat[fData(target_demoData)$TargetName, ]
 # Save detection rate information to pheno & feature data
 pData(target_demoData)$GenesDetected <- colSums(LOQ_Mat, na.rm = TRUE)
 fData(target_demoData)$DetectedSegments <- rowSums(LOQ_Mat, na.rm = TRUE)
-fData(target_demoData)$DetectionRate <-
-  fData(target_demoData)$DetectedSegments / nrow(pData(target_demoData))
 ```
+
+
+### Segment Gene Detection
+
+First let's go ahead and remove segments for which we have very low signal. These will be segments in which only small fraction of the panel is detected above LOQ. For this example we will remove segments with less than 10% of the panel detected. 
+
+```{r segHistogram, fig.wide = TRUE}
+# graph histogram of different cutpoints (1%, 5%, 10%, 15%)
+ggplot(pData(target_demoData), 
+       aes(x = GenesDetected / nrow(exprs(demoData)) * 100,
+           fill = region)) +
+  geom_histogram(bins = 30) +
+  geom_vline(xintercept = c(1,5,10), lty = 'dashed', lwd = 1,
+             color = c('red3','orange2','yellow2')) +
+  theme_bw() +
+  labs(x = 'Detection Rate, % Genes Detected', y = '# ROIs')
+```
+
+[INSET TEXT]
+
+```{r segTable}
+# cut percent genes detected at 1, 5, 10, 15
+kable(table(cut(pData(target_demoData)$GenesDetected,
+                breaks = c(nrow(demoData) * c(0, .01, .05, .1, .15, 1)),
+                labels = c('< 1%', '1-5%','5-10%', '10-15%', '15-100%'))),
+      col.names = c('Gene Detection Rate', '# of Segments'))
+```
+
+[INSERT TEST]
+
+```{r filterSegments}
+target_demoData <-
+  target_demoData[, pData(target_demoData)$GenesDetected > .1 * nrow(demoData)]
+
+```
+
+### Gene Detection Rate
 
 Let's review the detection rate of some genes of interest. Here we create a list, `goi` in which we store a handful of genes that we'll review to ensure we get robust detection in our samples.
 
 ``` {r goi detection}
+# Calculate detection rate:
+fData(target_demoData)$DetectionRate <-
+  fData(target_demoData)$DetectedSegments / nrow(pData(target_demoData))
+
 # Gene of interest detection table
 goi <- c('PDCD1','CD274','IFNG','CD8A','CD68','EPCAM',
          'KRT18','NPHS1','NPHS2','CALB1','CLDN8')
@@ -496,6 +549,8 @@ goi_df <- data.frame(
 ```{r tableGOI, echo = FALSE, results = 'asis'}
 kable(goi_df, caption = 'Detection rate for Genes of Interest', align = 'c')
 ```
+
+## Gene Filtering
 
 Next we'll graph the detection rate across different frequencies of segments. After this step we'll decide how many genes to filter out of the dataset ahead of normalization. We recommend filtering low-expressing targets which are poorly detected as they make the upper quartile less stable, and impact false-discovery adjuments that will be run on downstream analyses.
 
