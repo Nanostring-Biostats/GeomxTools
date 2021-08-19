@@ -127,7 +127,7 @@ library(NanoStringNCTools)
 library(GeomxTools)
 ```
 
-For this tutorial we will use a kidney dataset profiled with human whole transcriptome atlas (WTA). The data used for this demo can be [downloaded here](http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip) This dataset contains samples from 4 diseased kidneys and 3 healthy kidneys, with regions of interest (ROIs) placed in glomeruli and tubules, structures related to kidney function. 
+For this tutorial we will use a kidney dataset profiled with human whole transcriptome atlas (WTA). The data used for this demo can be [downloaded here](http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip) This dataset contains samples from 4 diseased kidneys and 3 healthy kidneys. These samples has specific regions profiled by GeoMx, called segments, defined by the scientist running the experiment. Segments were placed in glomeruli and tubules, which are structures related to kidney function. 
 
 ## Loading the Demo Data
 
@@ -251,7 +251,7 @@ demoData <- shiftCountsOne(demoData, useDALogic = TRUE)
 
 ## Segment QC 
 
-First, we will check sequencing quality and adequate tissue sampling for every segment / AOI. For each segment there are several steps along the way to generating a count matrix, each with it's own quality metric associated and recommended threshold. FASTQ files are generated and converted to DCC files, but before we aggregate DCC files we need to check the sequencing quality within the FASTQ files. We will determine if the samples pass QC based on the number of reads per sample, the percent or reads trimmed and aligned, as well as the sequencing saturation (1 - % unique reads). We will also confirm the number of nuclei & area associated with each segment. At the end of this section we will summarize the breakdown of flags observed, and total number of segments/AOIs that have been flagged for QC failures.
+First, we will check sequencing quality and adequate tissue sampling for every segment. For each segment there are several steps along the way to generating a count matrix, each with it's own quality metric associated and recommended threshold. FASTQ files are generated and converted to DCC files, but before we aggregate DCC files we need to check the sequencing quality within the FASTQ files. We will determine if the samples pass QC based on the number of reads per sample, the percent or reads trimmed and aligned, as well as the sequencing saturation (1 - % unique reads). We will also confirm the number of nuclei & area associated with each segment. At the end of this section we will summarize the breakdown of flags observed, and total number of segments that have been flagged for QC failures.
 
 ```{r setqcflagupdated,  eval = TRUE}
 demoData <-
@@ -300,7 +300,7 @@ QC_histogram <- function(assay_data = NULL,
     theme_bw() + guides(fill = 'none') +
     facet_wrap(as.formula(paste('~', fill_by)), nrow = 4) +
     xlim(xlims) +
-    labs(x = annotation, y = 'AOIs, #', title = annotation)
+    labs(x = annotation, y = 'Segments, #', title = annotation)
   plt
 }
 
@@ -329,7 +329,8 @@ for(ann in negCols) {
 pData(demoData) <- pData(demoData)[, !colnames(pData(demoData)) %in% negCols]
 
 # show all NTC values, Freq = # of Segments with a given NTC count:
-kable(table(NTC_Count = sData(demoData)$NTC))
+kable(table(NTC_Count = sData(demoData)$NTC),
+      col.names = c("NTC Count", "# of Segments"))
 ```
 
 Finally we'll plot all of the QC Summary information in a table.
@@ -349,40 +350,9 @@ demoData <- demoData[, QCResults$QCStatus == 'PASS']
 dim(demoData)
 ```
 
-Let's re-plot the Sankey diagram showing our current working dataset. 
-
-``` {r replotSankey, fig.width = 10, fig.height = 8, fig.wide = TRUE, message = FALSE, warning = FALSE}
-# select the annotations we want to show, use `` to surround column names with
-# spaces or special symbols
-count_mat <- count(pData(demoData), `slide name`, class, region, segment)
-# simplify the slide names
-count_mat$`slide name` <-  gsub('disease','d',
-                                gsub('normal','n', count_mat$`slide name`))
-# gather the data and plot in order: class, slide name, region, segment
-test_gr <- gather_set_data(count_mat, 1:4)
-test_gr$x <- factor(test_gr$x,
-                    levels = c('class','slide name','region','segment'))
-# plot Sankey
-ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
-  geom_parallel_sets(aes(fill = region), alpha = 0.5, axis.width = 0.1) +
-  geom_parallel_sets_axes(axis.width = 0.2) +
-  geom_parallel_sets_labels(color = 'white', size = 5) +
-  theme_classic(base_size = 17) + 
-  theme(legend.position = 'bottom',
-        axis.ticks.y = element_blank(),
-        axis.line = element_blank(),
-        axis.text.y = element_blank()) +
-  scale_y_continuous(expand = expansion(0)) + 
-  scale_x_discrete(expand = expansion(0)) +
-  labs(x = '', y = '') +
-  annotate(geom = 'segment', x = 4.25, xend = 4.25, y = 20, yend = 120, lwd = 2) +
-  annotate(geom = 'text', x = 4.19, y = 70, angle = 90, size = 5,
-           hjust = 0.5, label = '100 segments')
-```
-
 ## Probe QC
 
-In some GeoMx assays we rely on multiple probes per target to represent expression of a given gene. Across all NGS read-out assays, there are multiple probes representing our negative controls, which should not bind to any sequence in the genome. Before we summarize our data into a count matrix, we will remove probes for which we observe expression that appears spurious. This process is called outlier removal, which is performed on either a per gene (global) or per gene per AOI (local) basis. This process is only performed for targets where there are multiple ISH probes related to that target, so for our example data it will only be performed on the negative control probes. This process will always leave at least one probe representing the gene or biological target class in the dataset after the process.
+In some GeoMx assays we rely on multiple probes per target to represent expression of a given gene. Across all NGS read-out assays, there are multiple probes representing our negative controls, which should not bind to any sequence in the genome. Before we summarize our data into a count matrix, we will remove probes for which we observe expression that appears spurious. This process is called outlier removal, which is performed on either a per gene (global) or per gene per segment (local) basis. This process is only performed for targets where there are multiple ISH probes related to that target, so for our example data it will only be performed on the negative control probes. This process will always leave at least one probe representing the gene or biological target class in the dataset after the process.
 
 ### Set Probe QC Flags
 
@@ -423,14 +393,13 @@ demoData <- ProbeQCPassed
 
 ## Limit of Quantification
 
-In addition to outlier detection, we must now determine the limit of quantification. This is calculated based on the distribution of negative control probes, and is intended to represent the quantifiable limit of gene expression per segment, under which gene expression is no longer reliable. Please note that this process is more stable in larger segments, and AOIs with low area, and subsequently low negative control probe distributions, the LOQ may not be accurately reflective of true signal detection rates. The formula for calculating the LOQ in the $i^{th}$ segment/AOI is: 
+In addition to outlier detection, we must now determine the limit of quantification. This is calculated based on the distribution of negative control probes, and is intended to represent the quantifiable limit of gene expression per segment, under which gene expression is no longer reliable. Please note that this process is more stable in larger segments. Segments with low area, and subsequently low negative control probe distributions, the LOQ may not be accurately reflective of true signal detection rates. The formula for calculating the LOQ in the $i^{th}$ segment/AOI is: 
 
 $$LOQ_{i} = geomean(NegProbe_{i}) * geoSD(NegProbe_{i})^{n}$$
 
 In the example below we use 2 geometric standard deviations ($n = 2$) above the geometric mean as the cutoff, which is recommended for most use cases. We also recommend that a minimum LOQ of 2 be used even if the LOQ calculated to be below this threshold.
 
 ``` {r calculateLOQ, eval = TRUE}
-
 # Create a function to define and calculate the LOQ:
 calc_LOQ <- function(object = NULL,
                      cutoff = 2,
@@ -446,11 +415,6 @@ calc_LOQ <- function(object = NULL,
 
 pData(demoData)[['LOQ']] <- calc_LOQ(demoData)
 
-# LOQ_cols <- paste0('LOQ_', modules)
-# pData(demoData)[, LOQ_cols] <- calc_LOQ(demoData)
-
-  # esApply(negativeObject, MARGIN=2, FUN=function(x) {
-  #   pmax(ngeoMean(x) * ngeoSD(x) ^ cutoff, minLOQ)})
 ```
 
 ## Create Gene-level Count Data
@@ -493,24 +457,25 @@ pData(target_demoData)$GenesDetected <- colSums(LOQ_Mat, na.rm = TRUE)
 fData(target_demoData)$DetectedSegments <- rowSums(LOQ_Mat, na.rm = TRUE)
 ```
 
-
 ### Segment Gene Detection
 
-First let's go ahead and remove segments for which we have very low signal. These will be segments in which only small fraction of the panel is detected above LOQ. For this example we will remove segments with less than 10% of the panel detected. 
+First let's go ahead and remove segments for which we have very low signal. These will be segments in which only small fraction of the panel is detected above LOQ. For this example we will remove segments with less than 10% of the panel detected. Generally 5-10% detection is recommended, but depending on segmentation strategy and segment size these guidelines might need to be adjusted.
 
-```{r segHistogram, fig.wide = TRUE}
+```{r segHistogram}
 # graph histogram of different cutpoints (1%, 5%, 10%, 15%)
 ggplot(pData(target_demoData), 
-       aes(x = GenesDetected / nrow(exprs(demoData)) * 100,
+       aes(x = GenesDetected / nrow(exprs(demoData)),
            fill = region)) +
   geom_histogram(bins = 30) +
-  geom_vline(xintercept = c(1,5,10), lty = 'dashed', lwd = 1,
+  geom_vline(xintercept = c(.01,.05,.10), lty = 'dashed', lwd = 1,
              color = c('red3','orange2','yellow2')) +
-  theme_bw() +
-  labs(x = 'Detection Rate, % Genes Detected', y = '# ROIs')
+  theme_bw() + 
+  theme(legend.position = 'bottom') +
+  scale_x_continuous(labels = scales::percent) +
+  labs(x = 'Detection Rate, % Genes Detected', y = 'Segments, #')
 ```
 
-[INSET TEXT]
+As we can see above 1% and 5% cutoffs only remove 1 & 2 samples while there are several more near the 10% detection range. Let's create a table to review the number of segments in each bin:
 
 ```{r segTable}
 # cut percent genes detected at 1, 5, 10, 15
@@ -520,12 +485,44 @@ kable(table(cut(pData(target_demoData)$GenesDetected,
       col.names = c('Gene Detection Rate', '# of Segments'))
 ```
 
-[INSERT TEST]
+Next we'll remove these segments from the dataset.
 
 ```{r filterSegments}
 target_demoData <-
-  target_demoData[, pData(target_demoData)$GenesDetected > .1 * nrow(demoData)]
+  target_demoData[, pData(target_demoData)$GenesDetected > .1 *
+                    nrow(demoData)]
 
+```
+
+Let's re-plot the Sankey diagram showing our current working dataset. This is now a dataset which no longer contains segments flagged by sequencing QC, segment QC or which have low gene detection rates.
+
+``` {r replotSankey, fig.width = 10, fig.height = 8, fig.wide = TRUE, message = FALSE, warning = FALSE}
+# select the annotations we want to show, use `` to surround column names with
+# spaces or special symbols
+count_mat <- count(pData(demoData), `slide name`, class, region, segment)
+# simplify the slide names
+count_mat$`slide name` <-  gsub('disease','d',
+                                gsub('normal','n', count_mat$`slide name`))
+# gather the data and plot in order: class, slide name, region, segment
+test_gr <- gather_set_data(count_mat, 1:4)
+test_gr$x <- factor(test_gr$x,
+                    levels = c('class','slide name','region','segment'))
+# plot Sankey
+ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
+  geom_parallel_sets(aes(fill = region), alpha = 0.5, axis.width = 0.1) +
+  geom_parallel_sets_axes(axis.width = 0.2) +
+  geom_parallel_sets_labels(color = 'white', size = 5) +
+  theme_classic(base_size = 17) + 
+  theme(legend.position = 'bottom',
+        axis.ticks.y = element_blank(),
+        axis.line = element_blank(),
+        axis.text.y = element_blank()) +
+  scale_y_continuous(expand = expansion(0)) + 
+  scale_x_discrete(expand = expansion(0)) +
+  labs(x = '', y = '') +
+  annotate(geom = 'segment', x = 4.25, xend = 4.25, y = 20, yend = 120, lwd = 2) +
+  annotate(geom = 'text', x = 4.19, y = 70, angle = 90, size = 5,
+           hjust = 0.5, label = '100 segments')
 ```
 
 ### Gene Detection Rate
@@ -542,15 +539,16 @@ goi <- c('PDCD1','CD274','IFNG','CD8A','CD68','EPCAM',
          'KRT18','NPHS1','NPHS2','CALB1','CLDN8')
 goi_df <- data.frame(
   Gene = goi,
-  NumberAOIs = fData(target_demoData)[goi, 'DetectedSegments'],
-  DetectionRate = round(fData(target_demoData)[goi, 'DetectionRate']*100, 1))
+  Number = fData(target_demoData)[goi, 'DetectedSegments'],
+  DetectionRate = scales::percent(fData(target_demoData)[goi, 'DetectionRate'])
 ```
 
 ```{r tableGOI, echo = FALSE, results = 'asis'}
-kable(goi_df, caption = 'Detection rate for Genes of Interest', align = 'c')
+kable(goi_df, caption = 'Detection rate for Genes of Interest', align = 'c',
+      col.names = c('Gene', 'Detection, # Segments', 'Detection Rate, % of Dataset'))
 ```
 
-## Gene Filtering
+### Gene Filtering
 
 Next we'll graph the detection rate across different frequencies of segments. After this step we'll decide how many genes to filter out of the dataset ahead of normalization. We recommend filtering low-expressing targets which are poorly detected as they make the upper quartile less stable, and impact false-discovery adjuments that will be run on downstream analyses.
 
@@ -578,7 +576,7 @@ ggplot(plot_detect, aes(x = as.factor(Freq), y = Rate, fill = Rate)) +
          y = 'Genes Detected, % of Panel > LOQ')
 ```
 
-Most of the target genes of interest are detected at > 10% of AOIs, and filtering to this thershold removes about half of the data. If we knew that a key feature was represented in only a small number of AOIs, or if many of our target genes was detected in < 10% of AOIs we might select a different cutoff. Additionally, target genes can be kept for downstream use by manually selecting them for inclusion in the object. We also generally recommend saving the negative control probes which we will identify using the `negativeObject` we created during LOQ calculation with `negativeControlSubset`.
+Most of the target genes of interest are detected at > 10% of segments, and filtering to this threshold removes about half of the data. If we knew that a key feature was represented in only a small number of segments, or if many of our target genes was detected in < 10% of segments we might select a different cutoff. Additionally, target genes can be kept for downstream use by manually selecting them for inclusion in the object. We also generally recommend saving the negative control probes which we will identify using the `negativeObject` we created during LOQ calculation with `negativeControlSubset`.
 
 ``` {r subsetGenes, eval = TRUE}
 # Subset to target genes detected in at least 10% of the samples.
@@ -612,7 +610,7 @@ library(cowplot)   # for plot_grid
 ann_of_interest <- 'region'
 Stat_data <- 
   data.frame(row.names = colnames(exprs(target_demoData)),
-             AOI = colnames(exprs(target_demoData)),
+             Segment = colnames(exprs(target_demoData)),
              Annotation = pData(target_demoData)[, ann_of_interest],
              Q3 = unlist(apply(exprs(target_demoData), 2,
                                quantile, 0.75, na.rm = TRUE)),
@@ -626,7 +624,7 @@ plt1 <- ggplot(Stat_data_m,
   scale_x_continuous(trans = 'log2') +
   facet_wrap(~Annotation, nrow = 1) + 
   scale_fill_brewer(palette = 3, type = 'qual') +
-  labs(x = 'Counts', y = 'AOIs, #')
+  labs(x = 'Counts', y = 'Segments, #')
 
 plt2 <- ggplot(Stat_data,
                aes(x = NegProbe, y = Q3, color = Annotation)) +
@@ -749,7 +747,7 @@ pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
 
 # Differential Expression
 
-A common method for exploring differences between groups of segments or patients is to perform differential expression analysis. While advanced methods for modeling the underlying count distribution are being actively developed, a common approach is to use a linear mixed-effect model (LMM). LMMs allow the user to account for the fact that we sample multiple times within a slide, rather than assuming that each AOI is independently sampled. We use the `lme4` and `lmerTest` packages to calculate an LMM. The structure of the LMM preferred depends on the question being investigated. 
+A common method for exploring differences between groups of segments or patients is to perform differential expression analysis. While advanced methods for modeling the underlying count distribution are being actively developed, a common approach is to use a linear mixed-effect model (LMM). LMMs allow the user to account for the fact that we sample multiple times within a slide, rather than assuming that each segment is independently sampled. We use the `lme4` and `lmerTest` packages to calculate an LMM. The structure of the LMM preferred depends on the question being investigated. 
 
 As shown in the diagram below, for studies where you compare features within slides, we use a complex model to account for shared information shown below. For studies analyzing results between slides we can use a more simplistic model.
 
@@ -770,7 +768,7 @@ colnames(results) <- c('Gene','Estimate','Pr(>|t|)','FDR')
 # turn eval to TRUE in next code block to re-run LMM code (will take ~15-30 minutes on a single core local machine)
 ```
 
-``` {r DEComplex, eval = FALSE, warning = FALSE, message = FALSE}
+``` {r DEComplex, eval = TRUE, warning = FALSE, message = FALSE}
 library(lme4)      # for lmer
 library(lmerTest)  # for p-values for lmer
 # Create a factor level for testing, this ensures appropriate directionality:
@@ -1012,3 +1010,9 @@ Statistics & Packages:
 * [Benjamini-Hochberg FDR Manuscript](http://www.math.tau.ac.il/~ybenja/MyPapers/benjamini_hochberg1995.pdf)
 
 ## References
+
+## Session Information
+
+```{r sessInfo}
+sessionInfo()
+```
