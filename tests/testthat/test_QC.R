@@ -7,30 +7,10 @@ library(EnvStats)
 library(ggiraph)
 
 
-# This dataset is the same as what is used in Analyzing-GeoMx-NGS-Data-with-GeomxTools.html. 
-# The original file is located at: datadir <- file.path( "/home" , "rstudio" , "NAS_data", "rvitancol", "kidney_demo")
-
-datadir <- file.path( "~/NAS_data", "rvitancol", "kidney_demo")
-# datadir <- file.path("~/YREN", "GeomxTools", "GeoMx_SampleData")
-DCCFiles <- list.files(file.path( datadir , "DCC_files"), pattern=".dcc$", full.names=TRUE)
-PKCFiles <- list.files(file.path(datadir), pattern=".pkc$", full.names=TRUE)
-SampleAnnotationFile <- file.path(datadir, "kidney_demo_AOI_Annotations.xlsx")
-
-testData <-
-  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
-                                          pkcFiles = PKCFiles,
-                                          phenoDataFile = SampleAnnotationFile,
-                                          phenoDataSheet = "Template",
-                                          phenoDataDccColName = "Sample_ID",
-                                          protocolDataColNames = c("aoi", 
-                                                                   "roi",
-                                                                   "slide name"),
-                                          experimentDataColNames = c("panel", "instrument_type")))
+testData <- readRDS(file= system.file("extdata","DSP_NGS_Example_Data", "demoData.rds", package = "GeomxTools"))
 
 #Shift counts to one to mimic how DSPDA handles zero counts
 testData <- shiftCountsOne(testData, elt="exprs", useDALogic=TRUE) 
-
-
 
 ##### Technical Signal QC #####
 
@@ -87,7 +67,8 @@ TechBgQC <- as.data.frame(prData[["QCFlags"]])
 
 # req 1: test that the number of Low Negatives is correct:------
 testthat::test_that("test that the number of Low Negatives is correct", {
-  expect_true(sum(TechBgQC$LowNegatives) == sum(prData@data$NegGeoMean < 10)) 
+  expect_true(sum(TechBgQC$LowNegatives) == 
+              sum(apply(prData@data$NegGeoMean < 10, 1, sum) > 0)) 
 })
 
 
@@ -128,7 +109,9 @@ testData <- setBioProbeQCFlags(testData,
 
 
 probeQC <- fData(testData)[["QCFlags"]]
-probeQCResults <- data.frame(fData(testData)[["QCFlags"]], check.names = FALSE)
+subTest <- subset(testData, subset=Module == gsub(".pkc", "", annotation(testData)[[2]]))
+neg_set <- negativeControlSubset(subTest)
+probeQCResults <- data.frame(fData(neg_set)[["QCFlags"]], check.names = FALSE)
 
 # req 1: test that the number of Low Probe Ratio is correct:------
 testthat::test_that("test that the number of Low Probe Ratio is correct", {
@@ -138,7 +121,7 @@ testthat::test_that("test that the number of Low Probe Ratio is correct", {
 
 
 # req 2: test that the Local Grubbs Outlier is correct:
-neg_set <- assayDataElement(negativeControlSubset(testData), elt="preLocalRemoval")
+neg_set <- assayDataElement(neg_set, elt="preLocalRemoval")
 neg_set <- neg_set[, !apply(neg_set, 2, function(x) {max(x) < 10L})]
 neg_set <- logtBase(neg_set, base=10L)
 

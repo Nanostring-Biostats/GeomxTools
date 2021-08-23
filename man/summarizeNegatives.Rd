@@ -23,6 +23,8 @@ Calculate negative probe summary stats
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-demoData <- summarizeNegatives(demoData, functionList = c(mean, min, max))
+demoData <- 
+    summarizeNegatives(demoData, 
+                       functionList=c(mean=mean, min=min, max=max))
 
 }

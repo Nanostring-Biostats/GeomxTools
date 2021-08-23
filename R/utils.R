@@ -57,7 +57,7 @@ thresholdValues <- function(x, thresh=0.5) {
       thresh <- 0.5
     }
     if (min(x, na.rm = TRUE) < thresh) {
-        x <- x[!is.na(x)] + thresh
+        x <- x + thresh
     }
     return(x)
 }
@@ -118,11 +118,10 @@ countsShiftedByOne <- function(object) {
     return(experimentData(object)@other$shiftedByOne)
 }
 
-#NEO rewrite in data.tables for speed
 collapseCounts <- function(object) {
-    probeCounts <- cbind(fData(object)[, c("TargetName", "Module")], 
-        assayDataElement(object, elt="exprs"))
-    collapsedCounts <- aggregate(formula=. ~ TargetName + Module, 
-        data=probeCounts, FUN=ngeoMean)
+    probeCounts <- data.table(cbind(fData(object)[, c("TargetName", "Module")],
+                                    assayDataElement(object, elt="exprs")))
+    collapsedCounts <- probeCounts[, lapply(.SD, ngeoMean), 
+                                     by=c("TargetName", "Module")]
     return(collapsedCounts)
 }

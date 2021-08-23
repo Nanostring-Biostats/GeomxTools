@@ -216,9 +216,11 @@ Users can flag samples that fail QC thresholds or have borderline results based 
 The setQC Flags will set the QC flags in the protocolData for the samples and probes that are low in count and saturation levels. It will also set flags for probe local outliers (low and high) and Global Outliers
 
 ```{r qcobject, eval = TRUE}
-demoData <- setQCFlags(demoData)
+demoData <- shiftCountsOne(demoData, useDALogic=TRUE)
+demoData <- setSegmentQCFlags(demoData)
 head(protocolData(demoData)[["QCFlags"]])
-head(featureData(demoData)[["QCFlags"]])
+demoData <- setBioProbeQCFlags(demoData)
+featureData(demoData)[["QCFlags"]][1:5, 1:4]
 ```
 
 Probes and Samples that were flagged can be removed from analysis by subsetting. 
