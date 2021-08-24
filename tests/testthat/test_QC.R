@@ -61,14 +61,15 @@ testData <- setBackgroundQCFlags(testData,
                                  qcCutoffs=list(minNegativeCount=10, 
                                                 maxNTCCount=60))
 
-
+testData <- summarizeNegatives(testData)
 prData <- protocolData(testData)
 TechBgQC <- as.data.frame(prData[["QCFlags"]])
 
 # req 1: test that the number of Low Negatives is correct:------
 testthat::test_that("test that the number of Low Negatives is correct", {
-  expect_true(sum(TechBgQC$LowNegatives) == 
-              sum(apply(prData@data$NegGeoMean < 10, 1, sum) > 0)) 
+    numberFail <- (pData(testData)[, "NegGeoMean_VnV_GeoMx_Hs_CTA_v1.2"] < 10) + 
+                  (pData(testData)[, "NegGeoMean_Six-gene_test_v1_v1.1"] < 10)
+    expect_true(sum(TechBgQC$LowNegatives) ==  sum(numberFail > 0)) 
 })
 
 

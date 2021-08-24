@@ -168,7 +168,6 @@ setLowNegFlags <- function(object, cutoff=DEFAULTS[["minNegativeCount"]]) {
              FUN=function( x ) { 
                  assayDataApply( x, MARGIN = 2, FUN=ngeoMean, elt="exprs" ) 
              }) 
-    protocolData(object)[["NegGeoMean"]] <- negativeGeoMeans
     lowNegs <- 
         data.frame("LowNegatives"=apply(negativeGeoMeans < cutoff, 1, sum) > 0)
     object <- appendSampleFlags(object, lowNegs)
