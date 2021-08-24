@@ -18,7 +18,7 @@ subData <-
                       sample(unique(fData(subData)[["TargetName"]]), 
                   10, replace=FALSE))
 
-subAggd <- aggregateCounts(subData)
+subAggd <- suppressWarnings(aggregateCounts(subData))
 
 testthat::test_that("Feature type changed after aggregation", {
     expect_true(featureType(subData) == "Probe")
@@ -55,7 +55,7 @@ testthat::test_that("Target expression matrix contains aggregated counts", {
 })
 
 testthat::test_that("Other aggregation functions work", {
-    subSum <- aggregateCounts(subData, FUN=sum)
+    subSum <- suppressWarnings(aggregateCounts(subData, FUN=sum))
     expect_true(all(colnames(exprs(subData)) == colnames(exprs(subSum))))
     sameTargs <- intersect(fData(subData)[["TargetName"]],
                            rownames(exprs(subSum)))
