@@ -35,7 +35,7 @@ testMod <-
     suppressMessages(lmerTest::lmer(paste0(target, " ~ pool_rep + (1 | slide)"), 
                                     sampleExprs))
 manualResult <- lmerTest::ls_means(testMod, which="pool_rep", pairwise=TRUE)
-expect_equal(mixedOuts["lsmeans", target][[1]][, "PR(>|t|)"],
+expect_equal(mixedOuts["lsmeans", target][[1]][, "Pr(>|t|)"],
              manualResult[, "Pr(>|t|)"])
 })
 
