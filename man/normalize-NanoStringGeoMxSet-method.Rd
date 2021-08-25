@@ -26,6 +26,8 @@
 \item{toElt}{name of the assayDataElement to store normalized values}
 
 \item{housekeepers}{optional vector of housekeeper target names}
+
+\item{\code{ldots}}{optional arguments}
 }
 \value{
 a NanoStringGeoMxSet object with normalized counts and normalized factors

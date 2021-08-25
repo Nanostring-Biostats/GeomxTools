@@ -515,24 +515,24 @@ appendFeatureFlags <- function(object, currFlags) {
 }
 
 ############Not used##########################################################
-#' Add QC flags to feature or protocol data
+#' Add QC flags to feature and protocol data simultaneously
 #' 
 #' @param object name of the object class to perform QC on
 #' \enumerate{
 #'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 #' }
-#' @param dataDim the dimension of the object to QC on
-#' \enumerate{
-#'     \item{sample, QC data on the AOI level}
-#'     \item{feature, QC data on probe or target level}
-#' }
 #' @param qcCutoffs list of cutoffs and thresholds to use for QC
+#' @param \code{ldots} optional parameters to pass
 #' 
 #' @return the object that QC was performed on
 #' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' setQCFlags(object)
 #' 
+#' @export
 setMethod("setQCFlags",
     signature(object="NanoStringGeoMxSet"),
     function(object, qcCutoffs=DEFAULTS, ...) {
