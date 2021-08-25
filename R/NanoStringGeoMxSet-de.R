@@ -62,7 +62,6 @@ mixedModelDE <- function(object, elt = "exprs", modelFormula = NULL,
     }
   }
   if (nCores > 1) {
-    require(parallel)
     deFunc <- function(i, groupVar, pDat, modelFormula, exprs, pairwise = TRUE) {
       dat <- data.frame(expr = exprs$exprs[i, ], pDat)
       lmOut <- suppressWarnings(lmerTest::lmer(modelFormula, dat))
@@ -79,12 +78,12 @@ mixedModelDE <- function(object, elt = "exprs", modelFormula = NULL,
     exprs <- new.env()
     exprs$exprs <- assayDataElement(object, elt = elt)
     if (multiCore) {
-      mixedOut <- mclapply(featureNames(object), deFunc, groupVar, pDat, formula(paste("expr", as.character(modelFormula)[2], sep = " ~ ")), exprs, mc.cores = nCores)
+      mixedOut <- parallel::mclapply(featureNames(object), deFunc, groupVar, pDat, formula(paste("expr", as.character(modelFormula)[2], sep = " ~ ")), exprs, mc.cores = nCores)
     }
     else {
-      cl <- makeCluster(getOption("cl.cores", nCores))
-      mixedOut <- parLapply(cl, featureNames(object), deFunc, groupVar, pDat, formula(paste("expr", as.character(modelFormula)[2], sep = " ~ ")), exprs, pairwise)
-      suppressWarnings(stopCluster(cl))
+      cl <- parallel::makeCluster(getOption("cl.cores", nCores))
+      mixedOut <- parallel::parLapply(cl, featureNames(object), deFunc, groupVar, pDat, formula(paste("expr", as.character(modelFormula)[2], sep = " ~ ")), exprs, pairwise)
+      suppressWarnings(parallel::stopCluster(cl))
     }
     mixedOut <- rbind(array(lapply(mixedOut, function(x) x[["anova"]])),
                       array(lapply(mixedOut, function(x) x[["lsmeans"]])))
@@ -100,7 +99,7 @@ mixedModelDE <- function(object, elt = "exprs", modelFormula = NULL,
       } else {
         lsm <- lmerTest::ls_means(lmOut, which = groupVar, pairwise = TRUE)
       }
-      lmOut <- matrix(anova(lmOut)[groupVar, "Pr(>F)"], ncol = 1, dimnames = list(groupVar, "Pr(>F)"))
+      lmOut <- matrix(stats::anova(lmOut)[groupVar, "Pr(>F)"], ncol = 1, dimnames = list(groupVar, "Pr(>F)"))
       lsmOut <- matrix(cbind(lsm[,"Estimate"], lsm[,"Pr(>|t|)"]), ncol = 2, dimnames = list(gsub(groupVar, "", rownames(lsm)), c("Estimate", "Pr(>|t|)")))
       return(list(anova = lmOut, lsmeans = lsmOut))
     }

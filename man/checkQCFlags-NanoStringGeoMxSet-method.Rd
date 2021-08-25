@@ -11,7 +11,7 @@
 
 \item{removeLowLocalOutliers}{logical, if TRUE it sets outlier counts to zero,  default is FALSE,}
 
-\item{\code{ldots}}{optional arguments}
+\item{...}{optional arguments}
 }
 \value{
 NanoStringGeoMxSet

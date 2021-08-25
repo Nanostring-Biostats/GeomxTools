@@ -14,7 +14,7 @@
 
 \item{qcCutoffs}{list of cutoffs and thresholds to use for QC}
 
-\item{\code{ldots}}{optional parameters to pass}
+\item{...}{optional parameters to pass}
 }
 \value{
 the object that QC was performed on
@@ -26,6 +26,6 @@ Add QC flags to feature and protocol data simultaneously
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-setQCFlags(object)
+setQCFlags(demoData)
 
 }

@@ -522,7 +522,7 @@ appendFeatureFlags <- function(object, currFlags) {
 #'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 #' }
 #' @param qcCutoffs list of cutoffs and thresholds to use for QC
-#' @param \code{ldots} optional parameters to pass
+#' @param ... optional parameters to pass
 #' 
 #' @return the object that QC was performed on
 #' 
@@ -530,7 +530,7 @@ appendFeatureFlags <- function(object, currFlags) {
 #' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
 #'                        package="GeomxTools")
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-#' setQCFlags(object)
+#' setQCFlags(demoData)
 #' 
 #' @export
 setMethod("setQCFlags",
@@ -544,8 +544,6 @@ setMethod("setQCFlags",
             object <- setBioProbeQCFlags(object=object, qcCutoffs=qcCutoffs)
         } else if (featureType(object) == "Target") {
         #   object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
-        } else {
-            valid(object)
         }
         return(object)
 })
@@ -563,8 +561,9 @@ setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
     return(object)
 }
 
-setHighCountFlags <- function(object, qcCutoffs=DEFAULTS) {
-    object
+setHighCountFlags <- function(object, cutoff=DEFAULTS[["highCountCutoff"]]) {
+    cutoff <- checkCutoffs(cutoff)
+    return(object)
 }
 
 setLOQFlags <- function(object, cutoff=DEFAULTS[["loqCutoff"]]) {

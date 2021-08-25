@@ -10,7 +10,7 @@ HOUSEKEEPERS <- c(
 #' @param fromElt name of the assayDataElement to normalize
 #' @param toElt name of the assayDataElement to store normalized values
 #' @param housekeepers optional vector of housekeeper target names
-#' @param \code{ldots} optional arguments
+#' @param ... optional arguments
 #' @return a NanoStringGeoMxSet object with normalized counts and normalized factors
 #' @examples
 #' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
@@ -185,7 +185,7 @@ setGeneric("checkQCFlags",
 #' checkQCFlags
 #' @param object name of the NanoStringGeoMxSet object to check the QC Flags
 #' @param removeLowLocalOutliers logical, if TRUE it sets outlier counts to zero,  default is FALSE,
-#' @param \code{ldots} optional arguments
+#' @param ... optional arguments
 #' @return NanoStringGeoMxSet
 #' @export
 #'
