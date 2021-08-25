@@ -531,6 +531,7 @@ appendFeatureFlags <- function(object, currFlags) {
 #' @return the object that QC was performed on
 #' 
 #' @examples
+#' setQCFlags(object)
 #' 
 setMethod("setQCFlags",
     signature(object="NanoStringGeoMxSet"),
@@ -544,7 +545,7 @@ setMethod("setQCFlags",
         } else if (featureType(object) == "Target") {
         #   object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
         } else {
-            valid(Object(x))
+            valid(object)
         }
         return(object)
 })
@@ -560,6 +561,10 @@ setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
     object <- 
         setHighCountFlags(object=object, cutoff=qcCutoffs[["highCountCutoff"]])
     return(object)
+}
+
+setHighCountFlags <- function(object, qcCutoffs=DEFAULTS) {
+    object
 }
 
 setLOQFlags <- function(object, cutoff=DEFAULTS[["loqCutoff"]]) {

@@ -10,6 +10,7 @@
 #' @param nCores = 1, number of cores to use, set to 1 if running in serial mode
 #' @param multiCore = TRUE, set to TRUE to use multiCore, FALSE to run in cluster mode
 #' @param pAdjust = "BY" method for p-value adjustment
+#' @param pairwise boolean to calculate least-square means pairwise differences
 #'
 #' @return mixed model output list
 #'

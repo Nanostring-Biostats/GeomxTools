@@ -9,6 +9,8 @@ HOUSEKEEPERS <- c(
 #' @param data_type the data type of the object. Values maybe RNA, protein.
 #' @param fromElt name of the assayDataElement to normalize
 #' @param toElt name of the assayDataElement to store normalized values
+#' @param housekeepers optional vector of housekeeper target names
+#' @param \code{ldots} optional arguments
 #' @return a NanoStringGeoMxSet object with normalized counts and normalized factors
 #' @examples
 #' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
@@ -149,7 +151,7 @@ hkNorm <- function(object, data_type, toElt, fromElt, housekeepers) {
 # subtract background
 subtractBackground <- function(object, data_type, toElt, fromElt) {
   if (!featureType(object) == "Target") {
-    negsubset <- subset(object, subset = Codeclass %in% c("Negative01", "Negative"))
+    negsubset <- subset(object, subset = CodeClass %in% c("Negative01", "Negative"))
     negs <- apply(exprs(negsubset), 2, function(x) ngeoMean(x))
     assayDataElement(object, toElt) <-
       t(assayDataApply(object, MARGIN = 1L, FUN = `-`, t(negs), elt = fromElt))
@@ -181,8 +183,9 @@ setGeneric("checkQCFlags",
 
 
 #' checkQCFlags
-#' @param NanoStringGeoMxSet
+#' @param object name of the NanoStringGeoMxSet object to check the QC Flags
 #' @param removeLowLocalOutliers logical, if TRUE it sets outlier counts to zero,  default is FALSE,
+#' @param \code{ldots} optional arguments
 #' @return NanoStringGeoMxSet
 #' @export
 #'

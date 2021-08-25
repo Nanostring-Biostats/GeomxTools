@@ -67,6 +67,8 @@ thresholdValues <- function(x, thresh=0.5) {
 #' @param object name of the NanoStringGeoMxSet object
 #' @param elt expression matrix element in \code{assayDataElement}
 #'        to shift all counts by
+#' @param useDALogic boolean to use the same logic in DA (impute 0s to 1s)
+#'        or set to FALSE to shift all counts by 1
 #' 
 #' @return object of NanoStringGeoMxSet class
 #' 

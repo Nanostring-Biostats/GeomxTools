@@ -24,6 +24,8 @@
 \item{fromElt}{name of the assayDataElement to normalize}
 
 \item{toElt}{name of the assayDataElement to store normalized values}
+
+\item{housekeepers}{optional vector of housekeeper target names}
 }
 \value{
 a NanoStringGeoMxSet object with normalized counts and normalized factors
@@ -33,7 +35,8 @@ normalize GeoMxSet using different normalization methods
 }
 \examples{
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
-                       package="GeomxTools")
+  package = "GeomxTools"
+)
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 norm_object <- normalize(demoData)
 }
