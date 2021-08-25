@@ -2,9 +2,8 @@
 ### Imports
 import(S4Vectors)
 import(Biobase)
-import(data.table)
 importClassesFrom(NanoStringNCTools, SignatureSet)
-importClassesFrom(S4Vectors,DataFrame)
+importClassesFrom(S4Vectors, DataFrame)
 importFrom(NanoStringNCTools, SignatureSet)
 importFrom(rjson, fromJSON)
 importFrom(readxl, read_xlsx)
@@ -20,6 +19,7 @@ importFrom(methods, is)
 importFrom(methods, validObject)
 importFrom(utils, write.table)
 importFrom(outliers, grubbs.test)
+importFrom(data.table, data.table, .SD)
 importFrom(BiocGenerics, design)
 importFrom(BiocGenerics, "design<-")
 
