@@ -317,6 +317,15 @@ QC_histogram(sData(demoData), 'area', col_by, 5000) +
   scale_x_continuous(trans = 'log10')
 QC_histogram(sData(demoData), 'nuclei', col_by, 20)
 
+# calculate the negative geometric means for each module
+negativeGeoMeans <- 
+  esBy(negativeControlSubset(demoData), 
+       GROUP="Module", 
+       FUN=function(x) { 
+         assayDataApply(x, MARGIN = 2, FUN=ngeoMean, elt="exprs") 
+       }) 
+protocolData(demoData)[["NegGeoMean"]] <- negativeGeoMeans
+
 # explicitly copy the Negative geoMeans from sData to pData
 negCols <- paste0('NegGeoMean_', modules)
 pData(demoData)[, negCols] <- sData(demoData)[['NegGeoMean']]
@@ -325,6 +334,7 @@ for(ann in negCols) {
     scale_x_continuous(trans = 'log10') 
   print(plt)
 }
+
 # detatch neg_geomean columns ahead of aggregateCounts call
 pData(demoData) <- pData(demoData)[, !colnames(pData(demoData)) %in% negCols]
 
@@ -454,7 +464,6 @@ LOQ_Mat <- LOQ_Mat[fData(target_demoData)$TargetName, ]
 
 # Save detection rate information to pheno & feature data
 pData(target_demoData)$GenesDetected <- colSums(LOQ_Mat, na.rm = TRUE)
-fData(target_demoData)$DetectedSegments <- rowSums(LOQ_Mat, na.rm = TRUE)
 ```
 
 ### Segment Gene Detection
@@ -530,7 +539,11 @@ ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
 Let's review the detection rate of some genes of interest. Here we create a list, `goi` in which we store a handful of genes that we'll review to ensure we get robust detection in our samples.
 
 ``` {r goi detection}
+library(scales) # for precent
+
 # Calculate detection rate:
+LOQ_Mat <- LOQ_Mat[, colnames(target_demoData)]
+fData(target_demoData)$DetectedSegments <- rowSums(LOQ_Mat, na.rm = TRUE)
 fData(target_demoData)$DetectionRate <-
   fData(target_demoData)$DetectedSegments / nrow(pData(target_demoData))
 
@@ -540,7 +553,7 @@ goi <- c('PDCD1','CD274','IFNG','CD8A','CD68','EPCAM',
 goi_df <- data.frame(
   Gene = goi,
   Number = fData(target_demoData)[goi, 'DetectedSegments'],
-  DetectionRate = scales::percent(fData(target_demoData)[goi, 'DetectionRate'])
+  DetectionRate = percent(fData(target_demoData)[goi, 'DetectionRate']))
 ```
 
 ```{r tableGOI, echo = FALSE, results = 'asis'}
@@ -791,6 +804,29 @@ results <- t(suppressMessages(assayDataApply(target_demoData,
 results <- cbind(data.frame(Gene = rownames(results)),
                  as.data.frame(results))
 results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
+```
+
+``` {r deNativeComplex, eval = TRUE, echo = TRUE}
+# create a log2 transform of the data for analysis
+assayDataElement(object = target_demoData, elt = 'log_q') <-
+  assayDataApply(target_demoData, 2, FUN = log, base = 2, elt = 'q_norm')
+# convert slide to factor as well
+pData(target_demoData)[["slide"]] <- 
+     factor(pData(target_demoData)[["slide name"]])
+# run LMM
+mixedOutmc <- mixedModelDE(target_demoData,
+                           elt = "log_q",
+                           modelFormula = ~ testRegion +  (1 + testRegion | slide),
+                           groupVar = "testRegion",
+                           nCores = 3,
+                           multiCore = FALSE,
+                           pAdjust = 'fdr')
+results2 <- do.call(rbind, mixedOutmc['lsmeans', ])
+tests <- rownames(results2)
+results2 <- as.data.frame(results2)
+results2$Test <- tests
+rownames(results2) <- names(mixedOutmc['lsmeans', ])
+results2$Gene <- names(mixedOutmc['lsmeans', ])
 ```
 
 ``` {r saveDETable, eval = TRUE, echo = FALSE}
