@@ -401,32 +401,6 @@ dim(ProbeQCPassed)
 demoData <- ProbeQCPassed 
 ```
 
-## Limit of Quantification
-
-In addition to outlier detection, we must now determine the limit of quantification. This is calculated based on the distribution of negative control probes, and is intended to represent the quantifiable limit of gene expression per segment, under which gene expression is no longer reliable. Please note that this process is more stable in larger segments. Segments with low area, and subsequently low negative control probe distributions, the LOQ may not be accurately reflective of true signal detection rates. The formula for calculating the LOQ in the $i^{th}$ segment/AOI is: 
-
-$$LOQ_{i} = geomean(NegProbe_{i}) * geoSD(NegProbe_{i})^{n}$$
-
-In the example below we use 2 geometric standard deviations ($n = 2$) above the geometric mean as the cutoff, which is recommended for most use cases. We also recommend that a minimum LOQ of 2 be used even if the LOQ calculated to be below this threshold.
-
-``` {r calculateLOQ, eval = TRUE}
-# Create a function to define and calculate the LOQ:
-calc_LOQ <- function(object = NULL,
-                     cutoff = 2,
-                     minLOQ = 2) {
-  negativeObject <- negativeControlSubset(object)
-  # to fix known bug for multiple panels:
-  esBy(negativeObject, GROUP = "Module", 
-       function(x) {assayDataApply(x, MARGIN = 2, elt = "exprs",
-                                   FUN = function(y) {
-                                     pmax(ngeoMean(y) * ngeoSD(y) ^ cutoff,
-                                          minLOQ)})})
-}
-
-pData(demoData)[['LOQ']] <- calc_LOQ(demoData)
-
-```
-
 ## Create Gene-level Count Data
 
 After calculating the LOQ we will generate a target count matrix. This will summarize all multi-probe targets into a single value represented as the geometric mean of those probes.
@@ -442,28 +416,52 @@ exprs(target_demoData)[1:5, 1:2]
 
 ```
 
+## Limit of Quantification
+
+We must now determine the limit of quantification. This is calculated based on the distribution of negative control probes, and is intended to represent the quantifiable limit of gene expression per segment, under which gene expression is no longer reliable. Please note that this calculation is more stable in larger segments. Segments with low area, and subsequently low negative control probe distributions, the LOQ may not be accurately reflective of true signal detection rates. The formula for calculating the LOQ in the $i^{th}$ segment/AOI is: 
+
+$$LOQ_{i} = geomean(NegProbe_{i}) * geoSD(NegProbe_{i})^{n}$$
+
+In the example below we use 2 geometric standard deviations ($n = 2$) above the geometric mean as the cutoff, which is recommended for most use cases. We also recommend that a minimum LOQ of 2 be used even if the LOQ calculated to be below this threshold.
+
+``` {r calculateLOQ, eval = TRUE}
+# Define LOQ SD threshold and minimum value
+cutoff <- 2
+minLOQ <- 2
+
+# Calculate LOQ per module tested
+LOQ <- data.frame(row.names = colnames(target_demoData))
+for(module in modules) {
+  vars <- paste0(c('NegGeoMean_','NegGeoSD_'),
+                 module)
+  if(all(vars[1:2] %in% colnames(pData(target_demoData)))) {
+    LOQ[, module] <-
+      pmax(minLOQ,
+           pData(target_demoData)[, vars[1]] * 
+             pData(target_demoData)[, vars[2]] ^ cutoff)
+  }
+}
+pData(target_demoData)$LOQ <- LOQ
+```
+
 ## Filtering
 
 After creating the target count matrix, we recommend filtering out segments with poor gene detection rates and genes which were consistently poorly detected. This helps improve performance during downstream statistical tests, decreases multiple testing penalties, and may prevent interpreting stochastic expression of genes near the LOQ as biological signal.
 
-First we will determine the number of genes detected in each segment and across the dataset. We will also show you how to examine the detection rates of genes of interest, and performance for each segment and gene.
+First we will determine the which genes are detected in each segment across the dataset. We will also show you how to examine the detection rates of genes of interest, and performance for each segment and gene.
 
-```{r geneDetectionRate, eval = TRUE}
-pData(target_demoData)[['LOQ']] <- pData(demoData)[['LOQ']] # unclear if needed now
+```{r LOQMat, eval = TRUE}
 LOQ_Mat <- c()
-for(i in modules) {
-  ind <- fData(target_demoData)$Module == i
+for(module in modules) {
+  ind <- fData(target_demoData)$Module == module
   Mat_i <- t(esApply(target_demoData[ind, ], MARGIN = 1,
                    FUN = function(x) {
-                     x > LOQ[, i]
+                     x > LOQ[, module]
                    }))
   LOQ_Mat <- rbind(LOQ_Mat, Mat_i)
 }
 # ensure ordering since this is stored outside of the geomxSet
 LOQ_Mat <- LOQ_Mat[fData(target_demoData)$TargetName, ]
-
-# Save detection rate information to pheno & feature data
-pData(target_demoData)$GenesDetected <- colSums(LOQ_Mat, na.rm = TRUE)
 ```
 
 ### Segment Gene Detection
@@ -471,6 +469,10 @@ pData(target_demoData)$GenesDetected <- colSums(LOQ_Mat, na.rm = TRUE)
 First let's go ahead and remove segments for which we have very low signal. These will be segments in which only small fraction of the panel is detected above LOQ. For this example we will remove segments with less than 10% of the panel detected. Generally 5-10% detection is recommended, but depending on segmentation strategy and segment size these guidelines might need to be adjusted.
 
 ```{r segHistogram}
+# Save detection rate information to pheno data
+pData(target_demoData)$GenesDetected <- 
+  colSums(LOQ_Mat, na.rm = TRUE)
+
 # graph histogram of different cutpoints (1%, 5%, 10%, 15%)
 ggplot(pData(target_demoData), 
        aes(x = GenesDetected / nrow(exprs(demoData)),
