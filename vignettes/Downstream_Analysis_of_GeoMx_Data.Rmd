@@ -806,27 +806,43 @@ results <- cbind(data.frame(Gene = rownames(results)),
 results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
 ```
 
+Note that the example uses `nCores = 4` and `mutliCore = FALSE` to use the `parallel` package implementation of launching 4 clusters. If working in a Windows environment use `multicore = FALSE`. If in a unix-based environment setting `multicore = TRUE` will use parallelize using the `mcapply` package.
+
+outputs of the `mixedModelDE` function are saved as a matrix of lists.
+
 ``` {r deNativeComplex, eval = TRUE, echo = TRUE}
 # create a log2 transform of the data for analysis
 assayDataElement(object = target_demoData, elt = 'log_q') <-
   assayDataApply(target_demoData, 2, FUN = log, base = 2, elt = 'q_norm')
-# convert slide to factor as well
+# convert test variables to factors
+pData(target_demoData)$testRegion <- 
+  factor(pData(target_demoData)$region, c('glomerulus','tubule'))
 pData(target_demoData)[["slide"]] <- 
      factor(pData(target_demoData)[["slide name"]])
-# run LMM
-mixedOutmc <- mixedModelDE(target_demoData,
-                           elt = "log_q",
-                           modelFormula = ~ testRegion +  (1 + testRegion | slide),
-                           groupVar = "testRegion",
-                           nCores = 3,
-                           multiCore = FALSE,
-                           pAdjust = 'fdr')
-results2 <- do.call(rbind, mixedOutmc['lsmeans', ])
-tests <- rownames(results2)
-results2 <- as.data.frame(results2)
-results2$Test <- tests
-rownames(results2) <- names(mixedOutmc['lsmeans', ])
-results2$Gene <- names(mixedOutmc['lsmeans', ])
+
+# run LMM:
+# formula follows conventions defined by the lme4 package
+ind <- pData(target_demoData)$class == 'DKD'
+mixedOutmc <-
+  mixedModelDE(target_demoData[, ind],
+               elt = "log_q",
+               modelFormula = ~ testRegion + (1 + testRegion | slide),
+               groupVar = "testRegion",
+               nCores = parallel::detectCores(),
+               multiCore = FALSE)
+
+# format results as data.frame
+results <- do.call(rbind, mixedOutmc['lsmeans', ])
+tests <- rownames(results)
+results <- as.data.frame(results)
+results$Contrast <- tests
+# use lapply in case you have multiple levels of your test factor to
+# correctly associate gene name with it's row in the results table
+results$Gene <- 
+  unlist(lapply(colnames(mixedOutmc),
+                rep, nrow(mixedOutmc['lsmeans', ][[1]])))
+results$Subset <- 'DKD'
+results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
 ```
 
 ``` {r saveDETable, eval = TRUE, echo = FALSE}
