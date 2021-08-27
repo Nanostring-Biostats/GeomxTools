@@ -168,25 +168,6 @@ demoData <-
 ```
 
 <!--Seven tissue slides were analyzed, 4 diabetic kidney disease (DKD) and 3 healthy kidney. Regions of Interest (ROI) focused on two different kidney structures: tubules or glomeruli. Individual glomeruli were identified by a pathologist as either behaving relatively healthy or diseased regardless on if the tissue was DKD or healthy. One glomerulus ROI contains the entirety of a glomerulus. Tubule ROIs were segmented into distal (PanCK+) and proximal (PanCK-) tubule areas of interest (AOI). While both distal and proximal tubules are called tubules, they perform very different functions in the kidney.-->
-## GeoMxSet Object Overview
-
-The `demoData` object is stored now as a `GeoMxSet Object`. `GeoMxSet` objects are based on `ExpressionSet` objects, and have many similar functions as those described [on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf). All of expression, annotation, and probe information is linked and stored together as shown in the image below. There are a few key ways to access the data now that we have created a GeoMxSet Object. We will use these throughout the tutorial.
-
-<center>
-
-![](./GeomxSetStructure.png)
-
-</center>
-
-As is shown above the GeoMxSet object consists of 3 or more elements.
-
-* Expression count matrices - accessed with `exprs(object)` to return the matrix.
-    + As we progress through the analysis we will add new expression matrices to expression slots, or elements (`elt`), which can be accessed with `assayDataElement(object, elt = ...)`
-* Segment & Sample annotations - accessed with `pData(object)`
-* Probe & Target information - accessed with `fData(object)`
-* To learn more about other accessory functions type: `?GeomxTools::sData`
-
-Both eSets and GeoMxSets use `esApply` to extend the [`apply`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/apply) function to such objects. In addition to the `esApply` function defined by the `ExpressionSet` class, we have built the `assayDataApply` function to allow you to select which expression matrix `elt` you wish to use with the `esApply` function. We will demonstrate the use of these functions below. 
 
 # Study Design
 
@@ -775,7 +756,11 @@ As shown in the diagram below, for studies where you compare features within sli
 
 First we'll explore differences in morphological structures within the kidney: glomeruli and tubules. Because we are comparing structures found within the same slide we will use the structure outlined in *A* above. Region is what we want to test against, while we control for slide specific sampling using a random slope and intercept. If multiple samples are contained within a slide, we would change the random slope and intercepts to account for sample instead.
 
-In this analysis we save log~2~ fold change estimates and P-values using `coef(summary(...))`, and use `p.adjust(..., method = 'fdr')` to apply a benjamini-hochberg multiple test correction.
+In this analysis we save log~2~ fold change estimates and P-values across all levels in the factor of interest. We use `p.adjust(..., method = 'fdr')` to apply a benjamini-hochberg multiple test correction.
+
+Note that the example uses `nCores = parallel:detectCores()` and `mutliCore = FALSE` to implement the `parallel` package clustering of all available cores. If working in a Windows environment use `multicore = FALSE`. If in a unix-based environment setting `multicore = TRUE` will use parallelize using the `mcapply` package. If you do not want to use all available cores, change the `nCores` variable to the desired number.
+
+Outputs of the `mixedModelDE` function are saved as a matrix of lists, which we will convert into a table
 
 ``` {r cheatDE, eval = TRUE, echo = FALSE}
 # below is work-around text to quick load DE results from a saved csv for convenience
@@ -786,34 +771,6 @@ colnames(results) <- c('Gene','Estimate','Pr(>|t|)','FDR')
 # turn eval to TRUE in next code block to re-run LMM code (will take ~15-30 minutes on a single core local machine)
 ```
 
-``` {r DEComplex, eval = TRUE, warning = FALSE, message = FALSE}
-library(lme4)      # for lmer
-library(lmerTest)  # for p-values for lmer
-# Create a factor level for testing, this ensures appropriate directionality:
-#   FC < 0 is enriched in glomeruli
-#   FC > 0 is enriched in tubules
-pData(target_demoData)$testRegion <- 
-  factor(pData(target_demoData)$region, c('glomerulus','tubule'))
-
-# Define statistical test
-lmm <- function(gene) {
-  coef(summary(lmer(log2(gene) ~ testRegion + 
-                      (1 + testRegion | `slide name`))))[2, c(1,5)]
-}
-# Run tests
-results <- t(suppressMessages(assayDataApply(target_demoData,
-                                             elt = "q_norm",
-                                             MARGIN = 1, lmm)))
-
-# DE results are just stored as a table here, but could also be stored in fData
-results <- cbind(data.frame(Gene = rownames(results)),
-                 as.data.frame(results))
-results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
-```
-
-Note that the example uses `nCores = 4` and `mutliCore = FALSE` to use the `parallel` package implementation of launching 4 clusters. If working in a Windows environment use `multicore = FALSE`. If in a unix-based environment setting `multicore = TRUE` will use parallelize using the `mcapply` package.
-
-outputs of the `mixedModelDE` function are saved as a matrix of lists.
 
 ``` {r deNativeComplex, eval = TRUE, echo = TRUE}
 # create a log2 transform of the data for analysis
@@ -848,6 +805,7 @@ results$Gene <-
                 rep, nrow(mixedOutmc['lsmeans', ][[1]])))
 results$Subset <- 'DKD'
 results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
+results <- results[, c('Gene','Subset','Contrast','Estimate','Pr(>|t|)','FDR')]
 ```
 
 ``` {r saveDETable, eval = TRUE, echo = FALSE}
@@ -860,6 +818,8 @@ write.csv(results, '~/DE_results_for_testing.csv')
 Another common use case it to look for differences between patients or sample specimens, as shown in *B* in the figure above. Below is an example of our to code an LMM looking for variation on between patients, in this example using the `class` variable which contains disease status. Before running this model we will subset the data to only compare the glomeruli between patient classes. More complex models could be used to model both structures at once are beyond the scope of this tutorial.
 
 ``` {r DEsimple, eval = FALSE}
+## UPDATE CODE BELOW
+
 # Create a factor level for testing, this ensures appropriate directionality:
 #   FC < 0 is enriched in normal tissue
 #   FC > 0 is enriched in DKD tissue
@@ -893,7 +853,7 @@ glom <- pData(target_demoData)$region == 'glomerulus'
 Going back to the first test between glomeruli & tubules, the table produced captures 2 of the key features for DE. It saved the log~2~ fold change value, called `Estimate` in the table, and the P-value, called `Pr(>|t|)`. Let's take a look at our genes of interest and what their log~2~ fold change (`Estimate`), P-value (`Pr(>|t|)`), and FDR are. We can do this by simply subsetting the results table we just generated by typing `results[goi, ]`. 
 
 ``` {r DEtable, echo = FALSE, results = 'asis', }
-kable(results[goi, ], digits = 3, caption = 'DE results for Genes of Interest', align = 'lc')
+kable(subset(results, Gene %in% goi), digits = 3, caption = 'DE results for Genes of Interest', align = 'lc', row.names = FALSE)
 ```
 
 # Visualizing DE Genes
@@ -906,7 +866,7 @@ Let's code a simple `ggplot2` graph for a volcano plot, which will color based o
 library(ggrepel) 
 # Categorize Results based on P-value & FDR for plotting
 results$Color <- 'NS or FC < 0.5'
-results$Color[results$P < 0.05] <- 'P < 0.05'
+results$Color[results$`Pr(>|t|)` < 0.05] <- 'P < 0.05'
 results$Color[results$FDR < 0.05] <- 'FDR < 0.05'
 results$Color[results$FDR < 0.001] <- 'FDR < 0.001'
 results$Color[abs(results$Estimate) < 0.5] <- 'NS or FC < 0.5'
@@ -923,8 +883,8 @@ results <- results[, -1*ncol(results)] # remove invert_P from matrix
 
 # Graph results
 ggplot(results,
-              aes(x = Estimate, y = -log10(`Pr(>|t|)`),
-                  color = Color, label = Gene)) +
+       aes(x = Estimate, y = -log10(`Pr(>|t|)`),
+           color = Color, label = Gene)) +
   geom_vline(xintercept = c(0.5, -0.5), lty = 'dashed') +
   geom_hline(yintercept = -log10(0.05), lty = 'dashed') +
   geom_point() +
@@ -946,7 +906,111 @@ ggplot(results,
 
 The volcano plot shows several genes being significantly differentially expressed between glomeruli and tubules. However, it has a shape that is a different than a volcano plot from a simple linear regression. This is because we used the mixed effect model to account for patient specific variation. There are some genes for which we see high fold change, but lower significance, because these genes appear to be behaving in a patient-specific manner rather than a reproducible manner across all slides. The genes that we see higher on the y-axis are ones we have stronger evidence for consistent behavior.
 
-## MA Plot
+In the next section we'll explore the expression of PLA2R1 & ALDOA further to demonstrate the dynamics of these targets.
+
+## Plotting Genes of Interest
+
+Now that we know the top deferentially expressed genes, we can explore the expression of individual genes from the volcano plot. First we'll create a boxplot of a gene enriched within the glomeruli, PLA2R1 (Phospholipase A2 receptor 1). Using `ggplot2` we attach the phenotypic data (`pData`) so all of those variables are available for use, and manually call the expression data using `assayDataElement(..., elt = 'q_norm')`.
+
+In the second graph we plot two genes on opposite sides of the volcano plot against each other. While PODXL is highly enriched in the glomeruli, Aldolase (ALDOA) should show expression very specifically in the tubules. Plotting these against each other should show a mutually exclusive expression pattern that can easily distinguish the two structures. On this graph the dashed vertical lines represent the maximum observed KRT8 expression in glomeruli and and horizontal represent the maximum observed PODXL expression in the tubules.
+
+``` {r targetExprs, eval = TRUE}
+# show expression for a single target: PODXL
+ggplot(pData(target_demoData),
+       aes(x = region, fill = region,
+           y = assayDataElement(target_demoData['SEMA3G', ],
+                                elt = 'q_norm'))) +
+  geom_boxplot() +
+  labs(y = 'SEMA3G Expression') +
+  scale_y_continuous(trans = 'log2') +
+  theme_bw()
+
+# show expression of SEMA3G vs DSP
+ggplot(pData(target_demoData),
+       aes(x = assayDataElement(target_demoData['DSP', ],
+                                elt = 'q_norm'),
+           y = assayDataElement(target_demoData['SEMA3G', ],
+                                elt = 'q_norm'),
+           color = region, shape = class)) +
+  geom_vline(xintercept =
+               max(assayDataElement(target_demoData['DSP', glom],
+                                    elt = 'q_norm')),
+             lty = 'dashed', col = 'darkgray') +
+  geom_hline(yintercept =
+               max(assayDataElement(target_demoData['SEMA3G', !glom],
+                                    elt = 'q_norm')),
+             lty = 'dashed', col = 'darkgray') +
+  geom_point(size = 3) +
+  theme_bw() +
+  scale_x_continuous(trans = 'log2') + 
+  scale_y_continuous(trans = 'log2') +
+  labs(x = 'DSP Expression', y = 'SEMA3G Expression')
+```
+
+## Heatmap of Significant Genes
+
+In addition to generating individual gene boxplots or volcano plots, we can again create a heatmap from our data. This time instead of using the CV to select genes, we simply use the P-value or FDR to select Genes. Here we show all genes with an FDR < 0.001.
+
+``` {r heatmap, eval = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE}
+# select top significant genes based on significance, plot with pheatmap
+GOI <- subset(results, `FDR` < 0.001)$Gene
+pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
+         scale = 'row', 
+         show_rownames = FALSE, show_colnames = FALSE,
+         border_color = NA,
+         clustering_method = 'average',
+         clustering_distance_rows = 'correlation',
+         clustering_distance_cols = 'correlation',
+         cutree_cols = 2, cutree_rows = 2,
+         breaks = seq(-3, 3, 0.05),
+         color = colorRampPalette(c('purple3','black','yellow2'))(120),
+         annotation_col = pData(target_demoData)[, c('region','class')])
+```
+
+# Additional Resources
+
+While this vignette has focused on the full workflow of analysis we have also created vignettes that thoroughly describe the functionals and tools built into the `GeomxTools` package that more advanced users may be interested in. Please see the [Vignette name](Vignette link) *NEEDS LINK* vignette for more detailed information on all `GeomxTools` functionality.
+
+## GeoMxSet Object Overview
+
+The `demoData` object is stored now as a `GeoMxSet Object`. `GeoMxSet` objects are based on `ExpressionSet` objects, and have many similar functions as those described [on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf). All of expression, annotation, and probe information is linked and stored together as shown in the image below. There are a few key ways to access the data now that we have created a GeoMxSet Object. We will use these throughout the tutorial.
+
+<center>
+
+![](./GeomxSetStructure.png)
+
+</center>
+
+As is shown above the GeoMxSet object consists of 3 or more elements.
+
+* Expression count matrices - accessed with `exprs(object)` to return the matrix.
+    + As we progress through the analysis we will add new expression matrices to expression slots, or elements (`elt`), which can be accessed with `assayDataElement(object, elt = ...)`
+* Segment & Sample annotations - accessed with `pData(object)`
+* Probe & Target information - accessed with `fData(object)`
+* To learn more about other accessory functions type: `?GeomxTools::sData`
+
+Both eSets and GeoMxSets use `esApply` to extend the [`apply`](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/apply) function to such objects. In addition to the `esApply` function defined by the `ExpressionSet` class, we have built the `assayDataApply` function to allow you to select which expression matrix `elt` you wish to use with the `esApply` function. We will demonstrate the use of these functions below. 
+
+## Links
+
+GeoMx Background:
+
+* [Kidney Geomx Demo Dataset](http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip)
+* [Merritt et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32393914/) - Manuscript describing GeoMx Workflow and technology
+* [Data Analysis White Paper for DSP-NGS Assays](https://www.nanostring.com/resources/geomx-cta-data-whitepaper/)
+
+Statistics & Packages:
+
+* [Bioconductor Wesbite for GeomxTools](https://www.bioconductor.org/packages/release/bioc/html/GeomxTools.html)
+* [Introduction to ExpressionSets on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf)
+* [Lme4 package documentation](https://cran.r-project.org/web/packages/lme4/vignettes/lmer.pdf)
+* [Benjamini-Hochberg FDR Manuscript](http://www.math.tau.ac.il/~ybenja/MyPapers/benjamini_hochberg1995.pdf)
+
+## References
+
+## Additional Analysis Methods
+
+### MA Plot
 
 Another common visualization of expression would be to graph a MA plot looking for differences relative to expression within the baseline feature. As we have filtered out genes with low expression, it will not have the traditional shape of an MA plot, but can be useful in identifying targets with relatively high fold change and baseline expression. In the plot below we keep the labels genes within the top 90th percentile of expression on average with an FDR of < 0.001 and a log2 FC > 0.5.
 
@@ -978,95 +1042,6 @@ ggplot(subset(results, !Gene %in% neg_probes),
                   min.segment.length = .1, box.padding = .2, lwd = 2) +
   theme_bw(base_size = 16)
 ```
-
-Because we are exploring the relationship between expression and tissue substructure, we can leverage other databses to validate our findings. The [Human Protein Atlas](https://www.proteinatlas.org/) is a key resource for understanding protein localization. While not all markers have identified have been confirmed, as their targets may not have suitable antibodies available, in either side of the analysis we are able to find examples of top or near top hits concordant with these results:
-
-* [PLA2R1 Expression in Kidney Glomeruli](https://www.proteinatlas.org/ENSG00000153246-PLA2R1/tissue/kidney)
-* [SNCA Expression in Kidney Glomeruli](https://www.proteinatlas.org/ENSG00000145335-SNCA/tissue/kidney)
-* [ALDOA Expression in Kidney Tubules](https://www.proteinatlas.org/ENSG00000149925-ALDOA/tissue/kidney)
-* [SOD2 Expression in Kidney Tubules](https://www.proteinatlas.org/ENSG00000112096-SOD2/tissue/kidney)
-
-In the next section we'll explore the expression of PLA2R1 & ALDOA further to demonstrate the dynamics of these targets.
-
-## Plotting Genes of Interest
-
-Now that we know the top deferentially expressed genes, we can explore the expression of individual genes from the volcano plot. First we'll create a boxplot of a gene enriched within the glomeruli, PLA2R1 (Phospholipase A2 receptor 1). Using `ggplot2` we attach the phenotypic data (`pData`) so all of those variables are available for use, and manually call the expression data using `assayDataElement(..., elt = 'q_norm')`.
-
-In the second graph we plot two genes on opposite sides of the volcano plot against each other. While PODXL is highly enriched in the glomeruli, Aldolase (ALDOA) should show expression very specifically in the tubules. Plotting these against each other should show a mutually exclusive expression pattern that can easily distinguish the two structures. On this graph the dashed vertical lines represent the maximum observed KRT8 expression in glomeruli and and horizontal represent the maximum observed PODXL expression in the tubules.
-
-``` {r targetExprs, eval = TRUE}
-# show expression for a single target: PODXL
-ggplot(pData(target_demoData),
-       aes(x = region, fill = region,
-           y = assayDataElement(target_demoData['PLA2R1', ],
-                                elt = 'q_norm'))) +
-  geom_boxplot() +
-  labs(y = 'PLA2R1 Expression') +
-  scale_y_continuous(trans = 'log2') +
-  theme_bw()
-
-# show expression of PLA2R1 vs ALDOA
-ggplot(pData(target_demoData),
-       aes(x = assayDataElement(target_demoData['ALDOA', ],
-                                elt = 'q_norm'),
-           y = assayDataElement(target_demoData['PLA2R1', ],
-                                elt = 'q_norm'),
-           color = region, shape = class)) +
-  geom_vline(xintercept =
-               max(assayDataElement(target_demoData['ALDOA', glom],
-                                    elt = 'q_norm')),
-             lty = 'dashed', col = 'darkgray') +
-  geom_hline(yintercept =
-               max(assayDataElement(target_demoData['PLA2R1', !glom],
-                                    elt = 'q_norm')),
-             lty = 'dashed', col = 'darkgray') +
-  geom_point(size = 3) +
-  theme_bw() +
-  scale_x_continuous(trans = 'log2') + 
-  scale_y_continuous(trans = 'log2') +
-  labs(x = 'ALDOA Expression', y = 'PLA2R1 Expression')
-```
-
-## Heatmap of Significant Genes
-
-In addition to generating individual gene boxplots or volcano plots, we can again create a heatmap from our data. This time instead of using the CV to select genes, we simply use the P-value or FDR to select Genes. Here we show all genes with an FDR < 0.001.
-
-``` {r heatmap, eval = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE}
-# select top significant genes based on significance, plot with pheatmap
-GOI <- subset(results, `FDR` < 0.001)$Gene
-pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
-         scale = 'row', 
-         show_rownames = FALSE, show_colnames = FALSE,
-         border_color = NA,
-         clustering_method = 'average',
-         clustering_distance_rows = 'correlation',
-         clustering_distance_cols = 'correlation',
-         cutree_cols = 2, cutree_rows = 2,
-         breaks = seq(-3, 3, 0.05),
-         color = colorRampPalette(c('purple3','black','yellow2'))(120),
-         annotation_col = pData(target_demoData)[, c('region','class')])
-```
-
-# Additional Resources
-
-While this vignette has focused on the full workflow of analysis we have also created vignettes that thoroughly describe the functionals and tools built into the `GeomxTools` package that more advanced users may be interested in. Please see the [Vignette name](Vignette link) *NEEDS LINK* vignette for more detailed information on all `GeomxTools` functionality.
-
-## Links
-
-GeoMx Background:
-
-* [Kidney Geomx Demo Dataset](http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip)
-* [Merritt et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32393914/) - Manuscript describing GeoMx Workflow and technology
-* [Data Analysis White Paper for DSP-NGS Assays](https://www.nanostring.com/resources/geomx-cta-data-whitepaper/)
-
-Statistics & Packages:
-
-* [Bioconductor Wesbite for GeomxTools](https://www.bioconductor.org/packages/release/bioc/html/GeomxTools.html)
-* [Introduction to ExpressionSets on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf)
-* [Lme4 package documentation](https://cran.r-project.org/web/packages/lme4/vignettes/lmer.pdf)
-* [Benjamini-Hochberg FDR Manuscript](http://www.math.tau.ac.il/~ybenja/MyPapers/benjamini_hochberg1995.pdf)
-
-## References
 
 ## Session Information
 
