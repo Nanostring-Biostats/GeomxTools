@@ -472,37 +472,40 @@ First let's go ahead and remove segments for which we have very low signal. Thes
 # Save detection rate information to pheno data
 pData(target_demoData)$GenesDetected <- 
   colSums(LOQ_Mat, na.rm = TRUE)
+pData(target_demoData)$GeneDetectionRate <-
+  pData(target_demoData)$GenesDetected / nrow(target_demoData)
 
-# graph histogram of different cutpoints (1%, 5%, 10%, 15%)
-ggplot(pData(target_demoData), 
-       aes(x = GenesDetected / nrow(exprs(demoData)),
-           fill = region)) +
-  geom_histogram(bins = 30) +
-  geom_vline(xintercept = c(.01,.05,.10), lty = 'dashed', lwd = 1,
-             color = c('red3','orange2','yellow2')) +
-  theme_bw() + 
-  theme(legend.position = 'bottom') +
-  scale_x_continuous(labels = scales::percent) +
-  labs(x = 'Detection Rate, % Genes Detected', y = 'Segments, #')
+# Determine detection thresholds: 1%, 5%, 10%, 15%, >15%
+pData(target_demoData)$DetectionThreshold <- 
+  cut(pData(target_demoData)$GeneDetectionRate,
+      breaks = c(0, 0.01, 0.05, 0.1, 0.15, 1),
+      labels = c('<1%', '1-5%', '5-10%', '10-15%', '>15%'))
+
+# stacked barplot of different cutpoints (1%, 5%, 10%, 15%)
+ggplot(pData(target_demoData),
+       aes(x = DetectionThreshold)) +
+  geom_bar(aes(fill = region)) +
+  geom_text(stat='count', aes(label=..count..), vjust= -0.5) +
+  theme_bw() +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(x = 'Gene Detection Rate',
+       y = 'Segments, #',
+       fill = 'Segment Type')
 ```
 
-As we can see above 1% and 5% cutoffs only remove 1 & 2 samples while there are several more near the 10% detection range. Let's create a table to review the number of segments in each bin:
+As we can see above the 5% cutoffs only removes 2 samples while there are several more near the 10% detection range, with a bias towards glomeruli. Let's create a table to review what sample disease type is going to be impacted by each threshold:
 
 ```{r segTable}
 # cut percent genes detected at 1, 5, 10, 15
-kable(table(cut(pData(target_demoData)$GenesDetected,
-                breaks = c(nrow(demoData) * c(0, .01, .05, .1, .15, 1)),
-                labels = c('< 1%', '1-5%','5-10%', '10-15%', '15-100%'))),
-      col.names = c('Gene Detection Rate', '# of Segments'))
+kable(table(pData(target_demoData)$DetectionThreshold,
+            pData(target_demoData)$class))
 ```
 
 Next we'll remove these segments from the dataset.
 
 ```{r filterSegments}
 target_demoData <-
-  target_demoData[, pData(target_demoData)$GenesDetected > .1 *
-                    nrow(demoData)]
-
+  target_demoData[, pData(target_demoData)$GeneDetectionRate >= .1]
 ```
 
 Let's re-plot the Sankey diagram showing our current working dataset. This is now a dataset which no longer contains segments flagged by sequencing QC, segment QC or which have low gene detection rates.
