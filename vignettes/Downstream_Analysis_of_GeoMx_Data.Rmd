@@ -488,7 +488,7 @@ LOQ_Mat <- LOQ_Mat[fData(target_demoData)$TargetName, ]
 
 ### Segment Gene Detection
 
-First let's go ahead and remove segments for which we have very low signal. These will be segments in which only small fraction of the panel is detected above LOQ. For this example we will remove segments with less than 10% of the panel detected. Generally 5-10% detection is recommended, but depending on segmentation strategy and segment size these guidelines might need to be adjusted.
+We will remove segments with exceptionally low signal. These segments will have small fraction of panel genes detected above the LOQ relative to the other segments in the study. In this example, we will remove segments with less than 10% of the genes detected. Generally 5-10% detection is reasonably threshold, but based on the experimental design (e.g. segment types, sizes) and tissue characteristics (e.g. type, age) these guidelines may require adjustment.
 
 ```{r segHistogram}
 # Save detection rate information to pheno data
@@ -563,7 +563,7 @@ ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
 
 ### Gene Detection Rate
 
-Let's review the detection rate of some genes of interest. Here we create a list, `goi` in which we store a handful of genes that we'll review to ensure we get robust detection in our samples.
+Let's review the detection rate of select genes of interest. Here we create a list, `goi` in which we store a handful of genes that we will review to assess robust detection in our samples.
 
 ``` {r goi detection}
 library(scales) # for precent
@@ -590,7 +590,7 @@ kable(goi_df, caption = 'Detection rate for Genes of Interest', align = 'c',
 
 ### Gene Filtering
 
-Next we'll graph the detection rate across different frequencies of segments. After this step we'll decide how many genes to filter out of the dataset ahead of normalization. We recommend filtering low-expressing targets which are poorly detected as they make the upper quartile less stable, and impact false-discovery adjuments that will be run on downstream analyses.
+Next, we graph the number of genes detected in different percentages of segments. Based on this visualization, we can better understand global gene detection in our study and select how many low detected genes to filter out of the dataset. Gene filtering increases performance of downstream statistical tests, decreases multiple testing penalties, and improves interpretation of true biological signal.
 
 ```{r plotDetectionRate, eval = TRUE}
 # Plot detection rate:
@@ -616,7 +616,11 @@ ggplot(plot_detect, aes(x = as.factor(Freq), y = Rate, fill = Rate)) +
          y = 'Genes Detected, % of Panel > LOQ')
 ```
 
-Most of the target genes of interest are detected at > 10% of segments, and filtering to this threshold removes about half of the data. If we knew that a key feature was represented in only a small number of segments, or if many of our target genes was detected in < 10% of segments we might select a different cutoff. Additionally, target genes can be kept for downstream use by manually selecting them for inclusion in the object. We also generally recommend saving the negative control probes which we will identify using the `negativeObject` we created during LOQ calculation with `negativeControlSubset`.
+We generally set a % Segment cutoff ranging from 5-20% based on the biological diversity of our dataset. We will select for this study 10% as our cutoff. In other words, we observe that 10,159 genes are detected in at least 10% of our segments; we filter out the remainder of the targets.
+
+If we knew that a key gene was represented in only a small number of segments (<10%) due to biological diversity, we may select a different cutoff.
+
+Additionally, key target genes can be kept for downstream analysis by manually selecting them for inclusion in the data object. We generally recommend saving the negative control probes that we will identify using the `negativeObject` we created during LOQ calculation with `negativeControlSubset`.
 
 ``` {r subsetGenes, eval = TRUE}
 # Subset to target genes detected in at least 10% of the samples.
@@ -634,11 +638,13 @@ goi <- goi[goi %in% rownames(target_demoData@assayData$exprs)]
 
 # Normalization
 
-We will now normalize the GeoMx data for downstream visualizations and differential expression. Two common methods for normalization are i) upper quartile (Q3) or ii) background normalization.
+We will now normalize the GeoMx data for downstream visualizations and differential expression. The two common methods for normalization of DSP-NGS RNA data are i) quartile 3 (Q3) or ii) background normalization.
 
-Both of these normalization methods rely on the distribution of the data to estimate a normalization factor to roughly bring the data distributions together. More advanced methods for normalization and modelings are under active development, however, for most projects these methods are sufficient for understanding differences between biological classes of segments and samples. Additionally other packages such as `limma` may also be appropriate in some cases.
+Both of these normalization methods estimate a normalization factor per segment to bring the segment data distributions together. More advanced methods for normalization and modelings are under active development. However, for most studies, these methods are sufficient for understanding differences between biological classes of segments and samples.
 
-Before normalization, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. We'd ideally like there to be separation between these two values before normalizing to one of them. If you do not see sufficient separation between these values, you may need to be more aggressive with filtering out low-expressing genes. We'll use `reshape2` and `cowplot` to aggregate and plot these statistics in one graph.
+Q3 normalization is typically the preferred normalization strategy for most DSP-NGS RNA studies. Given the low negative probe counts in this particular dataset as shown during Segment QC, we would further avoid background normalization as it may be less stable.
+
+Before normalization, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. Ideally, there should be a separation between these two values to ensure we have stable measure of Q3 signal. If you do not see sufficient separation between these values, you may consider more aggressive filtering of low detected genes. 
 
 For additional guidance, please refer to our [Data Analysis White Paper for DSP-NGS Assays](https://www.nanostring.com/resources/geomx-cta-data-whitepaper/).
 
@@ -689,9 +695,13 @@ btm_row <- plot_grid(plt2, plt3, nrow = 1, labels = c('B',''),
 plot_grid(plt1, btm_row, ncol = 1, labels = c('A',''))
 ```
 
-Next we will use the `normalize` function from `NanoStringNCTools` to create normalization factors reflecting each data type. Upper quartile normalization is performed using `norm_method = "quant"` setting the `desiredQuantile` flag to 0.75. Other quantiles may be specified by changing that value. Quantile normalized data should be saved to the a specific normalized elt using `toELT = "q_norm"`.
+As expected, we see separation of the Q3 and negative probe counts at both the distribution (A) and per segment (B) levels. 
 
-Similarly background normalization is performed by setting `norm_method = "neg"` and `toElt = "neg_norm"`. each of these elt slots has been pre-defined and is expects consistently sized datasets as the base expression count matrix. 
+Next, we can normalize our data.
+
+We use the `normalize` function from `NanoStringNCTools` to create normalization factors reflecting each data type. Upper quartile normalization is performed using `norm_method = "quant"` setting the `desiredQuantile` flag to 0.75 (Q3). Other quantiles could be specified by changing that value. Quartile normalized data should be saved to the a specific normalized elt using `toELT = "q_norm"`.
+
+Similarly background normalization is performed by setting `norm_method = "neg"` and `toElt = "neg_norm"`. each of these elt slots has been pre-defined and expects consistently sized datasets as the base expression count matrix. 
 
 ```{r normalizeObject, eval = TRUE}
 # Q3 norm (75th percentile) for WTA/CTA  with or without custom spike-ins
@@ -707,7 +717,7 @@ target_demoData <- normalize(target_demoData , data_type = "RNA",
                              toElt = "neg_norm")
 ```
 
-To demonstrate the impact of normalization we'll graph a few boxplots of the data at for the base expression values, upper quartile, and background normalization.
+To demonstrate the effects of normalization, we graph a few boxplots of the data for individual segments before and after normalization.
 
 ```{r normplot, fig.small = TRUE}
 # visualize the first 10 segments with each normalization method
@@ -731,7 +741,7 @@ boxplot(assayDataElement(target_demoData[,1:10], elt = 'neg_norm'),
 
 ## UMAP & t-SNE
 
-One common approach to understanding the data after normalization is to plot the data in a reduced dimensionality space. Two common methods for this are UMAP and tSNE projections, which are non-orthogonally constrained projections which can cluster samples based on overall gene expression rates. In this example we see that by either UMAP (from the `umap` package) or tSNE (from the `Rtsne` package) we see clusters of segments related to morphology and disease status (normal & diabetic kidney disease (DKD)).
+One common approach to understanding high-plex data is dimension reduction. Two common methods are UMAP and tSNE, which are non-orthogonally constrained projections that cluster samples based on overall gene expression. In this study, we see by either UMAP (from the `umap` package) or tSNE (from the `Rtsne` package), clusters of segments related to structure (glomeruli or tubules) and disease status (normal or diabetic kidney disease).
 
 ``` {r dimReduction, eval = TRUE}
 library(umap)
@@ -740,8 +750,9 @@ custom_umap <- umap::umap.defaults
 custom_umap$random_state <- 42
 
 # run UMAP
-umap_out <- umap(t(log2(assayDataElement(target_demoData , elt = "q_norm"))),  
-                 config = custom_umap)
+umap_out <-
+  umap(t(log2(assayDataElement(target_demoData , elt = "q_norm"))),  
+       config = custom_umap)
 pData(target_demoData)[, c('UMAP1','UMAP2')] <- umap_out$layout[, c(1,2)]
 ggplot(pData(target_demoData),
        aes(x = UMAP1, y = UMAP2, color = region, shape = class)) +
@@ -750,8 +761,9 @@ ggplot(pData(target_demoData),
 
 library(Rtsne)
 # run tSNE
-tsne_out <- Rtsne(t(log2(assayDataElement(target_demoData , elt = "q_norm"))),
-                  perplexity = 5)
+tsne_out <-
+  Rtsne(t(log2(assayDataElement(target_demoData , elt = "q_norm"))),
+        perplexity = 5)
 pData(target_demoData)[, c('tSNE1','tSNE2')] <- tsne_out$Y[, c(1,2)]
 ggplot(pData(target_demoData),
        aes(x = tSNE1, y = tSNE2, color = region, shape = class)) +
@@ -761,12 +773,15 @@ ggplot(pData(target_demoData),
 
 ## Clustering high CV Genes
 
-Another unsupervised way to explore the structure of the data is to calculate the coefficient of variation (CV), for each gene ($g$) using the formula $CV_g = SD_g/mean_g$. After calculating we can look for genes with high CVs which should have large differences across the various segments that we have profiles. This is an unbiased way of showing highly variable genes across the dataset. For visualization we use the `pheatmap` package and function, which has many granular controls on how to graph the data.
+Another approach to explore the data is to calculate the coefficient of variation (CV) for each gene ($g$) using the formula $CV_g = SD_g/mean_g$. We then identify for genes with high CVs that should have large differences across the various profiled segments. This unbiased approach can reveal highly variable genes across the study. 
+
+We plot the results in a heatmap.
 
 ``` {r CVheatmap, eval = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE}
 library(pheatmap)  # for pheatmap
 calc_CV <- function(x) {sd(log2(x)) / mean(log2(x))}
-CV_dat <- assayDataApply(target_demoData, elt = 'q_norm', MARGIN = 1, calc_CV)
+CV_dat <- assayDataApply(target_demoData,
+                         elt = 'q_norm', MARGIN = 1, calc_CV)
 # show the highest CD genes and their CV values
 sort(CV_dat, decreasing = TRUE)[1:5]
 
@@ -787,23 +802,25 @@ pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
 
 # Differential Expression
 
-A common method for exploring differences between groups of segments or patients is to perform differential expression analysis. While advanced methods for modeling the underlying count distribution are being actively developed, a common approach is to use a linear mixed-effect model (LMM). LMMs allow the user to account for the fact that we sample multiple times within a slide, rather than assuming that each segment is independently sampled. We use the `lme4` and `lmerTest` packages to calculate an LMM. The structure of the LMM preferred depends on the question being investigated. 
+A central method for exploring differences between groups of segments or samples is to perform differential gene expression analysis. A common statistical approach is to use a linear mixed-effect model (LMM). The LMM allows the user to account for the subsampling per tissue; in other words, we adjust for that fact that the multiple regions of interest placed per tissue section are not independent observations, as is the assumption with other traditional statistical tests. The formulation of the LMM model depends on the scientific question being asked.
 
-As shown in the diagram below, for studies where you compare features within slides, we use a complex model to account for shared information shown below. For studies analyzing results between slides we can use a more simplistic model.
+Overall, there are two main flavors of the LMM model when used with GeoMx data: i) with and ii) without random slope. 
+
+When comparing features that co-exist in a given tissue section (e.g. glomeruli vs tubules in DKD kidneys), a random slope is included in the LMM model. When comparing features that are mutually exclusive in a given tissue section (healthy glomeruli versus DKD glomeruli) the LMM model does not require a random slope. We represent the two variations on the LMM in the schematic below:
 
 ![](./GeomxDETypes.png)
 
+For more details on the LMM, please refer to the [lme4 package](https://cran.r-project.org/web/packages/lme4/) and the [lmerTest package](https://cran.r-project.org/web/packages/lmerTest/).
+
 ## Within Slide Analysis: Glomeruli vs Tubules
 
-First we'll explore differences in morphological structures within the kidney: glomeruli and tubules. Because we are comparing structures found within the same slide we will use the structure outlined in *A* above. Region is what we want to test against, while we control for slide specific sampling using a random slope and intercept. If multiple samples are contained within a slide, we would change the random slope and intercepts to account for sample instead.
+One common exploration is to study differences in morphological structures. In this example, we can study differential expression between glomeruli and tubules. we will focus on the diseased kidney tissues. Because we are comparing structures that co-exist within the a given tissue we will use the LMM model with a random slope. Morphological structure (`Region`) is our test variable. We control for tissue subsampling with `slide` using a random slope and intercept; the intercept adjusts for the multiple regions placed per unique tissue, since we have one tissue per slide. If multiple tissues are placed per slide, we would change the intercept variable to the unique tissue name (ex: tissue name, Block ID, etc).
 
 In this analysis we save log~2~ fold change estimates and P-values across all levels in the factor of interest. We use `p.adjust(..., method = 'fdr')` to apply a benjamini-hochberg multiple test correction.
 
-Note that the example uses `nCores = parallel:detectCores()` and `mutliCore = FALSE` to implement the `parallel` package clustering of all available cores. If working in a Windows environment use `multicore = FALSE`. If in a unix-based environment setting `multicore = TRUE` will use parallelize using the `mcapply` package. If you do not want to use all available cores, change the `nCores` variable to the desired number.
-
 Outputs of the `mixedModelDE` function are saved as a matrix of lists, which we will convert into a table
 
-``` {r cheatDE, eval = TRUE, echo = FALSE}
+``` {r cheatDE, eval = FALSE, echo = FALSE}
 # below is work-around text to quick load DE results from a saved csv for convenience
 # THIS SECTION WILL NOT BE SHOWN, is only for speed of iteration
 results <- read.csv('~/DE_results_for_testing.csv', row.names = 1)
@@ -811,7 +828,6 @@ colnames(results) <- c('Gene','Estimate','Pr(>|t|)','FDR')
 
 # turn eval to TRUE in next code block to re-run LMM code (will take ~15-30 minutes on a single core local machine)
 ```
-
 
 ``` {r deNativeComplex, eval = TRUE, echo = TRUE}
 # create a log2 transform of the data for analysis
@@ -839,6 +855,7 @@ results <- do.call(rbind, mixedOutmc['lsmeans', ])
 tests <- rownames(results)
 results <- as.data.frame(results)
 results$Contrast <- tests
+
 # use lapply in case you have multiple levels of your test factor to
 # correctly associate gene name with it's row in the results table
 results$Gene <- 
@@ -849,6 +866,8 @@ results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
 results <- results[, c('Gene','Subset','Contrast','Estimate','Pr(>|t|)','FDR')]
 ```
 
+Note that the example uses `nCores = parallel:detectCores()` and `multiCore = FALSE` to implement the `parallel` package clustering of all available cores. If working in a Windows environment use `multicore = FALSE`. If in a unix-based environment setting `multicore = TRUE` will use parallelize using the `mcapply` package. If you do not want to use all available cores, change the `nCores` variable to the desired number.
+
 ``` {r saveDETable, eval = TRUE, echo = FALSE}
 # Save DE table (either same file read in or new calculation)
 write.csv(results, '~/DE_results_for_testing.csv')
@@ -856,7 +875,7 @@ write.csv(results, '~/DE_results_for_testing.csv')
 
 ## Between Slide Analysis: Diabetic Kidney Disease Glomeruli vs Healthy Glomeruli
 
-Another common use case it to look for differences between patients or sample specimens, as shown in *B* in the figure above. Below is an example of our to code an LMM looking for variation on between patients, in this example using the `class` variable which contains disease status. Before running this model we will subset the data to only compare the glomeruli between patient classes. More complex models could be used to model both structures at once are beyond the scope of this tutorial.
+Another common exploration is to compare tissue cohorts. In this case, we would like to compare diseased versus healthy kidneys. We will focus on glomeruli as our structure. Because we are comparing disease status, which is specific to the entire kidney, we will use the LMM model without a random slope. Disease (`testClass`) is our test variable. Like our previous LMM example, we control for tissue subsampling with `slide name` as the intercept.
 
 ``` {r DEsimple, eval = FALSE}
 ## UPDATE CODE BELOW
@@ -891,17 +910,21 @@ glom <- pData(target_demoData)$region == 'glomerulus'
 
 ## Interpreting the results table
 
-Going back to the first test between glomeruli & tubules, the table produced captures 2 of the key features for DE. It saved the log~2~ fold change value, called `Estimate` in the table, and the P-value, called `Pr(>|t|)`. Let's take a look at our genes of interest and what their log~2~ fold change (`Estimate`), P-value (`Pr(>|t|)`), and FDR are. We can do this by simply subsetting the results table we just generated by typing `results[goi, ]`. 
+Let's go back to our first statistical test comparing diseased glomeruli to tubules. We saved the LMM outputs into a table (`results`) containing two of the key features for differential expression: i) the log~2~ fold change value (`Estimate`) and ii) the P-value (`Pr(>|t|)`). Let's take a look at a few genes of interest and their fold changes, P-values, and FDR values. 
+We can perform this by simply subsetting the results table we just generated by subsetting the table.
 
-``` {r DEtable, echo = FALSE, results = 'asis', }
-kable(subset(results, Gene %in% goi), digits = 3, caption = 'DE results for Genes of Interest', align = 'lc', row.names = FALSE)
+``` {r DEtable, echo = TRUE, results = 'asis'}
+kable(subset(results, Gene %in% goi), digits = 3,
+      caption = 'DE results for Genes of Interest',
+      align = 'lc', row.names = FALSE)
 ```
 
 # Visualizing DE Genes
 
 ## Volcano Plots
 
-Let's code a simple `ggplot2` graph for a volcano plot, which will color based on various cuts in the significance threshold and label genes the top 30 genes based on P-value with `ggrepel` on either side of the volcano plot. 
+A canonical visualization for interpreting differential gene expression results is the volcano plot.
+Let's look at the LMM results from our diseased glomeruli versus tubules comparison.
 
 ``` {r volcanoPlot, fig.width = 10, fig.height = 8, fig.wide = TRUE, warning = FALSE, message = FALSE}
 library(ggrepel) 
@@ -929,7 +952,7 @@ ggplot(results,
   geom_vline(xintercept = c(0.5, -0.5), lty = 'dashed') +
   geom_hline(yintercept = -log10(0.05), lty = 'dashed') +
   geom_point() +
-  labs(x = 'Enriched in Glomeruli <- log2(FC) -> Enriched in Tubules',
+  labs(x = 'Enriched in Tubules <- log2(FC) -> Enriched in Glomeruli',
        y = 'Significance, -log10(P)',
        color = 'Significance') +
   scale_color_manual(values = c(`FDR < 0.001` = 'dodgerblue',
@@ -945,15 +968,16 @@ ggplot(results,
   theme(legend.position="bottom")
 ```
 
-The volcano plot shows several genes being significantly differentially expressed between glomeruli and tubules. However, it has a shape that is a different than a volcano plot from a simple linear regression. This is because we used the mixed effect model to account for patient specific variation. There are some genes for which we see high fold change, but lower significance, because these genes appear to be behaving in a patient-specific manner rather than a reproducible manner across all slides. The genes that we see higher on the y-axis are ones we have stronger evidence for consistent behavior.
+The volcano plot shows several genes being significantly differentially expressed between glomeruli and tubules. Note that because we use the linear mixed effect model to account for tissue specific variation, the volcano plot shape may look less typical than one generated with a linear regression model. There are some genes for which we see high fold change, but lower significance, because these genes appear to be behaving in a tissue-specific manner rather than across all kidneys.
 
-In the next section we'll explore the expression of PLA2R1 & ALDOA further to demonstrate the dynamics of these targets.
+In the next section we'll explore the expression of SEMA3G & DSP further to demonstrate the dynamics of these targets.
 
 ## Plotting Genes of Interest
 
-Now that we know the top deferentially expressed genes, we can explore the expression of individual genes from the volcano plot. First we'll create a boxplot of a gene enriched within the glomeruli, PLA2R1 (Phospholipase A2 receptor 1). Using `ggplot2` we attach the phenotypic data (`pData`) so all of those variables are available for use, and manually call the expression data using `assayDataElement(..., elt = 'q_norm')`.
+A simple and effective plot to view individual genes is the violin plot. This visualization reveals both the dynamic range and shape of the distribution for a gene target. We will plot a gene enriched within the glomeruli, SEMA3G (`UPDATE`) and a gene enriched within tubules, DSP (`UPDATE`). 
 
-In the second graph we plot two genes on opposite sides of the volcano plot against each other. While PODXL is highly enriched in the glomeruli, Aldolase (ALDOA) should show expression very specifically in the tubules. Plotting these against each other should show a mutually exclusive expression pattern that can easily distinguish the two structures. On this graph the dashed vertical lines represent the maximum observed KRT8 expression in glomeruli and and horizontal represent the maximum observed PODXL expression in the tubules.
+We can also plot these two targets against each other to show the mutually exclusive expression pattern that be used to easily distinguish the two structures. Dashed vertical lines were plotted to represent the maximum observed PLA2R1 expression in glomeruli and and horizontal represent the maximum observed ALDOA expression in the tubules.
+
 
 ``` {r targetExprs, eval = TRUE}
 # show expression for a single target: PODXL
@@ -990,7 +1014,7 @@ ggplot(pData(target_demoData),
 
 ## Heatmap of Significant Genes
 
-In addition to generating individual gene boxplots or volcano plots, we can again create a heatmap from our data. This time instead of using the CV to select genes, we simply use the P-value or FDR to select Genes. Here we show all genes with an FDR < 0.001.
+In addition to generating individual gene boxplots or volcano plots, we can again create a heatmap from our data. This time rather than utilizing CV to select genes, we can use the P-value or FDR values to select genes. Here, we plot with all genes with an FDR < 0.001.
 
 ``` {r heatmap, eval = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE}
 # select top significant genes based on significance, plot with pheatmap
@@ -1010,11 +1034,11 @@ pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
 
 # Additional Resources
 
-While this vignette has focused on the full workflow of analysis we have also created vignettes that thoroughly describe the functionals and tools built into the `GeomxTools` package that more advanced users may be interested in. Please see the [Vignette name](Vignette link) *NEEDS LINK* vignette for more detailed information on all `GeomxTools` functionality.
+While this vignette has focused on the full data analysis workflow, we have created additional vignettes to describe in detail the functionalaties and tools built into the `GeomxTools` package that more advanced users may be interested in. Please see the [Vignette name](Vignette link) *NEEDS LINK* vignette for more detailed information on all `GeomxTools` documentation.
 
 ## GeoMxSet Object Overview
 
-The `demoData` object is stored now as a `GeoMxSet Object`. `GeoMxSet` objects are based on `ExpressionSet` objects, and have many similar functions as those described [on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf). All of expression, annotation, and probe information is linked and stored together as shown in the image below. There are a few key ways to access the data now that we have created a GeoMxSet Object. We will use these throughout the tutorial.
+In section 'Loading the Demo Data', we see that the `demoData` object is stored as a `GeoMxSet Object`. `GeoMxSet` objects are based on `ExpressionSet` objects, and have many similar functions as those described [on Bioconductor](https://www.bioconductor.org/packages/release/bioc/vignettes/Biobase/inst/doc/ExpressionSetIntroduction.pdf). All expression, annotation, and probe information is linked and stored together as shown in the schematic below. There are a few key ways to access the data after we create a GeoMxSet Object. We use these throughout the vignette.
 
 <center>
 
@@ -1053,7 +1077,7 @@ Statistics & Packages:
 
 ### MA Plot
 
-Another common visualization of expression would be to graph a MA plot looking for differences relative to expression within the baseline feature. As we have filtered out genes with low expression, it will not have the traditional shape of an MA plot, but can be useful in identifying targets with relatively high fold change and baseline expression. In the plot below we keep the labels genes within the top 90th percentile of expression on average with an FDR of < 0.001 and a log2 FC > 0.5.
+Another visualization for differential expression is an MA plot. With this plot, we look for differences relative to expression within the baseline feature. As we have filtered out genes with low expression, the MA plot will not exhibit a traditional shape, but it can be useful in identifying targets with relatively high fold change and baseline expression. In the plot below we keep the labels genes within the top 90th percentile of expression on average with an FDR of < 0.001 and a log2 FC > 0.5.
 
 ``` {r maPlot, fig.width = 10, fig.height = 8, fig.wide = TRUE, warning = FALSE, message = FALSE}
 results$MeanExp <-
