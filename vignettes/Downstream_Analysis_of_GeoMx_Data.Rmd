@@ -19,7 +19,7 @@ author:
   affiliation: NanoString Technologies, Inc
 package: GeomxTools
 abstract: >
-  Here we walk through an end-to-end gene-level Geomx-NGS analysis workflow using open source packages on top of the GeomxTools object structure. We will start from the count files, show samples and targets are qualified, and prepare gene-level count datasets for downstream analysis. We will explore the relationship between samples, perform dimension reduction analysis, differential gene expression analysis, and visually explore the results.
+  Here we walk through an end-to-end Geomx-NGS gene expression analysis workflow. We start with raw gene expression count files. Using a combination of the Nanostring-developed (GeoMxTools & NanoStringNCTools) and open source packages, we qualify samples and expression targets and prepare gene-level count data for downstream analysis. To understand our spatial data, we perform unsupervising clustering, dimension reduction, and differential gene expression analyses and visually explore the results.
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   BiocStyle::html_document:
@@ -68,7 +68,11 @@ library(EnvStats)  # is this needed?
 
 # Introduction
 
-The GeoMx Digital Spatial Profiler (DSP) is platform for capturing protein or gene expression in a spatially resolved manner [Merritt et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32393914/). This vignette walks through analysis of data collected by GeoMx starting from raw count files through downstream biological analysis and interpretation.
+In this vignette, we will introduce a data analysis workflow for GeoMx-NGS mRNA expression data. 
+
+The GeoMx Digital Spatial Profiler (DSP) is a platform for capturing spatially resolved high-plex gene (or protein) expression data from tissue [Merritt et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32393914/).In particular, formalin-fixed paraffin-embedded (FFPE) or fresh-frozen (FF) tissue sections are stained with barcoded in-situ hybridization probes that bind to endogenous mRNA transcripts. The user then selects regions of the interest (ROI) to profile; if desired, each ROI can be further sub-divided into areas of illumination (AOI) based on tissue morphology. The GeoMx then photo-cleaves and collects expression barcodes for each AOI separately for downstream sequencing and data processing.
+
+The final results are spatially resolved unique expression datasets for every protein-coding gene (>18,000 genes) from every individual ROI/AOI profiled from tissue.
 
 <!--
 Swap everything to segments
@@ -90,14 +94,16 @@ GeoMx profiles expression by staining and processing standard histological slide
 
 ## Motivation & Scope
 
-The intent of this vignette is to enable an analyst to work with GeoMx data and understand the workflow of a standard data analysis. This vignette will cover how to:
+The motivation for this vignette is to enable a scientist to work with GeoMx-NGS gene expression data and understand a standard data analysis workflow.
 
-* Read in GeoMx count files and metadata (DCC, PKC and annotation file)
-* Perform QC and normalization to prepare the data for analysis
-* Perform downstream analysis and visualize the results including:
+Our specific objectives:
+
+* Load GeoMx raw count files and metadata (DCC, PKC, and annotation file)
+* Perform quality control (QC), filtering, and normalization to prepare the data
+* Perform downstream visualizations and statistical analyses including:
     + Dimension reduction with UMAP or t-SNE
-    + Differential expression analysis with mixed effect models
-    + Generate heatmaps and other visualizations of gene expression
+    + Heatmaps and other visualizations of gene expression
+    + Differential expression analysis with linear mixed effect models
 
 # Getting started 
 
@@ -112,7 +118,8 @@ devtools::install_github("Nanostring-Biostats/NanoStringNCTools")
 devtools::install_github("Nanostring-Biostats/GeomxTools", ref = "dev")
 ```
 -->
-If you haven't done so already, you will need to install the `GeomxTools` package. To do so from github use the following commands. We'll install from the `dev` branch currently.
+
+Let's install and load the GeoMx packages we need:
 
 ```{r InstallGeomxTools, echo = TRUE, eval = FALSE}
 install.packages("devtools")
@@ -140,7 +147,8 @@ We will start by loading the data. The key data files are:
 The section below will look up all the files related to the project. To use a different folder, change the `file.path` to look elsewhere on your machine.
 
 ```{r quickstart, message=FALSE, warning=FALSE}
-# Main folder containing the data files
+# Reference the main folder 'file.path' containing the sub-folders with each
+# data file type:
 datadir <- file.path("~/DA Vignettes/Kidney_Dataset_for_GeomxTools/Kidney_Dataset/")
 
 # automatically list files in each directory for use
@@ -152,7 +160,7 @@ SampleAnnotationFile <- dir(file.path(datadir, "annotation"), pattern=".xlsx$",
                             full.names=TRUE, recursive=TRUE)
 ```
 
-After locating your files we'll load these into a GeoMxSet using the `readNanoStringGeoMxSet` function returning a structured R object that collates this information. 
+We then load the data to create a data object using the `readNanoStringGeoMxSet` function.
 
 ``` {r loadData, message = FALSE, warning = FALSE}
 # load data
@@ -167,7 +175,9 @@ demoData <-
                                                     "instrument_type"))
 ```
 
-<!--Seven tissue slides were analyzed, 4 diabetic kidney disease (DKD) and 3 healthy kidney. Regions of Interest (ROI) focused on two different kidney structures: tubules or glomeruli. Individual glomeruli were identified by a pathologist as either behaving relatively healthy or diseased regardless on if the tissue was DKD or healthy. One glomerulus ROI contains the entirety of a glomerulus. Tubule ROIs were segmented into distal (PanCK+) and proximal (PanCK-) tubule areas of interest (AOI). While both distal and proximal tubules are called tubules, they perform very different functions in the kidney.-->
+All of the expression, annotation, and probe information are now linked and stored together into a single data object.
+
+For more details on this object's structure and accessors, please refer to the "GeoMxSet Object Overview" section at the end of this vignette.
 
 # Study Design
 
@@ -183,7 +193,7 @@ kable(data.frame(PKCs = pkcs, modules = modules))
 
 ## Sample Overview
 
-Now that we've loaded the data, let's look at the different types of regions and samples that have been profiled in the dataset. We will use `dplyr` and `ggforce` to aggregate the dataset information into a Sankey diagram which shows the breakdown of samples and how they are a related to each other.
+Now that we have loaded the data, let's visually summarize the experimental design for our dataset to look at the different types of samples and regions that have been profiled. we present this information in a Sankey diagram using the `ggforce` package.
 
 ``` {r sampleFlow, fig.width = 10, fig.height = 8, fig.wide = TRUE, message = FALSE, warning = FALSE}
 library(dplyr)
@@ -221,9 +231,9 @@ ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
 
 ![](./GeomxQCWorkflow.png)
 
-The steps above encompass the standard pre-processing workflow for GeoMx data in with GeomxTools. 
+The steps above encompass the standard pre-processing workflow for GeoMx data. In short, they represent the selection of ROI/AOI segments and genes based on quality control (QC) or limit of quantification (LOQ) metrics and data normalization. 
 
-Before we begin we will shift counts with 0 detection to 1 to prevent `-Inf` in downstream transformations. This uses the `shiftCountsOne` function. We'll also calculate the geometric mean of the negative controls for use in QC, by subsetting the data using `negativeControlSubset`.
+Before we begin, we will shift our expression counts with a value of 0 to 1 to enable in downstream transformations (e.g. prevent`-Inf`).
 
 ``` {r shiftCounts, eval = TRUE}
 # Shift counts to one
@@ -232,20 +242,37 @@ demoData <- shiftCountsOne(demoData, useDALogic = TRUE)
 
 ## Segment QC 
 
-First, we will check sequencing quality and adequate tissue sampling for every segment. For each segment there are several steps along the way to generating a count matrix, each with it's own quality metric associated and recommended threshold. FASTQ files are generated and converted to DCC files, but before we aggregate DCC files we need to check the sequencing quality within the FASTQ files. We will determine if the samples pass QC based on the number of reads per sample, the percent or reads trimmed and aligned, as well as the sequencing saturation (1 - % unique reads). We will also confirm the number of nuclei & area associated with each segment. At the end of this section we will summarize the breakdown of flags observed, and total number of segments that have been flagged for QC failures.
+We first assess sequencing quality and adequate tissue sampling for every ROI/AOI segment. 
+
+Every ROI/AOI segment will be tested for:
+
+* Raw sequencing reads: segments with >1000 raw reads are removed.
+* % Aligned,% Trimmed, or % Stitched sequencing reads: segments below ~80% for one or more of these QC parameters are removed.
+* % Sequencing saturation ([1-deduplicated reads/aligned reads]%): segments below ~50% require additional sequencing to capture full sample diversity and are not typically analyzed until improved.
+* Negative Count: this is the geometric mean of the several unique negative probes in the GeoMx panel that do not target mRNA and establish the background count level per segment; segments with low negative counts (<5-10) are not necessarily removed but may be studied closer for low endogenous gene signal and/or insufficient tissue sampling.
+* No Template Control (NTC) count: values >1,000 could indicate contamination for the segments associated with this NTC; however, in cases where the NTC count is between 1,000- 10,000, the segments may be used if the NTC data is uniformly low (e.g. 0-2 counts for all probes).
+* Nuclei: >100 nuclei per segment is generally recommended; however, this cutoff is highly study/tissue dependent and may need to be reduced; what is most important is consistency in the nuclei distribution for ROIs/AOIs within the study.
+* Area: generally correlates with nuclei; a strict cutoff is not generally applied based on area.
 
 ```{r setqcflagupdated,  eval = TRUE}
+# Default QC cutoffs are commented in () adjacent to the respective parameters
+# study-specific values were selected after visualizing the QC results in more
+# detail below
+QC_params <-
+  list(minSegmentReads = 1000, # Minimum number of reads (1000)
+       percentTrimmed = 80,    # Minimum % of reads trimmed (80%)
+       percentStitched = 80,   # Minimum % of reads stitched (80%)
+       percentAligned = 75,    # Minimum % of reads aligned to known targets (80%)
+       percentSaturation = 50, # Minimum sequencing saturation (50%)
+       minNegativeCount = 1,   # Minimum negative control counts (10)
+       maxNTCCount = 9000,     # Maximum counts observed in NTC well (1000)
+       minNuclei = 20,         # Minimum # of cells observed in a segment (100)
+       minArea = 1000)         # Minimum segment area (5000)
 demoData <-
   setSegmentQCFlags(demoData, 
-                    qcCutoffs = list(minSegmentReads = 1000, # Minimum number of reads
-                                     #   percentTrimmed = 80,    # Minimum % of reads trimmed
-                                     #   percentStitched = 80,   # Minimum % of reads stitched
-                                     percentAligned = 75,    # Minimum % of reads aligned to known targets
-                                     percentSaturation = 50, # Minimum sequencing saturation
-                                     minNegativeCount = 2,   # Minimum negative control counts
-                                     maxNTCCount = 1000,     # Maximum counts observed in NTC well
-                                     minNuclei = 20,         # Minimum # of cells observed in a segment
-                                     minArea = 5000))        # Minimum segment size
+                    qcCutoffs = QC_params)        
+
+# Collate QC Results
 QCResults <- protocolData(demoData)[["QCFlags"]]
 flag_columns <- colnames(QCResults)
 QC_Summary <- data.frame(Pass = colSums(!QCResults[, flag_columns]),
@@ -253,11 +280,16 @@ QC_Summary <- data.frame(Pass = colSums(!QCResults[, flag_columns]),
 QCResults$QCStatus <- apply(QCResults, 1L, function(x) {
   ifelse(sum(x) == 0L, "PASS", "WARNING")
 })
-QC_Summary['TOTAL FLAGS', ] <- c(sum(QCResults[, 'QCStatus'] == 'PASS'),
-                                sum(QCResults[, 'QCStatus'] == 'WARNING'))
+QC_Summary['TOTAL FLAGS', ] <-
+  c(sum(QCResults[, 'QCStatus'] == 'PASS'),
+    sum(QCResults[, 'QCStatus'] == 'WARNING'))
 ```
 
-To view the distribution of these statistics we will generate a few graphs with a quick function to draw histograms of our data using `ggplot2`. Here we use `col_by` variable to set an annotation column that we'd like to facet our data by.
+### Visualize Segment QC
+
+Before excluding any low-performing ROI/AOI segments, we visualize the distributions of the data for the different QC parameters. Note that the "Set Segment QC" and "Visualize Segment QC" sections are performed in parallel to fully understand low-performing segments for a given study. Iteration may follow to select the study-specific QC cutoffs.
+
+We will first write a quick function to draw histograms of our data.
 
 ``` {r qcflagHistogramsCode, eval = TRUE, warning = FALSE, message = FALSE}
 library(ggplot2)
@@ -287,7 +319,7 @@ QC_histogram <- function(assay_data = NULL,
 
 ```
 
-Now we'll explore each of the QC metrics to see how many samples were caught by the QC filters
+Now we will explore each of the QC metrics for the segments.
 
 ``` {r plotQCHist, fig.small = TRUE, warning = FALSE, message = FALSE}
 QC_histogram(sData(demoData), 'Aligned (%)', col_by, 75, c(0,100))
@@ -330,9 +362,7 @@ Finally we'll plot all of the QC Summary information in a table.
 kable(QC_Summary, caption = 'QC Summary Table for each Segment')
 ```
 
-In this particular dataset a large QC flag is found from the NTC being high in one sequencing plate. Generally in this situation we would recommend excluding the sequencing plate until it can be confirmed that there was no evidence of contamination across the FASTQ files, or resequencing can be performed. In this case we will exclude the samples, but we could also include those samples specifically by raising the QC flag threshold to a higher value by setting `maxNTCCount = 10000` in `setSegmentQCFlags`.
-
-###  Exclude samples that did not pass Sequencing QC
+###  Remove flagged segments
 
 ```{r removeQCSampleProbe, eval = TRUE}
 demoData <- demoData[, QCResults$QCStatus == 'PASS']
@@ -343,11 +373,20 @@ dim(demoData)
 
 ## Probe QC
 
-In some GeoMx assays we rely on multiple probes per target to represent expression of a given gene. Across all NGS read-out assays, there are multiple probes representing our negative controls, which should not bind to any sequence in the genome. Before we summarize our data into a count matrix, we will remove probes for which we observe expression that appears spurious. This process is called outlier removal, which is performed on either a per gene (global) or per gene per segment (local) basis. This process is only performed for targets where there are multiple ISH probes related to that target, so for our example data it will only be performed on the negative control probes. This process will always leave at least one probe representing the gene or biological target class in the dataset after the process.
+Before we summarize our data into gene-level count data, we will remove low-performing probes. In short, this QC is an outlier removal process, whereby probes are either removed entirely from the study (global) or from select AOI segments (local). The QC applies to gene targets for which there are multiple distinct probes representing the count for a gene per segment. In WTA data, one highly specific probe exists per gene; thus, Probe QC does not apply to the endogenous genes in the panel. Rather, it is performed on the negative control probes; there are multiple probes representing our negative controls, which do not target any sequence in the genome. These probes enable calculation of the background per segment and will be important for determining gene detection downstream.
+
+After Probe QC, there will always remain at least one probe representing every gene target. In other words, Probe QC never removes genes for your data.
 
 ### Set Probe QC Flags
 
-[text describing defaults & rationale]
+A probe is removed globally from the dataset if either of the following is true:
+
+* the geometric mean of that probe's counts from all AOI segments divided by the geometric mean of all probe counts representing the target from all segments is less than 0.1
+* the probe is an outlier according to the Grubb's test in at least 20% of the segments
+
+A probe is removed locally (from a segment) from the dataset if the probe is an outlier according to the Grubb's test in that segment.
+
+we do not typically adjust these QC parameters.
 
 ```{r setbioprobeqcflag,  eval = TRUE}
 # Generally keep the qcCutoffs parameters unchanged. Set removeLocalOutliers to 
@@ -364,6 +403,8 @@ qc_df <- data.frame(Passed = sum(rowSums(ProbeQCResults[, -1]) == 0),
                     Global = sum(ProbeQCResults$GlobalGrubbsOutlier),
                     Local = sum(rowSums(ProbeQCResults[, -2:-1])>0))
 ```
+
+We report the number of global and local outlier probes.
 
 ```{r bioprobeQCTable, echo = FALSE, results = 'asis'}
 kable(qc_df, caption = 'Probes flagged or passed as outliers')
@@ -384,7 +425,7 @@ demoData <- ProbeQCPassed
 
 ## Create Gene-level Count Data
 
-After calculating the LOQ we will generate a target count matrix. This will summarize all multi-probe targets into a single value represented as the geometric mean of those probes.
+With our Probe QC steps complete, we will generate a gene-level count matrix. The count for any gene with multiple probes per segment is calculated as the geometric mean of those probes.
 
 ```{r aggregateCounts, eval = TRUE}
 # Check how many unique targets the object has
@@ -399,11 +440,11 @@ exprs(target_demoData)[1:5, 1:2]
 
 ## Limit of Quantification
 
-We must now determine the limit of quantification. This is calculated based on the distribution of negative control probes, and is intended to represent the quantifiable limit of gene expression per segment, under which gene expression is no longer reliable. Please note that this calculation is more stable in larger segments. Segments with low area, and subsequently low negative control probe distributions, the LOQ may not be accurately reflective of true signal detection rates. The formula for calculating the LOQ in the $i^{th}$ segment/AOI is: 
+In addition to outlier detection, we also determine the limit of quantification (LOQ) per AOI segment. The LOQ is calculated based on the distribution of negative control probes and is intended to approximate the quantifiable limit of gene expression per segment. Please note that this process is more stable in larger segments. Likewise, the LOQ may not be accurately reflective of true signal detection rates in segments with low negative probes counts. The formula for calculating the LOQ in an $i^{th}$ AOI segment is: 
 
 $$LOQ_{i} = geomean(NegProbe_{i}) * geoSD(NegProbe_{i})^{n}$$
 
-In the example below we use 2 geometric standard deviations ($n = 2$) above the geometric mean as the cutoff, which is recommended for most use cases. We also recommend that a minimum LOQ of 2 be used even if the LOQ calculated to be below this threshold.
+We typically use 2 geometric standard deviations ($n = 2$) above the geometric mean as the LOQ, which is reasonable for most studies. We also recommend that a minimum LOQ of 2 be used if the LOQ calculated in an AOI is below this threshold.
 
 ``` {r calculateLOQ, eval = TRUE}
 # Define LOQ SD threshold and minimum value
@@ -427,9 +468,9 @@ pData(target_demoData)$LOQ <- LOQ
 
 ## Filtering
 
-After creating the target count matrix, we recommend filtering out segments with poor gene detection rates and genes which were consistently poorly detected. This helps improve performance during downstream statistical tests, decreases multiple testing penalties, and may prevent interpreting stochastic expression of genes near the LOQ as biological signal.
+After creating the target count matrix, we recommend filtering out data, either segments and/or genes with abnormally low signal. Filtering is any important step to focus on the true biological data of interest.
 
-First we will determine the which genes are detected in each segment across the dataset. We will also show you how to examine the detection rates of genes of interest, and performance for each segment and gene.
+We will first determine the number of genes detected in each segment and across the dataset. 
 
 ```{r LOQMat, eval = TRUE}
 LOQ_Mat <- c()
