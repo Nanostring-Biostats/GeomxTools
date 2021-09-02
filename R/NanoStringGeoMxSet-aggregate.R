@@ -51,11 +51,12 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
     targetCounts <- rbind(targetCounts, singleProbeCounts)
     targetCounts <- targetCounts[unique(fData(object)[["TargetName"]]), ]
         
-    targetFeats <- featureData(object)@data
+    targetFeats <- fData(object)
     targetFeats <- 
         targetFeats[!duplicated(targetFeats[["TargetName"]]), ]
     rownames(targetFeats) <- targetFeats[, "TargetName"]
-    probeColumns <- c("RTS_ID", "QCFlags", "ProbeID")
+    probeColumns <- c("RTS_ID", "QCFlags", "ProbeID", 
+                      "ProbeRatio", "OutlierFrequency")
     targetFeats <- 
         targetFeats[, !colnames(targetFeats) %in% probeColumns]
     targetFeats <- 
