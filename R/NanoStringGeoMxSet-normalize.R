@@ -149,7 +149,7 @@ hkNorm <- function(object, data_type, toElt, fromElt, housekeepers) {
 # subtract background
 subtractBackground <- function(object, data_type, toElt, fromElt) {
   if (!featureType(object) == "Target") {
-    negsubset <- subset(object, subset = Codeclass %in% c("Negative01", "Negative"))
+    negsubset <- subset(object, subset = CodeClass %in% c("Negative01", "Negative"))
     negs <- apply(exprs(negsubset), 2, function(x) ngeoMean(x))
     assayDataElement(object, toElt) <-
       t(assayDataApply(object, MARGIN = 1L, FUN = `-`, t(negs), elt = fromElt))
