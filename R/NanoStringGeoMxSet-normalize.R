@@ -152,10 +152,10 @@ subtractBackground <- function(object, data_type, toElt, fromElt) {
     negsubset <- subset(object, subset = CodeClass %in% c("Negative01", "Negative"))
     negs <- apply(exprs(negsubset), 2, function(x) ngeoMean(x))
     assayDataElement(object, toElt) <-
-      t(assayDataApply(object, MARGIN = 1L, FUN = `-`, t(negs), elt = fromElt))
+      t(assayDataApply(object, MARGIN = 1L, FUN = function(x) max(x-t(negs),0), elt = fromElt))
   } else {
     assayDataElement(object, toElt) <-
-      t(assayDataApply(object, MARGIN = 1L, FUN = `-`, t(exprs(object)["Negative Probe", ]), elt = fromElt))
+      t(assayDataApply(object, MARGIN = 1L, FUN = function(x) max(x-t(exprs(object)["Negative Probe", ]).0), elt = fromElt))
   }
   return(object)
 }
