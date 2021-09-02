@@ -7,14 +7,14 @@ library(EnvStats)
 library(ggiraph)
 
 
-testData <- readRDS(file= system.file("extdata","DSP_NGS_Example_Data", "demoData.rds", package = "GeomxTools"))
+testDataRaw <- readRDS(file= system.file("extdata","DSP_NGS_Example_Data", "demoData.rds", package = "GeomxTools"))
 
 #Shift counts to one to mimic how DSPDA handles zero counts
-testData <- shiftCountsOne(testData, elt="exprs", useDALogic=TRUE) 
+testData <- shiftCountsOne(testDataRaw, elt="exprs", useDALogic=TRUE) 
 
 ##### Technical Signal QC #####
 
-testData <- setSeqQCFlags(testData, 
+testData <- setSeqQCFlags(testDataRaw, 
                           qcCutoffs=list(minSegmentReads=1000, 
                                          percentAligned=80, 
                                          percentSaturation=50))
@@ -50,25 +50,23 @@ testthat::test_that("test that the number of Low Percent Saturation is correct",
   expect_true(sum(TechSigQC$LowSaturation) == sum(prData@data$`Saturated (%)` < 50))
 })
 
-
-
-
 ##### Technical Background QC #####
 
-neg_set <- exprs(negativeControlSubset(testData))
+neg_set <- summarizeNegatives(testDataRaw)
+neg_set <- pData(neg_set)[grep("NegGeoMean", colnames(pData(neg_set)))]
 
-testData <- setBackgroundQCFlags(testData, 
+testData <- setBackgroundQCFlags(testDataRaw, 
                                  qcCutoffs=list(minNegativeCount=10, 
                                                 maxNTCCount=60))
-
 
 prData <- protocolData(testData)
 TechBgQC <- as.data.frame(prData[["QCFlags"]])
 
+
 # req 1: test that the number of Low Negatives is correct:------
 testthat::test_that("test that the number of Low Negatives is correct", {
   expect_true(sum(TechBgQC$LowNegatives) == 
-              sum(apply(prData@data$NegGeoMean < 10, 1, sum) > 0)) 
+              sum(apply(neg_set < 10, 1, sum) > 0)) 
 })
 
 
@@ -77,12 +75,9 @@ testthat::test_that("test that the number of High NTC is correct", {
   expect_true(sum(TechBgQC$HighNTC) == sum(prData@data$NTC > 60))
 })
 
-
-
-
 ##### Segment QC #####
 
-testData <- setGeoMxQCFlags(testData, 
+testData <- setGeoMxQCFlags(testDataRaw, 
                             qcCutoffs=list(minNuclei=16000,
                                            minArea=20))
 prData <- protocolData(testData)
@@ -99,11 +94,49 @@ testthat::test_that("test that the number of Low Nuclei is correct", {
   expect_true(sum(segQC$LowNuclei) == sum(testData@phenoData@data$nuclei < 16000))
 })
 
+noArea <- testDataRaw
+pData(noArea) <- pData(noArea)[,1:4]
+
+# req 3: test that no error occurs when no nuclei or area:------
+testthat::test_that("test that no error or QC flags occur when no nuclei or area are in data", {
+  expect_identical(setGeoMxQCFlags(noArea, 
+                                   qcCutoffs=list(minNuclei=16000,
+                                                  minArea=20)),
+                   noArea)
+})
+
+##### Segment QC Flags #####
+
+testData <- setSegmentQCFlags(testDataRaw, qcCutoffs=list(minNuclei=16000,
+                                                      minArea=20,
+                                                      minNegativeCount=10, 
+                                                      maxNTCCount=60,
+                                                      minSegmentReads=1000, 
+                                                      percentAligned=80, 
+                                                      percentSaturation=50))
+
+prData <- protocolData(testData)
+segQC_all <- as.data.frame(prData[["QCFlags"]])
+
+# req 1: test that flags match after setSegmentQCFlags:------
+testthat::test_that("test that the setGeoMxQCFlags match after setSegmentQCFlags", {
+  expect_true(all(segQC_all[,colnames(segQC)] == segQC))
+})
+
+# req 2: test that flags match after setSegmentQCFlags:------
+testthat::test_that("test that the setBackgroundQCFlags match after setSegmentQCFlags", {
+  expect_true(all(segQC_all[,colnames(TechBgQC)] == TechBgQC))
+})
+
+# req 3: test that flags match after setSegmentQCFlags:------
+testthat::test_that("test that the setSeqQCFlags match after setSegmentQCFlags", {
+  expect_true(all(segQC_all[,colnames(TechSigQC)] == TechSigQC))
+})
 
 
 ##### Biological Probe QC #####
 
-testData <- setBioProbeQCFlags(testData, 
+testData <- setBioProbeQCFlags(testDataRaw, 
                                qcCutoffs=list(minProbeRatio=0.1,
                                               percentFailGrubbs=20))
 
@@ -161,3 +194,12 @@ testthat::test_that("flagged global outliers are correct", {
   testthat::expect_true(all(global_outliers %in% globals_flagged))
   testthat::expect_true(all(globals_flagged %in% global_outliers))
 })
+
+# req 4: test that genes with less than 3 probes get no grubbs flag:
+fewProbes <- names(which(table(fData(testData)$TargetName) < 3))
+fewProbes <- fData(testData)$RTS_ID[fData(testData)$TargetName %in% fewProbes] 
+grubbsCols <- grep("Grubbs", colnames(probeQC))
+testthat::test_that("genes with less than 3 probes get no grubbs flag", {
+  testthat::expect_true(all(apply(probeQC[fewProbes,grubbsCols], 2, sum)) == 0)
+})
+

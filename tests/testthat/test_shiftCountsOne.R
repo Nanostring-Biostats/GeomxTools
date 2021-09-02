@@ -49,3 +49,10 @@ testthat::test_that("test that the counts from shiftCountsOne(..., useDALogic = 
   expect_true(identical(counts_all_add_1, exprs(testData3)))
 })
 
+# req 3: tests that countsShiftedByOne returns true when counts have been shifted:------
+testthat::test_that("tests that countsShiftedByOne returns correct value", {
+  expect_false(countsShiftedByOne(testData))
+  expect_true(countsShiftedByOne(testData2))
+  expect_true(countsShiftedByOne(testData3))
+})
+

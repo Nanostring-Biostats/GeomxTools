@@ -100,7 +100,7 @@ test_that("negative norm factors for multipanel are correct", {
 })
 
 # check the normalized values for multipanel
-if (length(unique(fData(target_demoData)[["Module"]]) > 1)){
+if (length(unique(fData(target_demoData)[["Module"]])) > 1){
   # compute negative norm factors for samples and divide by geomean
   # subset data per module
   pool <- as.list(unique(fData(target_demoData)[["Module"]]))
@@ -119,7 +119,7 @@ if (length(unique(fData(target_demoData)[["Module"]]) > 1)){
 # Extract normalized data from object
 actualOutputData <- assayData(target_demoData)[["neg_norm"]]
 test_that("negative norm values are correct", {
-  expect_equal(expectedOutputData, actualOutputData)
+  expect_equal(expectedOutputData, actualOutputData[order(rownames(actualOutputData)),])
 })
 
 ########### Housekeeping Norm test
@@ -140,6 +140,31 @@ actualOutputData <- assayData(target_demoData)[["hk_norm"]]
 test_that("hk norm values are correct", {
   expect_equal(expectedOutputData, actualOutputData)
 })
+
+######### removing probe or sample based on QC flag ########
+
+# demoData <- setSegmentQCFlags(demoData)
+# demoData <- setBioProbeQCFlags(demoData)
+# 
+# prData <- protocolData(demoData)
+# segQC <- as.data.frame(prData[["QCFlags"]])
+# probeQC <- fData(demoData)[["QCFlags"]]
+# 
+# filteredData <- checkQCFlags(demoData)
+# 
+# test_that("Filtering occurs on samples and probes", {
+#   expect_false(dim(demoData)[1] == dim(filteredData)[1])
+#   expect_false(dim(demoData)[2] == dim(filteredData)[2])
+# })
+# 
+# test_that("correct filtering occurs on samples", {
+#   goodSamples <- which(rowSums(segQC) == 0)
+#   
+#   expect_true(length(goodSamples) == dim(filteredData)[2])
+#   if(dim(filteredData)[2] != 0){
+#     
+#   }
+# })
 
 # ########### Subtract Background Norm test
 # #### req 6 verify calculation of subtract background norm factors

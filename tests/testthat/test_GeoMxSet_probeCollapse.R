@@ -23,7 +23,6 @@ testData <-
                                                                    "slide_rep"),
                                           experimentDataColNames = c("panel")))
 
-
 test_Data <- aggregateCounts(testData)
 
 DCCFiles <- DCCFiles[!basename(DCCFiles) %in% unique(sData(testData)$NTC_ID)]
@@ -49,20 +48,25 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
     if(sum(is.na(DCC$Code_Summary[probes,"Count"])) > 0){
       #NAs are changed to 0 counts
       DCC$Code_Summary[probes, "Count"][is.na(DCC$Code_Summary[probes, "Count"])] <- 0
-      
+
       #0 count doesn't meet minimum threshold so all counts are increased by threshold
       #0.5 is default threshold from thresholdValues()
-      DCC$Code_Summary[probes, "Count"] <- DCC$Code_Summary[probes, "Count"]+0.5
+      if(length(probes) != 1){
+        DCC$Code_Summary[probes, "Count"] <- DCC$Code_Summary[probes, "Count"]+0.5
+      }
     }
     
-    matches <- c(matches, EnvStats::geoMean(DCC$Code_Summary[probes,"Count"]) == 
-                   test_Data@assayData$exprs[i,DCC_file])
+    if(length(probes) == 1){
+      matches <- c(matches, DCC$Code_Summary[probes,"Count"] == 
+                     test_Data@assayData$exprs[i,DCC_file])
+    }else{
+      matches <- c(matches, EnvStats::geoMean(DCC$Code_Summary[probes,"Count"]) == 
+                     test_Data@assayData$exprs[i,DCC_file])
+    }
   }
   
   dcc <- dcc + 1
 }
-
-
 
 
 # req 1: test that the number of collapsed probe is correct:------
@@ -70,6 +74,46 @@ testthat::test_that("test that the number of collapsed probe is correct", {
   expect_true(sum(matches) == nrow(test_Data@assayData$exprs)*numDCC)
 })
 
+
+matches <- NULL
+dcc <- 1
+while(dcc <= length(DCCFiles) & all(matches == TRUE)){
+  print(dcc)
+  DCC_file <- DCCFiles[dcc]
+  DCC <- suppressWarnings(readDccFile(DCC_file))
+  DCC_file <- basename(DCC_file)
+  rownames(DCC$Code_Summary) <- gsub("RNA", "RTS00", rownames(DCC$Code_Summary))
+  
+  for(i in unique(PKC$Module)){
+    negs <- PKC$RTS_ID[which(PKC$CodeClass == "Negative" & PKC$Module == i)]
+    
+    if(sum(is.na(DCC$Code_Summary[negs,"Count"])) > 0){
+      #NAs are changed to 0 counts
+      DCC$Code_Summary[negs, "Count"][is.na(DCC$Code_Summary[negs, "Count"])] <- 0
+      
+      #0 count doesn't meet minimum threshold so all counts are increased by threshold
+      #0.5 is default threshold from thresholdValues()
+      if(length(negs) != 1){
+        DCC$Code_Summary[negs, "Count"] <- DCC$Code_Summary[negs, "Count"]+0.5
+      }
+    }
+    
+    matches <- c(matches, EnvStats::geoMean(DCC$Code_Summary[negs,"Count"]) == 
+                     pData(test_Data)[DCC_file, paste0("NegGeoMean_",i)])
+    
+    matches <- c(matches, EnvStats::geoSD(DCC$Code_Summary[negs,"Count"]) == 
+                   pData(test_Data)[DCC_file, paste0("NegGeoSD_",i)])
+  }
+  
+  dcc <- dcc + 1
+}
+
+
+# req 2: test that geomean of negatives is correct
+testthat::test_that("test that the geomean and geosd of negatives is correct", {
+  #geomean and geosd (2) for each DCC (numDCC) * number of modules
+  expect_true(sum(matches) == length(unique(PKC$Module))*numDCC*2)
+})
 
 
 # a = PKC$RTS_ID[which(PKC$Target == "ANGPT2")]
