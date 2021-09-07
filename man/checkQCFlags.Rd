@@ -19,7 +19,8 @@ Check QC Flags in the GeoMxSet and removes the probe or sample from the object
 }
 \examples{
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
-                       package="GeomxTools")
+  package = "GeomxTools"
+)
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 QCobject <- checkQCFlags(demoData)
 }

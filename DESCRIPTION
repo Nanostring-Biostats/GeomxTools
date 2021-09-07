@@ -6,13 +6,15 @@ Version: 1.1.2
 Encoding: UTF-8
 Authors@R: c(person("Nicole", "Ortogero", email = "nortogero@nanostring.com", role = c("cre", "aut")), 
              person("Zhi", "Yang", email = "zyang@nanostring.com", role = c("aut")))
-Depends: R (>= 3.6), NanoStringNCTools
-Imports: Biobase, S4Vectors, rjson, readxl, EnvStats, reshape2, methods, 
-         utils, stats, data.table, outliers, BiocGenerics
+Depends: R (>= 3.6), Biobase, NanoStringNCTools, S4Vectors
+Imports: BiocGenerics, rjson, readxl, EnvStats, reshape2, methods, 
+         utils, stats, data.table, outliers, lmerTest, dplyr
 Suggests: 
     rmarkdown,
     knitr,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    parallel,
+    ggiraph
 License: Artistic-2.0
 Collate: DccMetadata.R
          NanoStringGeoMxSet-class.R

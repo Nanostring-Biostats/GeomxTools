@@ -16,19 +16,53 @@
 #' @export
 #' 
 aggregateCounts <- function(object, FUN=ngeoMean) {
-    object <- summarizeNegatives(object)
-    targetCounts <- do.call(rbind, esBy(object, GROUP = "TargetName", 
+    if(featureType(object) == "Target") {
+        stop("GeoMxSet object feature type is already target-level. ",
+             "No further aggregation can be performed.")
+    }
+
+    # Skip targets with single probe
+    multiProbeTable <- with(object, table(TargetName)) > 1L
+    multiProbeTargs <- 
+        names(multiProbeTable)[which(multiProbeTable, arr.ind=TRUE)]
+    if (length(multiProbeTargs) > 0) {
+        multiObject <- 
+            object[fData(object)[["TargetName"]] %in% multiProbeTargs, ]
+        if ("Negative" %in% unique(fData(object)[["CodeClass"]])) {
+            object <- summarizeNegatives(object)
+        } else {
+            warning("Object has no negatives. ",
+                "No summary statistics for negatives will be calculated.")
+        }
+    } else {
+        warning("Object has no multiprobe targets. ",
+                "No aggregation was performed.")
+        featureNames(object) <- fData(object)[["TargetName"]]
+        featureType(object) <- "Target"
+        return(object)
+    }
+    
+    targetCounts <- do.call(rbind, esBy(multiObject, GROUP = "TargetName", 
         FUN=function(x) {esApply(x, 2, FUN)}, simplify=FALSE))
-    targetFeats <- featureData(object)@data
+    singleProbeObject <- subset(object, 
+                                subset=!TargetName %in% multiProbeTargs)
+    singleProbeCounts <- exprs(singleProbeObject)
+    rownames(singleProbeCounts) <- fData(singleProbeObject)[["TargetName"]]
+    targetCounts <- rbind(targetCounts, singleProbeCounts)
+    targetCounts <- targetCounts[unique(fData(object)[["TargetName"]]), ]
+        
+    targetFeats <- fData(object)
     targetFeats <- 
         targetFeats[!duplicated(targetFeats[["TargetName"]]), ]
     rownames(targetFeats) <- targetFeats[, "TargetName"]
-    probeColumns <- c("RTS_ID", "QCFlags", "ProbeID")
+    probeColumns <- c("RTS_ID", "QCFlags", "ProbeID", 
+                      "ProbeRatio", "OutlierFrequency")
     targetFeats <- 
         targetFeats[, !colnames(targetFeats) %in% probeColumns]
     targetFeats <- 
          AnnotatedDataFrame(targetFeats[rownames(targetCounts), ], 
                             dimLabels = c("featureNames", "featureColumns"))
+
     targetObject <- NanoStringGeoMxSet(
         assayData = targetCounts,
         phenoData = phenoData(object),

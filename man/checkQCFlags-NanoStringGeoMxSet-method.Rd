@@ -7,9 +7,11 @@
 \S4method{checkQCFlags}{NanoStringGeoMxSet}(object, removeLowLocalOutliers = FALSE, ...)
 }
 \arguments{
+\item{object}{name of the NanoStringGeoMxSet object to check the QC Flags}
+
 \item{removeLowLocalOutliers}{logical, if TRUE it sets outlier counts to zero,  default is FALSE,}
 
-\item{NanoStringGeoMxSet}{}
+\item{...}{optional arguments}
 }
 \value{
 NanoStringGeoMxSet
@@ -19,7 +21,8 @@ checkQCFlags
 }
 \examples{
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
-                       package="GeomxTools")
+  package = "GeomxTools"
+)
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 QCobject <- checkQCFlags(demoData)
 }

@@ -57,7 +57,7 @@ thresholdValues <- function(x, thresh=0.5) {
       thresh <- 0.5
     }
     if (min(x, na.rm = TRUE) < thresh) {
-        x <- x[!is.na(x)] + thresh
+        x <- x + thresh
     }
     return(x)
 }
@@ -67,6 +67,8 @@ thresholdValues <- function(x, thresh=0.5) {
 #' @param object name of the NanoStringGeoMxSet object
 #' @param elt expression matrix element in \code{assayDataElement}
 #'        to shift all counts by
+#' @param useDALogic boolean to use the same logic in DA (impute 0s to 1s)
+#'        or set to FALSE to shift all counts by 1
 #' 
 #' @return object of NanoStringGeoMxSet class
 #' 
@@ -118,11 +120,10 @@ countsShiftedByOne <- function(object) {
     return(experimentData(object)@other$shiftedByOne)
 }
 
-#NEO rewrite in data.tables for speed
 collapseCounts <- function(object) {
-    probeCounts <- cbind(fData(object)[, c("TargetName", "Module")], 
-        assayDataElement(object, elt="exprs"))
-    collapsedCounts <- aggregate(formula=. ~ TargetName + Module, 
-        data=probeCounts, FUN=ngeoMean)
+    probeCounts <- data.table(cbind(fData(object)[, c("TargetName", "Module")],
+                                    assayDataElement(object, elt="exprs")))
+    collapsedCounts <- probeCounts[, lapply(.SD, ngeoMean), 
+                                     by=c("TargetName", "Module")]
     return(collapsedCounts)
 }

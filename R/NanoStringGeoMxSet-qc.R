@@ -168,7 +168,6 @@ setLowNegFlags <- function(object, cutoff=DEFAULTS[["minNegativeCount"]]) {
              FUN=function( x ) { 
                  assayDataApply( x, MARGIN = 2, FUN=ngeoMean, elt="exprs" ) 
              }) 
-    protocolData(object)[["NegGeoMean"]] <- negativeGeoMeans
     lowNegs <- 
         data.frame("LowNegatives"=apply(negativeGeoMeans < cutoff, 1, sum) > 0)
     object <- appendSampleFlags(object, lowNegs)
@@ -283,24 +282,41 @@ setBioProbeQCFlags <- function(object,
 
 setProbeRatioFlags <- function(object, 
                                cutoff=DEFAULTS[["minProbeRatio"]]) {
-    rawTargetCounts <- collapseCounts(object)
-    rawTargetCounts[["Mean"]] <- 
-        apply(rawTargetCounts[, sampleNames(object)], 
-            MARGIN=1, FUN=ngeoMean)
-    probeMeans <- apply(assayDataElement(object, elt="exprs"), 
+    # Skip targets with single probes
+    multiProbeTable <- with(object, table(TargetName)) > 1L
+    multiProbeTargs <- 
+        names(multiProbeTable)[which(multiProbeTable, arr.ind=TRUE)]
+    if (length(multiProbeTargs) > 0) {
+        multiObject <- 
+            object[fData(object)[["TargetName"]] %in% multiProbeTargs, ]
+    } else {
+        warning("Object has no multi-probe targets. ",
+                "No ratio testing can be performed.")
+        return(object)
+    }
+
+    probeCounts <- data.table(cbind(fData(multiObject)[, c("TargetName", 
+                                                           "Module")],
+                                    list(RTS_ID=featureNames(multiObject)),
+                                    exprs(multiObject)))
+    collapsedCounts <- as.data.frame(probeCounts[, lapply(.SD, ngeoMean),
+                                              .SDcols=!c("RTS_ID"),
+                                              by=c("TargetName", "Module")])
+    targetMeans <- 
+        apply(collapsedCounts[, 
+                  colnames(collapsedCounts) %in% sampleNames(multiObject)],
+                  1, ngeoMean)
+    names(targetMeans) <- collapsedCounts[["TargetName"]]
+
+    probeMeans <- apply(assayDataElement(multiObject, elt="exprs"), 
         MARGIN=1, FUN=ngeoMean)
-    probeRatios <- 
-        lapply(names(probeMeans), function(x) {
-            currTarget <- fData(object)[x, "TargetName"]
-            currModule <- fData(object)[x, "Module"]
-            currTargetMean <- 
-                rawTargetCounts[rawTargetCounts[["TargetName"]] == currTarget & 
-                                rawTargetCounts[["Module"]] == currModule, 
-                                "Mean"]
-            ratios <- probeMeans[[x]] / currTargetMean
-        })
-    probeRatios <- data.frame("ProbeRatio"=unlist(probeRatios), 
-                              row.names=names(probeMeans))
+    multiProbeRatios <- probeMeans / targetMeans[probeCounts$TargetName]
+
+    probeRatios <- data.frame("ProbeRatio"=rep(1, dim(object)[1L]), 
+                              row.names=featureNames(object))
+    probeRatios[names(multiProbeRatios), "ProbeRatio"] <- 
+        multiProbeRatios
+
     featureData(object)[["ProbeRatio"]] <- probeRatios
     probeRatioFlags <- probeRatios <= cutoff
     colnames(probeRatioFlags) <- "LowProbeRatio"
@@ -320,7 +336,17 @@ setGrubbsFlags <- function(object,
         multiObject <- 
             object[fData(object)[["TargetName"]] %in% multiProbeTargs, ]
     } else {
-        multiObject <- object
+        warning("Object has no targets with at least 3 probes. ",
+                "No outlier testing can be performed.")
+        return(object)
+    }
+
+    if (!"ProbeRatio" %in% fvarLabels(object)) {
+        warning("Probe ratio QC has not yet been performed. ",
+                "Suggests running probe ratio QC then re-running Grubbs QC.")
+    } else {
+        multiObject <- 
+            multiObject[!fData(multiObject)[["QCFlags"]][, "LowProbeRatio"], ]
     }
 
     grubbsResults <- 
@@ -489,23 +515,24 @@ appendFeatureFlags <- function(object, currFlags) {
 }
 
 ############Not used##########################################################
-#' Add QC flags to feature or protocol data
+#' Add QC flags to feature and protocol data simultaneously
 #' 
 #' @param object name of the object class to perform QC on
 #' \enumerate{
 #'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 #' }
-#' @param dataDim the dimension of the object to QC on
-#' \enumerate{
-#'     \item{sample, QC data on the AOI level}
-#'     \item{feature, QC data on probe or target level}
-#' }
 #' @param qcCutoffs list of cutoffs and thresholds to use for QC
+#' @param ... optional parameters to pass
 #' 
 #' @return the object that QC was performed on
 #' 
 #' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
+#' setQCFlags(demoData)
 #' 
+#' @export
 setMethod("setQCFlags",
     signature(object="NanoStringGeoMxSet"),
     function(object, qcCutoffs=DEFAULTS, ...) {
@@ -517,8 +544,6 @@ setMethod("setQCFlags",
             object <- setBioProbeQCFlags(object=object, qcCutoffs=qcCutoffs)
         } else if (featureType(object) == "Target") {
         #   object <- setTargetFlags(object=object, qcCutoffs=qcCutoffs)
-        } else {
-            valid(Object(x))
         }
         return(object)
 })
@@ -533,6 +558,11 @@ setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
         setLOQFlags(object, cutoff=qcCutoffs[["loqCutoff"]])
     object <- 
         setHighCountFlags(object=object, cutoff=qcCutoffs[["highCountCutoff"]])
+    return(object)
+}
+
+setHighCountFlags <- function(object, cutoff=DEFAULTS[["highCountCutoff"]]) {
+    cutoff <- checkCutoffs(cutoff)
     return(object)
 }
 
