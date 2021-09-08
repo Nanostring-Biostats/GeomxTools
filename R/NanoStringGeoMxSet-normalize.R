@@ -153,6 +153,9 @@ hkNorm <- function(object, data_type, toElt, fromElt, housekeepers) {
 # subtract background
 subtractBackground <- function(object, data_type, toElt, fromElt, byPanel=TRUE) {
     if (featureType(object) == "Target") {
+      if(!any(fData(object)$CodeClass == "Negative")){
+        stop("Error: No negative could be located for probe pool(s)")
+      }
         negSet <- negativeControlSubset(object)
         if (byPanel) {
             correctedByPanel <- 
