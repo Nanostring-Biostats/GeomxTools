@@ -87,20 +87,20 @@ testthat::test_that("test that the number of High NTC is correct", {
 ##### Segment QC #####
 
 testData <- setGeoMxQCFlags(testDataRaw, 
-                            qcCutoffs=list(minNuclei=16000,
-                                           minArea=20))
+                            qcCutoffs=list(minArea=16000,
+                                           minNuclei=20))
 prData <- protocolData(testData)
 segQC <- as.data.frame(prData[["QCFlags"]])
 
 # req 1: test that the number of Low Area is correct:------
 testthat::test_that("test that the number of Low Area is correct", {
-  expect_true(sum(segQC$LowArea) == sum(sData(testData)[c("area")] < 20)) 
+  expect_true(sum(segQC$LowArea) == sum(sData(testData)[c("area")] < 16000)) 
 })
 
 
 # req 2: test that the number of Low Nuclei is correct:------
 testthat::test_that("test that the number of Low Nuclei is correct", {
-  expect_true(sum(segQC$LowNuclei) == sum(testData@phenoData@data$nuclei < 16000))
+  expect_true(sum(segQC$LowNuclei) == sum(testData@phenoData@data$nuclei < 20))
 })
 
 noArea <- testDataRaw
@@ -109,15 +109,15 @@ pData(noArea) <- pData(noArea)[,1:4]
 # req 3: test that no error occurs when no nuclei or area:------
 testthat::test_that("test that no error or QC flags occur when no nuclei or area are in data", {
   expect_identical(setGeoMxQCFlags(noArea, 
-                                   qcCutoffs=list(minNuclei=16000,
-                                                  minArea=20)),
+                                   qcCutoffs=list(minArea=16000,
+                                                  minNuclei=20)),
                    noArea)
 })
 
 ##### Segment QC Flags #####
 
-testData <- setSegmentQCFlags(testDataRaw, qcCutoffs=list(minNuclei=16000,
-                                                      minArea=20,
+testData <- setSegmentQCFlags(testDataRaw, qcCutoffs=list(minNuclei=20,
+                                                      minArea=16000,
                                                       minNegativeCount=10, 
                                                       maxNTCCount=60,
                                                       minSegmentReads=1000, 
