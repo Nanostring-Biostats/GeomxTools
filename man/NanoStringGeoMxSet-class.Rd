@@ -25,6 +25,10 @@
 \alias{svarLabels,NanoStringGeoMxSet-method}
 \alias{dimLabels,NanoStringGeoMxSet-method}
 \alias{dimLabels<-,NanoStringGeoMxSet,character-method}
+\alias{featureType}
+\alias{featureType,NanoStringGeoMxSet-method}
+\alias{featureType<-}
+\alias{featureType<-,NanoStringGeoMxSet,character-method}
 \alias{signatures}
 \alias{signatures,NanoStringGeoMxSet-method}
 \alias{signatures<-}
@@ -56,6 +60,7 @@ NanoStringGeoMxSet(assayData,
                  dimLabels=c("TargetName", "SampleID"),
                  signatures=SignatureSet(),
                  design=NULL,
+                 featureType="Probe",
                  \ldots)
 }
 
@@ -80,6 +85,8 @@ NanoStringGeoMxSet(assayData,
     signature definitions.}
   \item{design}{An optional one-sided formula representing the experimental
     design based on columns from \code{\link[Biobase]{phenoData}}}
+  \item{featureType}{A \code{character} string indicating if features are on
+    \code{"Probe"} or \code{"Target"} level}
   \item{\ldots}{Additional arguments for \code{\link{ExpressionSet}}.}
 }
 
@@ -102,6 +109,14 @@ NanoStringGeoMxSet(assayData,
     \item{}{
       \code{dimLabels(object) <- value}: replaces the \code{dimLabels} of
       the \code{object}.
+    }
+    \item{}{
+      \code{featureType(object)}: extracts the \code{featureType}
+      of the \code{object}.
+    }
+    \item{}{
+      \code{featureType(object) <- value}: replaces the \code{featureType}
+      of the \code{object}.
     }
     \item{}{
       \code{signatures(object)}: extracts the \code{\link{SignatureSet}}
@@ -172,6 +187,7 @@ dccSet <- readNanoStringGeoMxSet(dccFiles=dccFiles,
 # Accessing sample data and column names
 head(sData(dccSet))
 svarLabels(dccSet)
+featureType(dccSet)
 
 # Accessing number of samples and features
 dim(dccSet)

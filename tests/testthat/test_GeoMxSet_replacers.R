@@ -42,7 +42,7 @@ testthat::test_that("test that dimLabels(testData) matches the value assigned", 
 
 
 # req 2: test that design(testData) matches the value assigned:------
-testthat::test_that("test that dimLabels(testData) matches the value assigned", {
+testthat::test_that("test that design(testData) matches the value assigned", {
   des <- design(testData)
   expect_null(des)
   design(testData) <- "x ~ y"
@@ -51,7 +51,7 @@ testthat::test_that("test that dimLabels(testData) matches the value assigned", 
 })
 
 # req 3: test that featureType(testData) matches the value assigned:------
-testthat::test_that("test that dimLabels(testData) matches the value assigned", {
+testthat::test_that("test that featureType(testData) matches the value assigned", {
   featType <- featureType(testData)
   featureType(testData) <- "Target"
   expect_true(all(featureType(testData) == "Target"))

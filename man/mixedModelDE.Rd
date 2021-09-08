@@ -32,6 +32,8 @@ mixedModelDE(
 \item{multiCore}{= TRUE, set to TRUE to use multiCore, FALSE to run in cluster mode}
 
 \item{pAdjust}{= "BY" method for p-value adjustment}
+
+\item{pairwise}{boolean to calculate least-square means pairwise differences}
 }
 \value{
 mixed model output list

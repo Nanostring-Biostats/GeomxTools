@@ -12,8 +12,8 @@
 \usage{
 readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile, 
                      phenoDataSheet, phenoDataDccColName = "Sample_ID",
-                     phenoDataColPrefix = "", protocolDataColNames = c("slide name"),
-                     experimentDataColNames = c("panel"))
+                     phenoDataColPrefix = "", protocolDataColNames = NULL,
+                     experimentDataColNames = NULL)
 }
 
 \arguments{

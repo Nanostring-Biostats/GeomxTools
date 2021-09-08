@@ -180,12 +180,13 @@ function(dccFiles,
 
   # Create protocolData
   protocol <-
-    do.call(rbind,
+    do.call(dplyr::bind_rows,
             lapply(names(data), function(i) {
               cbind(data[[i]][["Header"]], data[[i]][["Scan_Attributes"]],
                     data[[i]][["NGS_Processing_Attributes"]])
             }))
 
+  
   protocol <- data.frame(protocol,
                          pheno@data[, which(colnames(pheno@data) %in% protocolDataColNames)],
                          check.names = FALSE)

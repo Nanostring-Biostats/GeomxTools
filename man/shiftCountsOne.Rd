@@ -11,6 +11,9 @@ shiftCountsOne(object, elt = "exprs", useDALogic = FALSE)
 
 \item{elt}{expression matrix element in \code{assayDataElement}
 to shift all counts by}
+
+\item{useDALogic}{boolean to use the same logic in DA (impute 0s to 1s)
+or set to FALSE to shift all counts by 1}
 }
 \value{
 object of NanoStringGeoMxSet class

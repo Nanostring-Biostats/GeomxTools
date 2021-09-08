@@ -15,9 +15,8 @@ testthat::test_that("test that the names of DCC files have the right formats", {
   expect_true(all(names(dccFile$Header) == c("FileVersion", "SoftwareVersion", "Date")))
   expect_true(all(names(dccFile$Scan_Attributes) == c("SampleID", "Plate_ID", "Well"))) # QuickBase: "ID", "Plate_ID", "Well"
   expect_true(all(names(dccFile$NGS_Processing_Attributes) == c("SeqSetId", "tamperedIni", "Raw", "Trimmed", "Stitched", "Aligned", "umiQ30",
-                                                                "rtsQ30", "DeduplicatedReads"))) 
-  # QuickBase: c("SeqSetId", "tamperedIni", "trimGaloreOpts", "flash2Opts", "umiExtractOpts", "bowtie2Opts", "umiDedupOpts", "Raw", "Trimmed", "Stitched", "Aligned", "umiQ30", "rtsQ30")
-  expect_true(all(names(dccFile$Code_Summary) == c("RTS_ID", "Count"))) # QuickBase: "RNAID", "Count"
+                                                                "rtsQ30", "DeduplicatedReads")))
+  expect_true(all(names(dccFile$Code_Summary) == c("RTS_ID", "Count")))
   expect_true(all(rownames(dccFile$Code_Summary) == dccFile$Code_Summary$RTS_ID))
 })
 
