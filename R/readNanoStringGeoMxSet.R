@@ -6,7 +6,8 @@ function(dccFiles,
          phenoDataDccColName = "Sample_ID",
          phenoDataColPrefix = "",
          protocolDataColNames = NULL,
-         experimentDataColNames = NULL)
+         experimentDataColNames = NULL,
+         ...)
 {
   # check inputs
   if (!(sum(grepl("\\.dcc$",dccFiles)) == length(dccFiles) && length(dccFiles) > 0L)){
@@ -27,7 +28,7 @@ function(dccFiles,
   if (is.null(phenoDataFile)) {
     stop("Please specify an input for phenoDataFile.")
   } else {
-    pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet)
+    pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet, ...)
     pheno <- data.frame(pheno, stringsAsFactors = FALSE, check.names = FALSE)
     j <- colnames(pheno)[colnames(pheno) == phenoDataDccColName]
     if (length(j) == 0L){
