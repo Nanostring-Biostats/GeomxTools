@@ -152,18 +152,25 @@ hkNorm <- function(object, data_type, toElt, fromElt, housekeepers) {
 
 # subtract background
 subtractBackground <- function(object, data_type, toElt, fromElt, byPanel=TRUE) {
-    if (!featureType(object) == "Target") {
-        assayDataElement(object, elt=toElt) <- assayDataElement(object, elt=fromElt)
-        negSet <- negativeControlSubset(currSet)
+    if (featureType(object) == "Target") {
+        negSet <- negativeControlSubset(object)
         if (byPanel) {
-            for (currPanel in unique(fData(object)[["Module"]])) {
-                panelNegSet <- subset(negSet, subset=Module == currMod)
-                panelNegGeo <- 
-                    apply(assayDataElement(panelNegs, elt=fromElt), 2L, ngeoMean)
-                panelTarg <- fData(object)[["Module"]] == currPanel
-                assayDataElement(object[panelTarg, ], elt=toElt) <- 
-                    t(assayDataApply(object[panelTarg, ], MARGIN=1L, 
-                      FUN=`-`, t(panelNegGeo), elt = fromElt))
+            correctedByPanel <- 
+                lapply(unique(fData(object)[["Module"]]), function(currPanel) {
+                    panelSet <- subset(object, subset=Module == currPanel)
+                    panelNegSet <- subset(negSet, subset=Module == currPanel)
+                    panelNegGeo <- 
+                        apply(assayDataElement(panelNegSet, elt=fromElt), 
+                              2L, ngeoMean)
+                    panelCorrectExprs <- 
+                        t(assayDataApply(panelSet, MARGIN=1L, 
+                          FUN=`-`, t(panelNegGeo), elt = fromElt))
+                    colnames(panelCorrectExprs) <- sampleNames(object)
+                    return(panelCorrectExprs)
+                })
+            correctedMatrix <- do.call(rbind, correctedByPanel)
+            assayDataElement(object, elt=toElt) <- 
+                correctedMatrix[featureNames(object), sampleNames(object)]
         } else {
             allNegGeo <- 
                 apply(assayDataElement(negSet, elt=fromElt), 2L, ngeoMean)
