@@ -9,8 +9,6 @@ library(testthat)
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
 DCCFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)
-PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
-SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
 protocolDataColNames <- c("aoi",
                           "cell_line",
@@ -18,14 +16,8 @@ protocolDataColNames <- c("aoi",
                           "pool_rep",
                           "slide_rep")
 
-testData <-
-  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, # QuickBase: readNanoStringGeomxSet, need to change it
-                                          pkcFiles = PKCFiles,
-                                          phenoDataFile = SampleAnnotationFile,
-                                          phenoDataSheet = "CW005",
-                                          phenoDataDccColName = "Sample_ID",
-                                          protocolDataColNames = protocolDataColNames,
-                                          experimentDataColNames = c("panel")))
+testData <- readRDS(file= system.file("extdata", "DSP_NGS_Example_Data", 
+                                      "demoData.rds", package = "GeomxTools"))
 
 
 testData_agg <- aggregateCounts(testData)
@@ -38,8 +30,6 @@ testthat::test_that("test that the rownames and column names in sData are correc
   expect_true(all(c(names(testData@phenoData@data),
                     protocolDataColNames) %in% colnames(sData(testData))))
 })
-
-
 
 
 # req 2: test that the svarLabels method gives the correct results:------

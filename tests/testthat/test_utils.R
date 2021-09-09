@@ -62,5 +62,3 @@ testthat::test_that("test that logtBase is calculated as expected", {
 #These functions are tested in test_shiftCountsOne.R:
 #shiftCountsOne()
 
-#These functions are tested in test_GeoMxSet_probeCollapse.R:
-#collapseCounts()

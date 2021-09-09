@@ -6,22 +6,10 @@ datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
 DCCFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)
 PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
-SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
-testData <-
-  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, # QuickBase: readNanoStringGeomxSet, need to change it.
-                                          pkcFiles = PKCFiles,
-                                          phenoDataFile = SampleAnnotationFile,
-                                          phenoDataSheet = "CW005",
-                                          phenoDataDccColName = "Sample_ID",
-                                          protocolDataColNames = c("aoi",
-                                                                   "cell_line",
-                                                                   "roi_rep",
-                                                                   "pool_rep",
-                                                                   "slide_rep"),
-                                          experimentDataColNames = c("panel")))
+testData <- readRDS(file= system.file("extdata", "DSP_NGS_Example_Data", 
+                            "demoData.rds", package = "GeomxTools"))
 
-testData <- shiftCountsOne(testData, elt="exprs", useDALogic=TRUE)
 aggTestData <- aggregateCounts(testData)
 
 DCCFiles <- DCCFiles[!basename(DCCFiles) %in% unique(sData(testData)$NTC_ID)]

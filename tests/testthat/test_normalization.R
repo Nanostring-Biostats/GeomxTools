@@ -135,19 +135,6 @@ test_that("Error is given if dataset is not collapsed", {
                          toElt = "neg_norm"))
 })
 
-negs <- which(fData(target_demoData)$CodeClass == "Negative")
-test_that("Error is given if no negatives are in dataset", {
-  expect_error(normalize(target_demoData[-negs[1],], data_type="RNA", norm_method="neg",
-                         toElt = "neg_norm"))
-  expect_error(normalize(target_demoData[-negs[2],], data_type="RNA", norm_method="neg",
-                         toElt = "neg_norm"))
-})
-
-test_that("Error is given if dataset is not collapsed", {
-  expect_error(normalize(demoData , data_type="RNA", norm_method="neg",
-                         toElt = "neg_norm"))
-})
-
 ########### Housekeeping Norm test
 #### req 5 verify calculation of housekeeping norm factors
 #call hk normalization
@@ -240,3 +227,4 @@ test_that("bg subtract norm values are correct", {
                          norm_method="subtractBackground", fromElt="exprs", 
                          toElt="bg_norm", byPanel = FALSE))
 })
+

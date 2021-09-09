@@ -70,7 +70,7 @@ mixedModelDE <- function(object, elt = "exprs", modelFormula = NULL,
       } else {
         lsm <- lmerTest::ls_means(lmOut, which = groupVar, pairwise = TRUE)
       }
-      lmOut <- matrix(anova(lmOut)[groupVar, "Pr(>F)"], ncol = 1, dimnames = list(groupVar, "Pr(>F)"))
+      lmOut <- matrix(stats::anova(lmOut)[groupVar, "Pr(>F)"], ncol = 1, dimnames = list(groupVar, "Pr(>F)"))
       lsmOut <- matrix(cbind(lsm[,"Estimate"], lsm[,"Pr(>|t|)"]), ncol = 2, dimnames = list(gsub(groupVar, "", rownames(lsm)), c("Estimate", "Pr(>|t|)")))
 
       return(list(anova = lmOut, lsmeans = lsmOut))
@@ -99,7 +99,7 @@ mixedModelDE <- function(object, elt = "exprs", modelFormula = NULL,
       } else {
         lsm <- lmerTest::ls_means(lmOut, which = groupVar, pairwise = TRUE)
       }
-      lmOut <- matrix(anova(lmOut)[groupVar, "Pr(>F)"], ncol = 1, dimnames = list(groupVar, "Pr(>F)"))
+      lmOut <- matrix(stats::anova(lmOut)[groupVar, "Pr(>F)"], ncol = 1, dimnames = list(groupVar, "Pr(>F)"))
       lsmOut <- matrix(cbind(lsm[,"Estimate"], lsm[,"Pr(>|t|)"]), ncol = 2, dimnames = list(gsub(groupVar, "", rownames(lsm)), c("Estimate", "Pr(>|t|)")))
 
       return(list(anova = lmOut, lsmeans = lsmOut))
