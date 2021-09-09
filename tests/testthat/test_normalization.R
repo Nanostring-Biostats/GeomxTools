@@ -69,10 +69,10 @@ sub_target_demoData <- subset(target_demoData, subset = Module == "VnV_GeoMx_Hs_
 #call negative normalization
 sub_target_demoData <- normalize(sub_target_demoData , data_type="RNA", norm_method="neg",
                       toElt = "neg_norm")
-  # compute negative norm factors for samples and divide by geomean
-  negfactors <- assayDataApply(negativeControlSubset(sub_target_demoData), 2, ngeoMean)
-  norm_neg <- function(x){
-    x <- x/(negfactors/ngeoMean(negfactors))}
+# compute negative norm factors for samples and divide by geomean
+negfactors <- assayDataApply(negativeControlSubset(sub_target_demoData), 2, ngeoMean)
+norm_neg <- function(x){
+  x <- x/(negfactors/ngeoMean(negfactors))}
 expectedOutputData <- t(assayDataApply(sub_target_demoData, 1, norm_neg))
 
 # Extract normalized data from object
@@ -122,6 +122,19 @@ test_that("negative norm values are correct", {
   expect_equal(expectedOutputData, actualOutputData)
 })
 
+negs <- which(fData(target_demoData)$CodeClass == "Negative")
+test_that("Error is given if no negatives are in dataset", {
+  expect_error(normalize(target_demoData[-negs[1],], data_type="RNA", norm_method="neg",
+                         toElt = "neg_norm"))
+  expect_error(normalize(target_demoData[-negs[2],], data_type="RNA", norm_method="neg",
+                         toElt = "neg_norm"))
+})
+
+test_that("Error is given if dataset is not collapsed", {
+  expect_error(normalize(demoData , data_type="RNA", norm_method="neg",
+                         toElt = "neg_norm"))
+})
+
 ########### Housekeeping Norm test
 #### req 5 verify calculation of housekeeping norm factors
 #call hk normalization
@@ -141,14 +154,31 @@ test_that("hk norm values are correct", {
   expect_equal(expectedOutputData, actualOutputData)
 })
 
+
 # ########### Subtract ground Norm test
 # #### req 6 verify calculation of subtract background norm factors
 # #call subtract bg normalization
-
 test_that("background subtraction throws warning on probe level data", {
   expect_warning(normalize(demoData , data_type="RNA",
                            norm_method="subtractBackground", fromElt="exprs", toElt="bg_norm"))
 })
+
+
+target_demoData <- normalize(target_demoData , data_type="RNA",
+                             norm_method="subtractBackground", fromElt="exprs", 
+                             toElt="bg_norm_byPanel", byPanel = TRUE)
+target_demoData <- normalize(target_demoData , data_type="RNA",
+                             norm_method="subtractBackground", fromElt="exprs", 
+                             toElt="bg_norm", byPanel = FALSE)
+
+panels <- unique(fData(target_demoData)$Module)
+# compute neg norm factors for samples and divide by geomean
+bkcounts <- NULL
+for(i in panels){
+  negs <- assayDataApply(subset(negativeControlSubset(target_demoData), subset=Module == i), 2, ngeoMean)
+  counts <- subset(target_demoData, subset=Module == i)
+  bkcounts <- rbind(bkcounts, sweep(counts@assayData$exprs, 2, negs, "-"))
+}
 
 
 target_demoData <- normalize(target_demoData , data_type="RNA",
@@ -197,5 +227,4 @@ test_that("bg subtract norm values are correct", {
                          norm_method="subtractBackground", fromElt="exprs", 
                          toElt="bg_norm", byPanel = FALSE))
 })
-
 

@@ -190,6 +190,8 @@ subtractBackground <- function(object, data_type, toElt, fromElt, byPanel=TRUE) 
     return(object)
 }
 
+############  NOT USED OR TESTED IN DEV  ############
+
 #' Check QC Flags in the GeoMxSet and removes the probe or sample from the object
 #' @rdname checkQCFlags
 #' @param object name of the NanoStringGeoMxSet object to check the QC Flags
@@ -209,6 +211,7 @@ setGeneric("checkQCFlags",
   }
 )
 
+############  NOT USED OR TESTED IN DEV  ############
 
 #' checkQCFlags
 #' @param object name of the NanoStringGeoMxSet object to check the QC Flags

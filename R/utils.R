@@ -102,6 +102,8 @@ shiftCountsOne <- function(object, elt="exprs", useDALogic=FALSE) {
     return(object)
 }
 
+
+#### NOT TESTED OR USED ####
 collapseCounts <- function(object) {
     probeCounts <- data.table(cbind(fData(object)[, c("TargetName", "Module")],
                                     assayDataElement(object, elt="exprs")))
