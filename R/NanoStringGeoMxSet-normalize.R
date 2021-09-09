@@ -10,6 +10,8 @@ HOUSEKEEPERS <- c(
 #' @param fromElt name of the assayDataElement to normalize
 #' @param toElt name of the assayDataElement to store normalized values
 #' @param housekeepers optional vector of housekeeper target names
+#' @param byPanel = TRUE, TRUE background subtraction done within panel, 
+#'        FALSE background aggregated from all negatives regardless of panel
 #' @param ... optional arguments
 #' @return a NanoStringGeoMxSet object with normalized counts and normalized factors
 #' @examples
@@ -149,17 +151,43 @@ hkNorm <- function(object, data_type, toElt, fromElt, housekeepers) {
 
 
 # subtract background
-subtractBackground <- function(object, data_type, toElt, fromElt) {
-  if (!featureType(object) == "Target") {
-    negsubset <- subset(object, subset = CodeClass %in% c("Negative01", "Negative"))
-    negs <- apply(exprs(negsubset), 2, function(x) ngeoMean(x))
-    assayDataElement(object, toElt) <-
-      t(assayDataApply(object, MARGIN = 1L, FUN = `-`, t(negs), elt = fromElt))
-  } else {
-    assayDataElement(object, toElt) <-
-      t(assayDataApply(object, MARGIN = 1L, FUN = `-`, t(exprs(object)["Negative Probe", ]), elt = fromElt))
-  }
-  return(object)
+subtractBackground <- function(object, data_type, toElt, fromElt, byPanel=TRUE) {
+    if (featureType(object) == "Target") {
+      if(!any(fData(object)$CodeClass == "Negative")){
+        stop("Error: No negative could be located for probe pool(s)")
+      }
+        negSet <- negativeControlSubset(object)
+        if (byPanel) {
+            correctedByPanel <- 
+                lapply(unique(fData(object)[["Module"]]), function(currPanel) {
+                    panelSet <- subset(object, subset=Module == currPanel)
+                    panelNegSet <- subset(negSet, subset=Module == currPanel)
+                    panelNegGeo <- 
+                        apply(assayDataElement(panelNegSet, elt=fromElt), 
+                              2L, ngeoMean)
+                    panelCorrectExprs <- 
+                        t(assayDataApply(panelSet, MARGIN=1L, 
+                          FUN=`-`, t(panelNegGeo), elt = fromElt))
+                    colnames(panelCorrectExprs) <- sampleNames(object)
+                    return(panelCorrectExprs)
+                })
+            correctedMatrix <- do.call(rbind, correctedByPanel)
+            assayDataElement(object, elt=toElt) <- 
+                correctedMatrix[featureNames(object), sampleNames(object)]
+        } else {
+            allNegGeo <- 
+                apply(assayDataElement(negSet, elt=fromElt), 2L, ngeoMean)
+            assayDataElement(object, toElt) <-
+                t(assayDataApply(object, MARGIN = 1L, 
+                  FUN = `-`, t(allNegGeo), elt = fromElt))
+        }
+        assayDataElement(object, elt=toElt)[
+            assayDataElement(object, elt=toElt) < 0] <- 0
+    } else {
+        warning("Data on probe-level; no background subtraction performed. ",
+                "Aggregate counts prior to background subtraction.\n")
+    }
+    return(object)
 }
 
 #' Check QC Flags in the GeoMxSet and removes the probe or sample from the object
