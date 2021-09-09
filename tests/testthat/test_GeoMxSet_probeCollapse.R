@@ -208,3 +208,11 @@ testthat::test_that("Warning given when data doesn't have multi-probe targets", 
   expect_warning(aggregateCounts(testData[!duplicated(fData(testData)$TargetName),]))
 })
 
+negs <- summarizeNegatives(testData)
+negs2 <- summarizeNegatives(negs)
+
+# req 11: summarizeNegatives can be rerun
+testthat::test_that("summarizeNegatives can be rerun", {
+    expect_identical(negs, negs2)
+})
+
