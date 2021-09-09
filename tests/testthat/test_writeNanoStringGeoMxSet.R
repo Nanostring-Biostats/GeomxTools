@@ -9,7 +9,7 @@ PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
 SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
 demoData <-
-  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, # QuickBase: readNanoStringGeomxSet, need to change it.
+  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
                                           pkcFiles = PKCFiles,
                                           phenoDataFile = SampleAnnotationFile,
                                           phenoDataSheet = "CW005",
@@ -21,8 +21,6 @@ demoData <-
                                                                    "slide_rep"),
                                           experimentDataColNames = c("panel")))
 
-<<<<<<< Updated upstream
-=======
 
 
 writeDir <-  "writeTest/"
@@ -69,16 +67,10 @@ testthat::test_that("test GeomxSet object from written DCC is identical to origi
 rm(testData)
 unlink(writeDir, recursive = TRUE, force = TRUE)
 
->>>>>>> Stashed changes
 #Shift counts to one to mimic how DSPDA handles zero counts
 demoData <- shiftCountsOne(demoData, elt="exprs", useDALogic=TRUE) 
+writeNanoStringGeoMxSet(demoData, dir = writeDir)
 
-<<<<<<< Updated upstream
-
-#QC flags
-demoData <- setSegmentQCFlags(demoData)
-demoData <- setBioProbeQCFlags(demoData)
-=======
 # req 3: test DCC files are written after shifting counts by one
 testthat::test_that("test DCC files are written after shifting counts by one", {
   expect_true(dir.exists(writeDir))
@@ -109,13 +101,10 @@ testthat::test_that("test DCC files are written after Probe QC", {
   expect_true(all(writtenDCCs %in% dir(writeDir)))
 })
 unlink(writeDir, recursive = TRUE, force = TRUE)
->>>>>>> Stashed changes
 
 #aggregate counts
 demoData <- aggregateCounts(demoData)
 
-<<<<<<< Updated upstream
-=======
 
 # req 6: test error occurs when writing set after aggregating counts
 testthat::test_that("test error occurs when writing set after aggregating counts", {
@@ -123,18 +112,13 @@ testthat::test_that("test error occurs when writing set after aggregating counts
 })
 unlink(writeDir, recursive = TRUE, force = TRUE)
 
->>>>>>> Stashed changes
 #normalize
 demoData <- normalize(demoData , data_type="RNA", norm_method="quant",
                       desiredQuantile = .9, toElt = "q_norm")
 
-<<<<<<< Updated upstream
-writeNanoStringGeoMxSet(demoData, dir = "./")
-=======
 # req 7: test error occurs when writing set after aggregating counts
 testthat::test_that("test error occurs when writing set after manipulating target level counts", {
   expect_error(writeNanoStringGeoMxSet(demoData, dir = writeDir))
 })
 unlink(writeDir, recursive = TRUE, force = TRUE)
 
->>>>>>> Stashed changes

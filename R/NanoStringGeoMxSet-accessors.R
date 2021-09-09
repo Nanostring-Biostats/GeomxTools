@@ -51,3 +51,20 @@ setReplaceMethod("featureType", c("NanoStringGeoMxSet", "character"),
                    return(object)
                  })
 
+#' Accessor to check if "exprs" \code{assDataElement} was shifted by one
+#' 
+#' @param object name of the NanoStringGeoMxSet object
+#' 
+#' @return boolean indicating if counts in default matrix were shifted by one
+#' 
+#' @examples
+#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+#'                        package="GeomxTools")
+#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
+#' countsShiftedByOne(demoData)
+#' 
+#' @export
+#' 
+countsShiftedByOne <- function(object) {
+    return(experimentData(object)@other$shiftedByOne)
+}
