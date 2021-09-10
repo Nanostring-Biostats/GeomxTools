@@ -515,7 +515,7 @@ ggplot(pData(target_demoData),
        fill = 'Segment Type')
 ```
 
-As we can see above the 5% cutoffs only removes 2 samples while there are several more near the 10% detection range, with a bias towards glomeruli. Let's create a table to review what sample disease type is going to be impacted by each threshold:
+As we can see above the 5% cutoffs only removes 7 segments while there are several more near the 10% detection range, with a bias towards glomeruli. Let's create a table to review what sample disease type is going to be impacted by each threshold:
 
 ```{r segTable}
 # cut percent genes detected at 1, 5, 10, 15
@@ -537,8 +537,9 @@ Let's re-plot the Sankey diagram showing our current working dataset. This is no
 # spaces or special symbols
 count_mat <- count(pData(demoData), `slide name`, class, region, segment)
 # simplify the slide names
-count_mat$`slide name` <-  gsub('disease','d',
-                                gsub('normal','n', count_mat$`slide name`))
+count_mat$`slide name` <- 
+  gsub('disease','d',
+       gsub('normal','n', count_mat$`slide name`))
 # gather the data and plot in order: class, slide name, region, segment
 test_gr <- gather_set_data(count_mat, 1:4)
 test_gr$x <- factor(test_gr$x,
@@ -841,29 +842,34 @@ pData(target_demoData)[["slide"]] <-
 
 # run LMM:
 # formula follows conventions defined by the lme4 package
-ind <- pData(target_demoData)$class == 'DKD'
-mixedOutmc <-
-  mixedModelDE(target_demoData[, ind],
-               elt = "log_q",
-               modelFormula = ~ testRegion + (1 + testRegion | slide),
-               groupVar = "testRegion",
-               nCores = parallel::detectCores(),
-               multiCore = FALSE)
+results <- c()
+for(status in c('DKD','normal')) {
+  ind <- pData(target_demoData)$class == status
+  mixedOutmc <-
+    mixedModelDE(target_demoData[, ind],
+                 elt = "log_q",
+                 modelFormula = ~ testRegion + (1 + testRegion | slide),
+                 groupVar = "testRegion",
+                 nCores = parallel::detectCores(),
+                 multiCore = FALSE)
+  
+  # format results as data.frame
+  r_test <- do.call(rbind, mixedOutmc['lsmeans', ])
+  tests <- rownames(r_test)
+  r_test <- as.data.frame(r_test)
+  r_test$Contrast <- tests
+  
+  # use lapply in case you have multiple levels of your test factor to
+  # correctly associate gene name with it's row in the results table
+  r_test$Gene <- 
+    unlist(lapply(colnames(mixedOutmc),
+                  rep, nrow(mixedOutmc['lsmeans', ][[1]])))
+  r_test$Subset <- status
+  r_test$FDR <- p.adjust(r_test$`Pr(>|t|)`, method = 'fdr')
+  r_test <- r_test[, c('Gene','Subset','Contrast','Estimate','Pr(>|t|)','FDR')]
+  results <- rbind(results, r_test)
+}
 
-# format results as data.frame
-results <- do.call(rbind, mixedOutmc['lsmeans', ])
-tests <- rownames(results)
-results <- as.data.frame(results)
-results$Contrast <- tests
-
-# use lapply in case you have multiple levels of your test factor to
-# correctly associate gene name with it's row in the results table
-results$Gene <- 
-  unlist(lapply(colnames(mixedOutmc),
-                rep, nrow(mixedOutmc['lsmeans', ][[1]])))
-results$Subset <- 'DKD'
-results$FDR <- p.adjust(results$`Pr(>|t|)`, method = 'fdr')
-results <- results[, c('Gene','Subset','Contrast','Estimate','Pr(>|t|)','FDR')]
 ```
 
 Note that the example uses `nCores = parallel:detectCores()` and `multiCore = FALSE` to implement the `parallel` package clustering of all available cores. If working in a Windows environment use `multicore = FALSE`. If in a unix-based environment setting `multicore = TRUE` will use parallelize using the `mcapply` package. If you do not want to use all available cores, change the `nCores` variable to the desired number.
@@ -873,50 +879,62 @@ Note that the example uses `nCores = parallel:detectCores()` and `multiCore = FA
 write.csv(results, '~/DE_results_for_testing.csv')
 ```
 
-## Between Slide Analysis: Diabetic Kidney Disease Glomeruli vs Healthy Glomeruli
-
-Another common exploration is to compare tissue cohorts. In this case, we would like to compare diseased versus healthy kidneys. We will focus on glomeruli as our structure. Because we are comparing disease status, which is specific to the entire kidney, we will use the LMM model without a random slope. Disease (`testClass`) is our test variable. Like our previous LMM example, we control for tissue subsampling with `slide name` as the intercept.
-
-``` {r DEsimple, eval = FALSE}
-## UPDATE CODE BELOW
-
-# Create a factor level for testing, this ensures appropriate directionality:
-#   FC < 0 is enriched in normal tissue
-#   FC > 0 is enriched in DKD tissue
-pData(target_demoData)$testClass <-
-  factor(pData(target_demoData)$class, c('normal','DKD'))
-
-# Define statistical test
-lmm <- function(gene) {
-  coef(summary(lmer(log2(gene) ~ testClass + (1 | `slide name`))))[2, c(1,5)]
-}
-# Identify the glomeruli regions
-glom <- pData(target_demoData)$region == 'glomerulus'
-# Run tests on only the glomeruli
-results_disease <- t(suppressMessages(assayDataApply(target_demoData[glom, ], 
-                                                     elt = "q_norm",
-                                                     MARGIN = 1, lmm)))
-
-# DE results are just stored as a table similar to before
-results_disease <- cbind(data.frame(Gene = rownames(results_disease)),
-                 as.data.frame(results_disease))
-results_disease$FDR <- p.adjust(results_disease$`Pr(>|t|)`, method = 'fdr')
-```
-
-``` {r glomindex, eval = TRUE, echo = FALSE}
-# since we didn't execute above, ID the glomeruli for later use
-glom <- pData(target_demoData)$region == 'glomerulus'
-```
-
 ## Interpreting the results table
 
-Let's go back to our first statistical test comparing diseased glomeruli to tubules. We saved the LMM outputs into a table (`results`) containing two of the key features for differential expression: i) the log~2~ fold change value (`Estimate`) and ii) the P-value (`Pr(>|t|)`). Let's take a look at a few genes of interest and their fold changes, P-values, and FDR values. 
+Let's go back to our first statistical test comparing diseased glomeruli to tubules. We saved the LMM outputs into a table (`results`) containing two of the key features for differential expression: i) the log~2~ fold change value (`Estimate`) and ii) the P-value (`Pr(>|t|)`). Let's take a look at a few genes of interest and their fold changes, P-values, and FDR values. The contrast column is used to interpret the log~2~ fold change value as it specifies which level are compared (e.g. positive fold change values when comparing `glomerulus - tubule` indicates an enrichment in the glomerulus).
+
 We can perform this by simply subsetting the results table we just generated by subsetting the table.
 
 ``` {r DEtable, echo = TRUE, results = 'asis'}
 kable(subset(results, Gene %in% goi), digits = 3,
       caption = 'DE results for Genes of Interest',
       align = 'lc', row.names = FALSE)
+```
+
+## Between Slide Analysis: Diabetic Kidney Disease vs Healthy
+
+Another common exploration is to compare tissue cohorts. In this case, we would like to compare diseased versus healthy kidneys. Because we are comparing disease status, which is specific to the entire kidney, we will use the LMM model without a random slope. Disease (`testClass`) is our test variable. Like our previous LMM example, we control for tissue subsampling with `slide name` as the intercept.
+
+``` {r DEsimple, eval = FALSE}
+# convert test variables to factors
+pData(target_demoData)$testClass <-
+  factor(pData(target_demoData)$class, c('normal','DKD'))
+
+# run LMM:
+# formula follows conventions defined by the lme4 package
+results2 <- c()
+for(region in c('glomerulus','tubule')) {
+  ind <- pData(target_demoData)$region == region
+  mixedOutmc <-
+    mixedModelDE(target_demoData[, ind],
+                 elt = "log_q",
+                 modelFormula = ~ testClass + (1 | slide),
+                 groupVar = "testClass",
+                 nCores = parallel::detectCores(),
+                 multiCore = FALSE)
+  
+  # format results as data.frame
+  r_test <- do.call(rbind, mixedOutmc['lsmeans', ])
+  tests <- rownames(r_test)
+  r_test <- as.data.frame(r_test)
+  r_test$Contrast <- tests
+  
+  # use lapply in case you have multiple levels of your test factor to
+  # correctly associate gene name with it's row in the results table
+  r_test$Gene <- 
+    unlist(lapply(colnames(mixedOutmc),
+                  rep, nrow(mixedOutmc['lsmeans', ][[1]])))
+  r_test$Subset <- region
+  r_test$FDR <- p.adjust(r_test$`Pr(>|t|)`, method = 'fdr')
+  r_test <- r_test[, c('Gene','Subset','Contrast','Estimate','Pr(>|t|)','FDR')]
+  results2 <- rbind(results2, r_test)
+}
+
+```
+
+``` {r glomindex, eval = TRUE, echo = FALSE}
+# since we didn't execute above, ID the glomeruli for later use
+glom <- pData(target_demoData)$region == 'glomerulus'
 ```
 
 # Visualizing DE Genes
@@ -926,7 +944,7 @@ kable(subset(results, Gene %in% goi), digits = 3,
 A canonical visualization for interpreting differential gene expression results is the volcano plot.
 Let's look at the LMM results from our diseased glomeruli versus tubules comparison.
 
-``` {r volcanoPlot, fig.width = 10, fig.height = 8, fig.wide = TRUE, warning = FALSE, message = FALSE}
+``` {r volcanoPlot, fig.width = 10, fig.height = 7, fig.wide = TRUE, warning = FALSE, message = FALSE}
 library(ggrepel) 
 # Categorize Results based on P-value & FDR for plotting
 results$Color <- 'NS or FC < 0.5'
@@ -965,16 +983,17 @@ ggplot(results,
                   size = 4, point.padding = 0.15, color = 'black',
                   min.segment.length = .1, box.padding = .2, lwd = 2) +
   theme_bw(base_size = 16) +
-  theme(legend.position="bottom")
+  theme(legend.position="bottom") +
+  facet_wrap(~Subset)
 ```
 
 The volcano plot shows several genes being significantly differentially expressed between glomeruli and tubules. Note that because we use the linear mixed effect model to account for tissue specific variation, the volcano plot shape may look less typical than one generated with a linear regression model. There are some genes for which we see high fold change, but lower significance, because these genes appear to be behaving in a tissue-specific manner rather than across all kidneys.
 
-In the next section we'll explore the expression of SEMA3G & DSP further to demonstrate the dynamics of these targets.
+In the next section we'll explore the expression of PLA2R1 & DSP further to demonstrate the dynamics of these targets.
 
 ## Plotting Genes of Interest
 
-A simple and effective plot to view individual genes is the violin plot. This visualization reveals both the dynamic range and shape of the distribution for a gene target. We will plot a gene enriched within the glomeruli, SEMA3G (`UPDATE`) and a gene enriched within tubules, DSP (`UPDATE`). 
+A simple and effective plot to view individual genes is the violin plot. This visualization reveals both the dynamic range and shape of the distribution for a gene target. We will plot a gene enriched within the glomeruli, PLA2R1 and a gene enriched within tubules, MUC1. 
 
 We can also plot these two targets against each other to show the mutually exclusive expression pattern that be used to easily distinguish the two structures. Dashed vertical lines were plotted to represent the maximum observed PLA2R1 expression in glomeruli and and horizontal represent the maximum observed ALDOA expression in the tubules.
 
@@ -983,33 +1002,33 @@ We can also plot these two targets against each other to show the mutually exclu
 # show expression for a single target: PODXL
 ggplot(pData(target_demoData),
        aes(x = region, fill = region,
-           y = assayDataElement(target_demoData['SEMA3G', ],
+           y = assayDataElement(target_demoData['PLA2R1', ],
                                 elt = 'q_norm'))) +
   geom_boxplot() +
-  labs(y = 'SEMA3G Expression') +
+  labs(y = 'PLA2R1 Expression') +
   scale_y_continuous(trans = 'log2') +
   theme_bw()
 
-# show expression of SEMA3G vs DSP
+# show expression of PLA2R1 vs DSP
 ggplot(pData(target_demoData),
-       aes(x = assayDataElement(target_demoData['DSP', ],
+       aes(x = assayDataElement(target_demoData['MUC1', ],
                                 elt = 'q_norm'),
-           y = assayDataElement(target_demoData['SEMA3G', ],
+           y = assayDataElement(target_demoData['PLA2R1', ],
                                 elt = 'q_norm'),
            color = region, shape = class)) +
   geom_vline(xintercept =
-               max(assayDataElement(target_demoData['DSP', glom],
+               max(assayDataElement(target_demoData['MUC1', glom],
                                     elt = 'q_norm')),
              lty = 'dashed', col = 'darkgray') +
   geom_hline(yintercept =
-               max(assayDataElement(target_demoData['SEMA3G', !glom],
+               max(assayDataElement(target_demoData['PLA2R1', !glom],
                                     elt = 'q_norm')),
              lty = 'dashed', col = 'darkgray') +
   geom_point(size = 3) +
   theme_bw() +
   scale_x_continuous(trans = 'log2') + 
   scale_y_continuous(trans = 'log2') +
-  labs(x = 'DSP Expression', y = 'SEMA3G Expression')
+  labs(x = 'MUC1 Expression', y = 'PLA2R1 Expression')
 ```
 
 ## Heatmap of Significant Genes
