@@ -77,7 +77,7 @@ mixedModelDE <- function(object, elt = "exprs", modelFormula = NULL,
     }
     exprs <- new.env()
     exprs$exprs <- assayDataElement(object, elt = elt)
-    if (multiCore) {
+    if (multiCore & Sys.info()['sysname'] != "Windows") {
       mixedOut <- parallel::mclapply(featureNames(object), deFunc, groupVar, pDat, formula(paste("expr", as.character(modelFormula)[2], sep = " ~ ")), exprs, mc.cores = nCores)
     }
     else {
