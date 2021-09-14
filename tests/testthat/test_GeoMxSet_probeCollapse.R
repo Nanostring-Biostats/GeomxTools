@@ -56,8 +56,8 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
 }
 
 
-# req 1: test that the number of collapsed probe is correct:------
-testthat::test_that("test that the number of collapsed probe is correct", {
+# req 1: test that collapsed probe count is equal to the geomean of probes for each target:------
+testthat::test_that("test that collapsed probe count is equal to the geomean of probes for each target", {
   expect_true(sum(matches) == nrow(aggTestData@assayData$exprs)*numDCC)
 })
 
@@ -94,7 +94,7 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
 }
 
 
-# req 2: test that geomean of negatives is correct
+# req 2: test that geomean and geosd of negatives is correct
 testthat::test_that("test that the geomean and geosd of negatives is correct", {
   #geomean and geosd (2) for each DCC (numDCC) * number of modules
   expect_true(sum(matches) == length(unique(PKC$Module))*numDCC*2)
@@ -114,7 +114,7 @@ subData <-
 
 subAggd <- suppressWarnings(aggregateCounts(subData))
 
-# req 3: featureType is changed affer aggregation
+# req 3: featureType is changed after aggregation
 testthat::test_that("Feature type changed after aggregation", {
     expect_true(featureType(subData) == "Probe")
     expect_true(featureType(subAggd) == "Target")

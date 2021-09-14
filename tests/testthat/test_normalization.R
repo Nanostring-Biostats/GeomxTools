@@ -16,8 +16,8 @@ target_demoData <- aggregateCounts(demoData)
 #############################
 
 ########### Quantile Normalization test
-#### req 1 check that normfactors are in in pData of demoData
-test_that("quantile norm factors are present", {
+#### req 1 check that normfactors are in pData of demoData
+test_that("check that normfactors are in pData of demoData", {
   expect_true(length(demoData@phenoData@data[["q_norm_qFactors"]]) == dim(demoData@assayData$exprs)[2])
   expect_true(length(demoData@phenoData@data[["normFactors"]]) == dim(demoData@assayData$exprs)[2])
 })
@@ -222,7 +222,7 @@ test_that("bg subtract norm values are correct", {
 })
 
 negs <- which(fData(target_demoData)$CodeClass == "Negative")
-test_that("bg subtract norm values are correct", {
+test_that("bg subtract errors with no negatives", {
   expect_error(normalize(target_demoData[-negs,] , data_type="RNA",
                          norm_method="subtractBackground", fromElt="exprs", 
                          toElt="bg_norm", byPanel = FALSE))
