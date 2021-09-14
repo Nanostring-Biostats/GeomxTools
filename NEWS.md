@@ -1,3 +1,14 @@
+# GeomxTools 1.1.3
+
+## Revisions:
+* Allow for multipanel background correction in `subtractBackground()`
+* Allow user to re-run `summarizeNegatives()`
+* Enable optional parameters in `readNanoStringGeoMxSet()` for annotation file reading
+* Added and revised test cases throughout
+
+## Bug fixes:
+* Fixed `writeNanoStringGeoMxSet` to work with current DCC file format
+
 # GeomxTools 1.1.2
 
 ## Revisions:
@@ -22,7 +33,7 @@
 * Fix build warning from knitr update
 
 # GeomxTools 0.99.4 - concomittant development branch version
-# Includes changes beyond 1.0.0
+v0.99.4 includes changes beyond 1.0.0
 
 ## New features:
 * New slot FeatureType to indicate if data is probe- or target-level
@@ -46,6 +57,11 @@
 
 ## User notes:
 * This version was included in Bioconductor release 3.13
+
+## Citation:
+Ortogero, N.; Yang, Z.; Vitancol, R.; Griswold, M.; Henderson, D. 
+GeomxTools: NanoString GeoMx Tools. R Package Version 1.0.0. 
+NanoString Technologies Inc.; Seattle, WA 98109, USA. 2021. 
 
 # GeomxTools 0.99.0
 

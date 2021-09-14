@@ -15,7 +15,7 @@ PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
 SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
 testData <-
-  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, # QuickBase: readNanoStringGeomxSet, need to change it.
+  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
                                           pkcFiles = PKCFiles,
                                           phenoDataFile = SampleAnnotationFile,
                                           phenoDataSheet = "CW005",
@@ -115,4 +115,46 @@ testthat::test_that("test that the counts of testData@assayData$exprs match thos
   expect_true(correct)
 })
 
+n_aois <- 15
+
+testData <-
+  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                          pkcFiles = PKCFiles,
+                                          phenoDataFile = SampleAnnotationFile,
+                                          phenoDataSheet = "CW005",
+                                          phenoDataDccColName = "Sample_ID",
+                                          protocolDataColNames = c("aoi",
+                                                                   "cell_line",
+                                                                   "roi_rep",
+                                                                   "pool_rep",
+                                                                   "slide_rep"),
+                                          experimentDataColNames = c("panel"),
+                                          col_types = c(rep("text", 4), "numeric", rep("text", 2),
+                                                        "numeric", rep("text", 4)),
+                                          n_max = n_aois + 1))
+
+# req 7: test that ... gets translated to read_xlsx():------
+testthat::test_that("test that ... gets translated to read_xlsx()", {
+  expect_true(dim(testData)[2] == n_aois) 
+  expect_true(class(pData(testData)$roi) == "numeric")
+  expect_true(class(pData(testData)$area) == "numeric")
+})
+
+# req 8: test that only valid ... gets translated to read_xlsx():------
+testthat::test_that("test that only valid ... gets translated to read_xlsx()", {
+  expect_error(testData <-
+                 suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                                         pkcFiles = PKCFiles,
+                                                         phenoDataFile = SampleAnnotationFile,
+                                                         phenoDataSheet = "CW005",
+                                                         phenoDataDccColName = "Sample_ID",
+                                                         protocolDataColNames = c("aoi",
+                                                                                  "cell_line",
+                                                                                  "roi_rep",
+                                                                                  "pool_rep",
+                                                                                  "slide_rep"),
+                                                         experimentDataColNames = c("panel"),
+                                                         trim_ws = c(rep("text", 4), "numeric", rep("text", 2),
+                                                                       "numeric", rep("text", 4)))))
+})
 

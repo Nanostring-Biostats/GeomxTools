@@ -7,7 +7,7 @@ demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 target_demoData <- aggregateCounts(demoData)
 target_demoData <- normalize(target_demoData, norm_method="quant")
 target_demoData <- target_demoData[1:100,]
-summary(sData(target_demoData))
+# summary(sData(target_demoData))
 pData(target_demoData)[["slide"]]<- factor(pData(target_demoData)[["slide name"]])
 protocolData(target_demoData)[["cell_line"]] <- factor(protocolData(target_demoData)[["cell_line"]])
 protocolData(target_demoData)[["pool_rep"]] <- factor(protocolData(target_demoData)[["pool_rep"]])

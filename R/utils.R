@@ -102,24 +102,8 @@ shiftCountsOne <- function(object, elt="exprs", useDALogic=FALSE) {
     return(object)
 }
 
-#' Accessor to check if "exprs" \code{assDataElement} was shifted by one
-#' 
-#' @param object name of the NanoStringGeoMxSet object
-#' 
-#' @return boolean indicating if counts in default matrix were shifted by one
-#' 
-#' @examples
-#' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
-#'                        package="GeomxTools")
-#' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-#' countsShiftedByOne(demoData)
-#' 
-#' @export
-#' 
-countsShiftedByOne <- function(object) {
-    return(experimentData(object)@other$shiftedByOne)
-}
 
+#### NOT TESTED OR USED ####
 collapseCounts <- function(object) {
     probeCounts <- data.table(cbind(fData(object)[, c("TargetName", "Module")],
                                     assayDataElement(object, elt="exprs")))

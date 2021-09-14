@@ -118,6 +118,8 @@ summarizeNegatives <-
         summaryDF <- do.call(cbind, summaryList)
         colnames(summaryDF) <- summaryListNames
         summaryDF <- summaryDF[sampleNames(object), ]
+        pData(object) <- pData(object)[, 
+                             !colnames(pData(object)) %in% summaryListNames]
         pData(object) <- cbind(pData(object), summaryDF)
         return(object)
 }

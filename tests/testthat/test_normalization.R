@@ -16,8 +16,8 @@ target_demoData <- aggregateCounts(demoData)
 #############################
 
 ########### Quantile Normalization test
-#### req 1 check that normfactors are in in pData of demoData
-test_that("quantile norm factors are present", {
+#### req 1 check that normfactors are in pData of demoData
+test_that("check that normfactors are in pData of demoData", {
   expect_true(length(demoData@phenoData@data[["q_norm_qFactors"]]) == dim(demoData@assayData$exprs)[2])
   expect_true(length(demoData@phenoData@data[["normFactors"]]) == dim(demoData@assayData$exprs)[2])
 })
@@ -69,10 +69,10 @@ sub_target_demoData <- subset(target_demoData, subset = Module == "VnV_GeoMx_Hs_
 #call negative normalization
 sub_target_demoData <- normalize(sub_target_demoData , data_type="RNA", norm_method="neg",
                       toElt = "neg_norm")
-  # compute negative norm factors for samples and divide by geomean
-  negfactors <- assayDataApply(negativeControlSubset(sub_target_demoData), 2, ngeoMean)
-  norm_neg <- function(x){
-    x <- x/(negfactors/ngeoMean(negfactors))}
+# compute negative norm factors for samples and divide by geomean
+negfactors <- assayDataApply(negativeControlSubset(sub_target_demoData), 2, ngeoMean)
+norm_neg <- function(x){
+  x <- x/(negfactors/ngeoMean(negfactors))}
 expectedOutputData <- t(assayDataApply(sub_target_demoData, 1, norm_neg))
 
 # Extract normalized data from object
@@ -86,15 +86,15 @@ test_that("negative norm values are correct for single panel", {
 # call negative normalization
 target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="neg",
                                  toElt = "neg_norm")
-  expectedOutputData_1 <- pData(target_demoData)[["NegGeoMean_VnV_GeoMx_Hs_CTA_v1.2"]]/
-    ngeoMean(pData(target_demoData)[["NegGeoMean_VnV_GeoMx_Hs_CTA_v1.2"]])
-  expectedOutputData_2 <- pData(target_demoData)[["NegGeoMean_Six-gene_test_v1_v1.1"]]/
-  ngeoMean(pData(target_demoData)[["NegGeoMean_Six-gene_test_v1_v1.1"]])
-  expectedOutputData <- (cbind("VnV_GeoMx_Hs_CTA_v1.2" = expectedOutputData_1,
-                               "Six-gene_test_v1_v1.1" = expectedOutputData_2))
-  actualOutputData <- pData(target_demoData)[["neg_norm_negFactors"]]
-  dimnames(expectedOutputData) <- NULL
-  dimnames(actualOutputData) <- NULL
+expectedOutputData_1 <- pData(target_demoData)[["NegGeoMean_VnV_GeoMx_Hs_CTA_v1.2"]]/
+  ngeoMean(pData(target_demoData)[["NegGeoMean_VnV_GeoMx_Hs_CTA_v1.2"]])
+expectedOutputData_2 <- pData(target_demoData)[["NegGeoMean_Six-gene_test_v1_v1.1"]]/
+ngeoMean(pData(target_demoData)[["NegGeoMean_Six-gene_test_v1_v1.1"]])
+expectedOutputData <- (cbind("VnV_GeoMx_Hs_CTA_v1.2" = expectedOutputData_1,
+                             "Six-gene_test_v1_v1.1" = expectedOutputData_2))
+actualOutputData <- pData(target_demoData)[["neg_norm_negFactors"]]
+dimnames(expectedOutputData) <- NULL
+dimnames(actualOutputData) <- NULL
 
 test_that("negative norm factors for multipanel are correct", {
   expect_equal(expectedOutputData, actualOutputData)
@@ -122,6 +122,19 @@ test_that("negative norm values are correct", {
   expect_equal(expectedOutputData, actualOutputData)
 })
 
+negs <- which(fData(target_demoData)$CodeClass == "Negative")
+test_that("Error is given if no negatives are in dataset", {
+  expect_error(normalize(target_demoData[-negs[1],], data_type="RNA", norm_method="neg",
+                         toElt = "neg_norm"))
+  expect_error(normalize(target_demoData[-negs[2],], data_type="RNA", norm_method="neg",
+                         toElt = "neg_norm"))
+})
+
+test_that("Error is given if dataset is not collapsed", {
+  expect_error(normalize(demoData , data_type="RNA", norm_method="neg",
+                         toElt = "neg_norm"))
+})
+
 ########### Housekeeping Norm test
 #### req 5 verify calculation of housekeeping norm factors
 #call hk normalization
@@ -141,28 +154,77 @@ test_that("hk norm values are correct", {
   expect_equal(expectedOutputData, actualOutputData)
 })
 
-# ########### Subtract Background Norm test
+
+# ########### Subtract ground Norm test
 # #### req 6 verify calculation of subtract background norm factors
 # #call subtract bg normalization
-# target_demoData <- normalize(target_demoData , data_type="RNA",
-#                              norm_method="subtractBackground", fromElt="exprs", toElt="bg_norm")
-#
-# # compute neg norm factors for samples and divide by geomean
-# negfactors <- assayDataApply(negativeControlSubset(target_demoData), 2, ngeoMean)
-# norm_bg <- function(x){
-#   x <- (x- negfactors)
-# }
-# expectedOutputData <- t(assayDataApply(target_demoData, 1, norm_bg))
-# head(exprs(target_demoData))
-# head(negfactors)
-# 3.776350                   -
-# # Extract normalized data from object
-# actualOutputData <- assayData(target_demoData)[["bg_norm"]]
-# test_that("bg subtract norm values are correct", {
-#   expect_equal(expectedOutputData, actualOutputData)
-# })
+test_that("background subtraction throws warning on probe level data", {
+  expect_warning(normalize(demoData , data_type="RNA",
+                           norm_method="subtractBackground", fromElt="exprs", toElt="bg_norm"))
+})
 
 
+target_demoData <- normalize(target_demoData , data_type="RNA",
+                             norm_method="subtractBackground", fromElt="exprs", 
+                             toElt="bg_norm_byPanel", byPanel = TRUE)
+target_demoData <- normalize(target_demoData , data_type="RNA",
+                             norm_method="subtractBackground", fromElt="exprs", 
+                             toElt="bg_norm", byPanel = FALSE)
+
+panels <- unique(fData(target_demoData)$Module)
+# compute neg norm factors for samples and divide by geomean
+bkcounts <- NULL
+for(i in panels){
+  negs <- assayDataApply(subset(negativeControlSubset(target_demoData), subset=Module == i), 2, ngeoMean)
+  counts <- subset(target_demoData, subset=Module == i)
+  bkcounts <- rbind(bkcounts, sweep(counts@assayData$exprs, 2, negs, "-"))
+}
 
 
+target_demoData <- normalize(target_demoData , data_type="RNA",
+                             norm_method="subtractBackground", fromElt="exprs", 
+                             toElt="bg_norm_byPanel", byPanel = TRUE)
+target_demoData <- normalize(target_demoData , data_type="RNA",
+                             norm_method="subtractBackground", fromElt="exprs", 
+                             toElt="bg_norm", byPanel = FALSE)
+
+panels <- unique(fData(target_demoData)$Module)
+# compute neg norm factors for samples and divide by geomean
+bkcounts <- NULL
+for(i in panels){
+  negs <- assayDataApply(subset(negativeControlSubset(target_demoData), subset=Module == i), 2, ngeoMean)
+  counts <- subset(target_demoData, subset=Module == i)
+  bkcounts <- rbind(bkcounts, sweep(counts@assayData$exprs, 2, negs, "-"))
+}
+
+bkcounts[bkcounts < 0] <- 0
+
+expectedOutputData <- bkcounts[featureNames(target_demoData), sampleNames(target_demoData)]
+
+# Extract normalized data from object
+actualOutputData <- assayData(target_demoData)[["bg_norm_byPanel"]]
+test_that("bg subtract byPanel norm values are correct", {
+  expect_equal(actualOutputData, expectedOutputData)
+})
+
+negs <- assayDataApply(negativeControlSubset(target_demoData), 2, ngeoMean)
+counts <- target_demoData
+bkcounts <- sweep(counts@assayData$exprs, 2, negs, "-")
+
+bkcounts[bkcounts < 0] <- 0
+
+expectedOutputData <- bkcounts[featureNames(target_demoData), sampleNames(target_demoData)]
+
+# Extract normalized data from object
+actualOutputData <- assayData(target_demoData)[["bg_norm"]]
+test_that("bg subtract norm values are correct", {
+  expect_equal(actualOutputData, expectedOutputData)
+})
+
+negs <- which(fData(target_demoData)$CodeClass == "Negative")
+test_that("bg subtract errors with no negatives", {
+  expect_error(normalize(target_demoData[-negs,] , data_type="RNA",
+                         norm_method="subtractBackground", fromElt="exprs", 
+                         toElt="bg_norm", byPanel = FALSE))
+})
 
