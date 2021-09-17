@@ -19,7 +19,7 @@ author:
   affiliation: NanoString Technologies, Inc
 package: GeomxTools
 abstract: >
-  Here we walk through an end-to-end Geomx-NGS gene expression analysis workflow. We start with raw gene expression count files. Using a combination of the Nanostring-developed (GeoMxTools & NanoStringNCTools) and open source packages, we qualify samples and expression targets and prepare gene-level count data for downstream analysis. To understand our spatial data, we perform unsupervising clustering, dimension reduction, and differential gene expression analyses and visually explore the results.
+  Here we walk through an end-to-end Geomx-NGS gene expression analysis workflow. We start with raw gene expression count files. Using a combination of Nanostring-developed (GeoMxTools & NanoStringNCTools) and open source R packages, we evaluate samples and expression targets and prepare gene-level count data for downstream analysis. To understand our spatial data, we perform unsupervising clustering, dimension reduction, and differential gene expression analyses and visually explore the results.
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   BiocStyle::html_document:
@@ -64,27 +64,9 @@ knitr::opts_chunk$set(
 
 In this vignette, we will introduce a data analysis workflow for GeoMx-NGS mRNA expression data. 
 
-The GeoMx Digital Spatial Profiler (DSP) is a platform for capturing spatially resolved high-plex gene (or protein) expression data from tissue [Merritt et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32393914/).In particular, formalin-fixed paraffin-embedded (FFPE) or fresh-frozen (FF) tissue sections are stained with barcoded in-situ hybridization probes that bind to endogenous mRNA transcripts. The user then selects regions of the interest (ROI) to profile; if desired, each ROI can be further sub-divided into areas of illumination (AOI) based on tissue morphology. The GeoMx then photo-cleaves and collects expression barcodes for each AOI separately for downstream sequencing and data processing.
+The GeoMx Digital Spatial Profiler (DSP) is a platform for capturing spatially resolved high-plex gene (or protein) expression data from tissue [Merritt et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32393914/).In particular, formalin-fixed paraffin-embedded (FFPE) or fresh-frozen (FF) tissue sections are stained with barcoded in-situ hybridization probes that bind to endogenous mRNA transcripts. The user then selects regions of the interest (ROI) to profile; if desired, each ROI segment can be further sub-divided into areas of illumination (AOI) based on tissue morphology. The GeoMx then photo-cleaves and collects expression barcodes for each AOI segment separately for downstream sequencing and data processing.
 
-The final results are spatially resolved unique expression datasets for every protein-coding gene (>18,000 genes) from every individual ROI/AOI profiled from tissue.
-
-<!--
-Swap everything to segments
-FDR - soften language around filtering; how to train 
-ROI Filtering
-Slide ID as covariate in mixed model
-DA: if it's local it can't be global ; if global can't be local [issue report]
-check accronym use
-BC360 aesthetic - use theme for CX team
-Mirror to new location - demo dataset
-negControlSubset - 
-probe QC - bar graph of segments
-  -> 
--->
-
-<!--PRAJAN: this is commented - not sure if it's needed. Remove the <!--  and - -> surrounding it if you want to uncomment
-
-GeoMx profiles expression by staining and processing standard histological slides, including fixed-frozen (FF) or formalin-fixed paraffin-embedded (FFPE) tissue sections. Tissue sections are stained with barcoded in-situ hybridization probes that bind to mRNA transcripts or oligo-labeled antibodies which bind to epitopes throughout the tissue. The slide is visualized using up to 4 immunoflorescent (IF) markers which can be IF-labeled antibodies or RNA Scope ISH probes. The user then selects regions of the interest (ROI) based on tissue morphology; if desired, each ROI can be further sub-divided into segments which will be sequentially profiled and are referred to as areas of illumination (AOI). The instrument then collects expression barcodes for each AOI individually, which are sequenced and processed. The final result are expression count files which can contain >18,000 quantified genes for every respective AOI profiled.-->
+The final results are spatially resolved unique expression datasets for every protein-coding gene (>18,000 genes) from every individual ROI/AOI segment profiled from tissue.
 
 ## Motivation & Scope
 
@@ -97,21 +79,9 @@ Our specific objectives:
 * Perform downstream visualizations and statistical analyses including:
     + Dimension reduction with UMAP or t-SNE
     + Heatmaps and other visualizations of gene expression
-    + Differential expression analysis with linear mixed effect models
+    + Differential expression analyses with linear mixed effect models
 
 # Getting started 
-
-<!--SECTION commented - just put a link to install instructions???
-
-Let's install and load `GeomxTools` package and other required packages. 
-
-```{r installPackages, message = FALSE, warning = FALSE, eval = FALSE}
-# If you have not done so, install devtools to install needed R packages
-install.packages("devtools")
-devtools::install_github("Nanostring-Biostats/NanoStringNCTools")
-devtools::install_github("Nanostring-Biostats/GeomxTools", ref = "dev")
-```
--->
 
 Let's install and load the GeoMx packages we need:
 
@@ -121,24 +91,24 @@ devtools::install_github("Nanostring-Biostats/NanoStringNCTools")
 devtools::install_github("Nanostring-Biostats/GeomxTools", ref = "dev")
 ```
 
-Once you have installed the packages you can load them. Future version of this tutorial will include 
-
 ```{r libs, message = FALSE, warning = FALSE, eval = TRUE}
 library(NanoStringNCTools)
 library(GeomxTools)
 ```
 
-For this tutorial we will use a kidney dataset profiled with human whole transcriptome atlas (WTA). The data used for this demo can be [downloaded here](http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip) This dataset contains samples from 4 diseased kidneys and 3 healthy kidneys. These samples has specific regions profiled by GeoMx, called segments, defined by the scientist running the experiment. Segments were placed in glomeruli and tubules, which are structures related to kidney function. 
-
 ## Loading the Demo Data
 
-We will start by loading the data. The key data files are:
+In this vignette, we will analyze a GeoMx kidney dataset created with the human whole transcriptome atlas (WTA) assay. The dataset includes 4 diabetic kidney disease (DKD) and 3 healthy kidney tissue samples. Regions of interest (ROI) were spatially profiled to focus on two different kidney structures: tubules or glomeruli. One glomerular ROI contains the entirety of a single glomerulus. Each tubular ROI contains multiple tubules that were segmented into distal (PanCK+) and proximal (PanCK-) tubule areas of illumination (AOI).
 
-* DCCs files - expression count data
-* PKCs file - probe metadata describing the probes present in the data
-* Annotation file - useful sample information, including the type of regions profiled, and other characteristics of the samples.
+Download and the unzip the kidney data set found [on the NanoString Website](http://nanostring-public-share.s3-website-us-west-2.amazonaws.com/GeoScriptHub/Kidney_Dataset_for_GeomxTools.zip)
 
-The section below will look up all the files related to the project. To use a different folder, change the `file.path` to look elsewhere on your machine.
+The key data files are:
+
+* DCCs files - expression count data and sequencing quality metadata
+* PKCs file(s) - probe assay metadata describing the gene targets present in the data
+* Annotation file - useful tissue information, including the type of ROIs/AOIs profiled (ex: glomerulus vs. tubule), ROI/AOI area/nuclei count, and other tissue characteristics (ex: diseased vs. healthy)
+
+We first locate the downloaded files:
 
 ```{r quickstart, message=FALSE, warning=FALSE}
 # Reference the main folder 'file.path' containing the sub-folders with each
@@ -188,7 +158,7 @@ kable(data.frame(PKCs = pkcs, modules = modules))
 
 ## Sample Overview
 
-Now that we have loaded the data, let's visually summarize the experimental design for our dataset to look at the different types of samples and regions that have been profiled. we present this information in a Sankey diagram using the `ggforce` package.
+Now that we have loaded the data, we can visually summarize the experimental design for our dataset to look at the different types of samples and ROI/AOI segments that have been profiled. We present this information in a Sankey diagram.
 
 ``` {r sampleFlow, fig.width = 10, fig.height = 8, fig.wide = TRUE, message = FALSE, warning = FALSE}
 library(dplyr)
@@ -228,7 +198,7 @@ ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
 
 The steps above encompass the standard pre-processing workflow for GeoMx data. In short, they represent the selection of ROI/AOI segments and genes based on quality control (QC) or limit of quantification (LOQ) metrics and data normalization. 
 
-Before we begin, we will shift our expression counts with a value of 0 to 1 to enable in downstream transformations (e.g. prevent`-Inf`).
+Before we begin, we will shift any expression counts with a value of 0 to 1 to enable in downstream transformations.
 
 ``` {r shiftCounts, eval = TRUE}
 # Shift counts to one
@@ -246,8 +216,12 @@ Every ROI/AOI segment will be tested for:
 * % Sequencing saturation ([1-deduplicated reads/aligned reads]%): segments below ~50% require additional sequencing to capture full sample diversity and are not typically analyzed until improved.
 * Negative Count: this is the geometric mean of the several unique negative probes in the GeoMx panel that do not target mRNA and establish the background count level per segment; segments with low negative counts (<5-10) are not necessarily removed but may be studied closer for low endogenous gene signal and/or insufficient tissue sampling.
 * No Template Control (NTC) count: values >1,000 could indicate contamination for the segments associated with this NTC; however, in cases where the NTC count is between 1,000- 10,000, the segments may be used if the NTC data is uniformly low (e.g. 0-2 counts for all probes).
-* Nuclei: >100 nuclei per segment is generally recommended; however, this cutoff is highly study/tissue dependent and may need to be reduced; what is most important is consistency in the nuclei distribution for ROIs/AOIs within the study.
+* Nuclei: >100 nuclei per segment is generally recommended; however, this cutoff is highly study/tissue dependent and may need to be reduced; what is most important is consistency in the nuclei distribution for segments within the study.
 * Area: generally correlates with nuclei; a strict cutoff is not generally applied based on area.
+
+### Select Segment QC 
+
+First, we select the QC parameter cutoffs, against which our ROI/AOI segments will be tested and flagged appropriately. We have selected the appropriate study-specific parameters for this study. Note: the default QC values recommended above are advised when surveying a new dataset for the first time. 
 
 ```{r setqcflagupdated,  eval = TRUE}
 # Default QC cutoffs are commented in () adjacent to the respective parameters
@@ -282,9 +256,9 @@ QC_Summary['TOTAL FLAGS', ] <-
 
 ### Visualize Segment QC
 
-Before excluding any low-performing ROI/AOI segments, we visualize the distributions of the data for the different QC parameters. Note that the "Set Segment QC" and "Visualize Segment QC" sections are performed in parallel to fully understand low-performing segments for a given study. Iteration may follow to select the study-specific QC cutoffs.
+Before excluding any low-performing ROI/AOI segments, we visualize the distributions of the data for the different QC parameters. Note that the "Select Segment QC" and "Visualize Segment QC" sections are performed in parallel to fully understand low-performing segments for a given study. Iteration may follow to select the study-specific QC cutoffs.
 
-We will first write a quick function to draw histograms of our data.
+For QC visualization, we write a quick function to draw histograms of our data.
 
 ``` {r qcflagHistogramsCode, eval = TRUE, warning = FALSE, message = FALSE}
 library(ggplot2)
@@ -314,14 +288,16 @@ QC_histogram <- function(assay_data = NULL,
 
 ```
 
-Now we will explore each of the QC metrics for the segments.
+Now we explore each of the QC metrics for the segments.
 
 ``` {r plotQCHist, fig.small = TRUE, warning = FALSE, message = FALSE}
-QC_histogram(sData(demoData), 'Aligned (%)', col_by, 75, c(0,100))
-QC_histogram(sData(demoData), 'Stitched (%)', col_by, 75, c(0,100))
-QC_histogram(sData(demoData), 'Trimmed (%)', col_by, 75, c(0,100))
-QC_histogram(sData(demoData), 'Saturated (%)', col_by, 50, c(0,100))
-QC_histogram(sData(demoData), 'area', col_by, 5000) +
+QC_histogram(sData(demoData), 'Trimmed (%)', col_by, 80, c(0,101))
+QC_histogram(sData(demoData), 'Stitched (%)', col_by, 80, c(0,101))
+QC_histogram(sData(demoData), 'Aligned (%)', col_by, 75, c(0,101))
+QC_histogram(sData(demoData), 'Saturated (%)', col_by, 50, c(0,101)) +
+  labs(title = 'Sequencing Saturation (%)',
+       x = 'Sequencing Saturation (%)')
+QC_histogram(sData(demoData), 'area', col_by, 1000) +
   scale_x_continuous(trans = 'log10')
 QC_histogram(sData(demoData), 'nuclei', col_by, 20)
 
@@ -351,13 +327,15 @@ kable(table(NTC_Count = sData(demoData)$NTC),
       col.names = c("NTC Count", "# of Segments"))
 ```
 
-Finally we'll plot all of the QC Summary information in a table.
+Finally we plot all of the QC Summary information in a table.
 
 ```{r QCSummaryTable, results = 'asis'}
 kable(QC_Summary, caption = 'QC Summary Table for each Segment')
 ```
 
 ###  Remove flagged segments
+
+As the final step in Segment QC, we remove flagged segments that do not meet our QC cutoffs.
 
 ```{r removeQCSampleProbe, eval = TRUE}
 demoData <- demoData[, QCResults$QCStatus == 'PASS']
@@ -368,20 +346,20 @@ dim(demoData)
 
 ## Probe QC
 
-Before we summarize our data into gene-level count data, we will remove low-performing probes. In short, this QC is an outlier removal process, whereby probes are either removed entirely from the study (global) or from select AOI segments (local). The QC applies to gene targets for which there are multiple distinct probes representing the count for a gene per segment. In WTA data, one highly specific probe exists per gene; thus, Probe QC does not apply to the endogenous genes in the panel. Rather, it is performed on the negative control probes; there are multiple probes representing our negative controls, which do not target any sequence in the genome. These probes enable calculation of the background per segment and will be important for determining gene detection downstream.
+Before we summarize our data into gene-level count data, we will remove low-performing probes. In short, this QC is an outlier removal process, whereby probes are either removed entirely from the study (global) or from specific segments (local). The QC applies to gene targets for which there are multiple distinct probes representing the count for a gene per segment. In WTA data, only one probe exists per target gene; thus, Probe QC does not apply to the endogenous genes in the panel. Rather, it is performed on the negative control probes; there are multiple probes representing our negative controls, which do not target any sequence in the genome. These probes enable calculation of the background per segment and will be important for determining gene detection downstream.
 
-After Probe QC, there will always remain at least one probe representing every gene target. In other words, Probe QC never removes genes for your data.
+After Probe QC, there will always remain at least one probe representing every gene target. In other words, Probe QC never removes genes from your data.
 
 ### Set Probe QC Flags
 
 A probe is removed globally from the dataset if either of the following is true:
 
-* the geometric mean of that probe's counts from all AOI segments divided by the geometric mean of all probe counts representing the target from all segments is less than 0.1
+* the geometric mean of that probe's counts from all segments divided by the geometric mean of all probe counts representing the target from all segments is less than 0.1
 * the probe is an outlier according to the Grubb's test in at least 20% of the segments
 
-A probe is removed locally (from a segment) from the dataset if the probe is an outlier according to the Grubb's test in that segment.
+A probe is removed locally (from a given segment) if the probe is an outlier according to the Grubb's test in that segment.
 
-we do not typically adjust these QC parameters.
+We do not typically adjust these QC parameters.
 
 ```{r setbioprobeqcflag,  eval = TRUE}
 # Generally keep the qcCutoffs parameters unchanged. Set removeLocalOutliers to 
@@ -436,11 +414,11 @@ exprs(target_demoData)[1:5, 1:2]
 
 ## Limit of Quantification
 
-In addition to outlier detection, we also determine the limit of quantification (LOQ) per AOI segment. The LOQ is calculated based on the distribution of negative control probes and is intended to approximate the quantifiable limit of gene expression per segment. Please note that this process is more stable in larger segments. Likewise, the LOQ may not be accurately reflective of true signal detection rates in segments with low negative probes counts. The formula for calculating the LOQ in an $i^{th}$ AOI segment is: 
+In addition to Segment and Probe QC, we also determine the limit of quantification (LOQ) per segment. The LOQ is calculated based on the distribution of negative control probes and is intended to approximate the quantifiable limit of gene expression per segment. Please note that this process is more stable in larger segments. Likewise, the LOQ may not be as accurately reflective of true signal detection rates in segments with low negative probes counts (ex: <2). The formula for calculating the LOQ in a $i^{th}$ segment is: 
 
 $$LOQ_{i} = geomean(NegProbe_{i}) * geoSD(NegProbe_{i})^{n}$$
 
-We typically use 2 geometric standard deviations ($n = 2$) above the geometric mean as the LOQ, which is reasonable for most studies. We also recommend that a minimum LOQ of 2 be used if the LOQ calculated in an AOI is below this threshold.
+We typically use 2 geometric standard deviations ($n = 2$) above the geometric mean as the LOQ, which is reasonable for most studies. We also recommend that a minimum LOQ of 2 be used if the LOQ calculated in a segment is below this threshold.
 
 ``` {r calculateLOQ, eval = TRUE}
 # Define LOQ SD threshold and minimum value
@@ -464,9 +442,9 @@ pData(target_demoData)$LOQ <- LOQ
 
 ## Filtering
 
-After creating the target count matrix, we recommend filtering out data, either segments and/or genes with abnormally low signal. Filtering is any important step to focus on the true biological data of interest.
+After determining the limit of quantification (LOQ) per segment, we recommend filtering out either segments and/or genes with abnormally low signal. Filtering is an important step to focus on the true biological data of interest.
 
-We will first determine the number of genes detected in each segment and across the dataset. 
+We determine the number of genes detected in each segment across the dataset.
 
 ```{r LOQMat, eval = TRUE}
 LOQ_Mat <- c()
@@ -484,9 +462,9 @@ LOQ_Mat <- LOQ_Mat[fData(target_demoData)$TargetName, ]
 
 ### Segment Gene Detection
 
-We will remove segments with exceptionally low signal. These segments will have small fraction of panel genes detected above the LOQ relative to the other segments in the study. In this example, we will remove segments with less than 10% of the genes detected. Generally 5-10% detection is reasonably threshold, but based on the experimental design (e.g. segment types, sizes) and tissue characteristics (e.g. type, age) these guidelines may require adjustment.
+We first filter out segments with exceptionally low signal. These segments will have a small fraction of panel genes detected above the LOQ relative to the other segments in the study. Let's visualize the distribution of segments with respect to their % genes detected:
 
-```{r segHistogram}
+```{r segDetectionBarplot}
 # Save detection rate information to pheno data
 pData(target_demoData)$GenesDetected <- 
   colSums(LOQ_Mat, na.rm = TRUE)
@@ -511,7 +489,7 @@ ggplot(pData(target_demoData),
        fill = 'Segment Type')
 ```
 
-As we can see above the 5% cutoffs only removes 7 segments while there are several more near the 10% detection range, with a bias towards glomeruli. Let's create a table to review what sample disease type is going to be impacted by each threshold:
+We can also create a table to review what kidney tissue type (DKD vs normal) is going to be impacted by each threshold:
 
 ```{r segTable}
 # cut percent genes detected at 1, 5, 10, 15
@@ -519,14 +497,16 @@ kable(table(pData(target_demoData)$DetectionThreshold,
             pData(target_demoData)$class))
 ```
 
-Next we'll remove these segments from the dataset.
+In this example, we choose to remove segments with less than 10% of the genes detected. Generally, 5-10% detection is a reasonable segment filtering threshold. However, based on the experimental design (e.g. segment types, size, nuclei) and tissue characteristics (e.g. type, age), these guidelines may require adjustment.
 
 ```{r filterSegments}
 target_demoData <-
   target_demoData[, pData(target_demoData)$GeneDetectionRate >= .1]
+
+dim(target_demoData)
 ```
 
-Let's re-plot the Sankey diagram showing our current working dataset. This is now a dataset which no longer contains segments flagged by sequencing QC, segment QC or which have low gene detection rates.
+Let's re-plot the Sankey diagram showing our current working dataset. This is now a dataset that no longer contains segments flagged by Segment QC or that have low gene detection rates.
 
 ``` {r replotSankey, fig.width = 10, fig.height = 8, fig.wide = TRUE, message = FALSE, warning = FALSE}
 # select the annotations we want to show, use `` to surround column names with
@@ -560,7 +540,8 @@ ggplot(test_gr, aes(x, id = id, split = y, value = n)) +
 
 ### Gene Detection Rate
 
-Let's review the detection rate of select genes of interest. Here we create a list, `goi` in which we store a handful of genes that we will review to assess robust detection in our samples.
+Next, we determine the detection rate for genes across the study. To illustrate this idea, we create a small gene list (`goi`) to review.
+
 
 ``` {r goi detection}
 library(scales) # for precent
@@ -585,9 +566,11 @@ kable(goi_df, caption = 'Detection rate for Genes of Interest', align = 'c',
       col.names = c('Gene', 'Detection, # Segments', 'Detection Rate, % of Dataset'))
 ```
 
+We can see that individual genes are detected to varying degrees in the segments, which leads us to the next QC we will perform across the dataset.
+
 ### Gene Filtering
 
-Next, we graph the number of genes detected in different percentages of segments. Based on this visualization, we can better understand global gene detection in our study and select how many low detected genes to filter out of the dataset. Gene filtering increases performance of downstream statistical tests, decreases multiple testing penalties, and improves interpretation of true biological signal.
+We will graph the total number of genes detected in different percentages of segments. Based on the visualization below, we can better understand global gene detection in our study and select how many low detected genes to filter out of the dataset. Gene filtering increases performance of downstream statistical tests and improves interpretation of true biological signal.
 
 ```{r plotDetectionRate, eval = TRUE}
 # Plot detection rate:
@@ -613,17 +596,15 @@ ggplot(plot_detect, aes(x = as.factor(Freq), y = Rate, fill = Rate)) +
          y = 'Genes Detected, % of Panel > LOQ')
 ```
 
-We generally set a % Segment cutoff ranging from 5-20% based on the biological diversity of our dataset. We will select for this study 10% as our cutoff. In other words, we observe that 10,159 genes are detected in at least 10% of our segments; we filter out the remainder of the targets.
+We typically set a % Segment cutoff ranging from 5-20% based on the biological diversity of our dataset. For this study, we will select 10% as our cutoff. In other words, we will focus on the genes detected in at least 10% of our segments; we filter out the remainder of the targets.
 
-If we knew that a key gene was represented in only a small number of segments (<10%) due to biological diversity, we may select a different cutoff.
-
-Additionally, key target genes can be kept for downstream analysis by manually selecting them for inclusion in the data object. We will also save the negative control probes for reference and use in downstream analysis.
+Note: if we know that a key gene is represented in only a small number of segments (<10%) due to biological diversity, we may select a different cutoff or keep the target gene by manually selecting them for inclusion in the data object. 
 
 ``` {r subsetGenes, eval = TRUE}
 # Subset to target genes detected in at least 10% of the samples.
 #   Also manually include the negative control probe, for downstream use
-negativeProbeData <- subset(fData(target_demoData), CodeClass == 'Negative')
-neg_probes <- unique(negativeProbeData$TargetName)
+negativeProbefData <- subset(fData(target_demoData), CodeClass == 'Negative')
+neg_probes <- unique(negativeProbefData$TargetName)
 target_demoData <- 
   target_demoData[fData(target_demoData)$DetectionRate >= 0.1 |
                     fData(target_demoData)$TargetName %in% neg_probes, ]
@@ -637,13 +618,11 @@ goi <- goi[goi %in% rownames(target_demoData@assayData$exprs)]
 
 We will now normalize the GeoMx data for downstream visualizations and differential expression. The two common methods for normalization of DSP-NGS RNA data are i) quartile 3 (Q3) or ii) background normalization.
 
-Both of these normalization methods estimate a normalization factor per segment to bring the segment data distributions together. More advanced methods for normalization and modelings are under active development. However, for most studies, these methods are sufficient for understanding differences between biological classes of segments and samples.
+Both of these normalization methods estimate a normalization factor per segment to bring the segment data distributions together. More advanced methods for normalization and modeling are under active development. However, for most studies, these methods are sufficient for understanding differences between biological classes of segments and samples.
 
 Q3 normalization is typically the preferred normalization strategy for most DSP-NGS RNA studies. Given the low negative probe counts in this particular dataset as shown during Segment QC, we would further avoid background normalization as it may be less stable.
 
-Before normalization, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. Ideally, there should be a separation between these two values to ensure we have stable measure of Q3 signal. If you do not see sufficient separation between these values, you may consider more aggressive filtering of low detected genes. 
-
-For additional guidance, please refer to our [Data Analysis White Paper for DSP-NGS Assays](https://www.nanostring.com/resources/geomx-cta-data-whitepaper/).
+Before normalization, we will explore the relationship between the upper quartile (Q3) of the counts in each segment with the geometric mean of the negative control probes in the data. Ideally, there should be a separation between these two values to ensure we have stable measure of Q3 signal. If you do not see sufficient separation between these values, you may consider more aggressive filtering of low signal segments/genes. 
 
 ``` {r, previewNF, fig.width = 8, fig.height = 8, fig.wide = TRUE, eval = TRUE, warning = FALSE, message = FALSE}
 library(reshape2)  # for melt
@@ -692,13 +671,11 @@ btm_row <- plot_grid(plt2, plt3, nrow = 1, labels = c('B',''),
 plot_grid(plt1, btm_row, ncol = 1, labels = c('A',''))
 ```
 
+
 As expected, we see separation of the Q3 and negative probe counts at both the distribution (A) and per segment (B) levels. 
+For additional conceptual guidance, please refer to our [Data Analysis White Paper for DSP-NGS Assays](https://www.nanostring.com/resources/geomx-cta-data-whitepaper/). Next, we normalize our data. We will use Q3 normalized data moving forward.
 
-Next, we can normalize our data.
-
-We use the `normalize` function from `NanoStringNCTools` to create normalization factors reflecting each data type. Upper quartile normalization is performed using `norm_method = "quant"` setting the `desiredQuantile` flag to 0.75 (Q3). Other quantiles could be specified by changing that value. Quartile normalized data should be saved to the a specific normalized elt using `toELT = "q_norm"`.
-
-Similarly background normalization is performed by setting `norm_method = "neg"` and `toElt = "neg_norm"`. each of these elt slots has been pre-defined and expects consistently sized datasets as the base expression count matrix. 
+We use the `normalize` function from `NanoStringNCTools` to create normalization factors reflecting each data type. Upper quartile (Q3) normalization is performed using `norm_method = "quant"` setting the `desiredQuantile` flag to 0.75. Other quantiles could be specified by changing that value. We save the normalized data to a specific slot using `toELT = "q_norm"`. Similarly background normalization is performed by setting `norm_method = "neg"` and `toElt = "neg_norm"`.
 
 ```{r normalizeObject, eval = TRUE}
 # Q3 norm (75th percentile) for WTA/CTA  with or without custom spike-ins
@@ -714,7 +691,7 @@ target_demoData <- normalize(target_demoData , data_type = "RNA",
                              toElt = "neg_norm")
 ```
 
-To demonstrate the effects of normalization, we graph a few boxplots of the data for individual segments before and after normalization.
+To demonstrate the effects of normalization, we graph a representative boxplots of the data for individual segments before and after normalization.
 
 ```{r normplot, fig.small = TRUE}
 # visualize the first 10 segments with each normalization method
@@ -742,10 +719,11 @@ One common approach to understanding high-plex data is dimension reduction. Two 
 
 ``` {r dimReduction, eval = TRUE}
 library(umap)
+library(Rtsne)
+
 # update defaults for umap to contain a stable random_state (seed)
 custom_umap <- umap::umap.defaults
 custom_umap$random_state <- 42
-
 # run UMAP
 umap_out <-
   umap(t(log2(assayDataElement(target_demoData , elt = "q_norm"))),  
@@ -756,11 +734,11 @@ ggplot(pData(target_demoData),
   geom_point(size = 3) +
   theme_bw()
 
-library(Rtsne)
 # run tSNE
+set.seed(42) # set the seed for tSNE as well
 tsne_out <-
   Rtsne(t(log2(assayDataElement(target_demoData , elt = "q_norm"))),
-        perplexity = 5)
+        perplexity = ncol(target_demoData)*.1)
 pData(target_demoData)[, c('tSNE1','tSNE2')] <- tsne_out$Y[, c(1,2)]
 ggplot(pData(target_demoData),
        aes(x = tSNE1, y = tSNE2, color = region, shape = class)) +
@@ -801,7 +779,7 @@ pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = 'q_norm')),
 
 A central method for exploring differences between groups of segments or samples is to perform differential gene expression analysis. A common statistical approach is to use a linear mixed-effect model (LMM). The LMM allows the user to account for the subsampling per tissue; in other words, we adjust for that fact that the multiple regions of interest placed per tissue section are not independent observations, as is the assumption with other traditional statistical tests. The formulation of the LMM model depends on the scientific question being asked.
 
-Overall, there are two main flavors of the LMM model when used with GeoMx data: i) with and ii) without random slope. 
+Overall, there are two flavors of the LMM model when used with GeoMx data: i) with and ii) without random slope. 
 
 When comparing features that co-exist in a given tissue section (e.g. glomeruli vs tubules in DKD kidneys), a random slope is included in the LMM model. When comparing features that are mutually exclusive in a given tissue section (healthy glomeruli versus DKD glomeruli) the LMM model does not require a random slope. We represent the two variations on the LMM in the schematic below:
 
@@ -811,11 +789,9 @@ For more details on the LMM, please refer to the [lme4 package](https://cran.r-p
 
 ## Within Slide Analysis: Glomeruli vs Tubules
 
-One common exploration is to study differences in morphological structures. In this example, we can study differential expression between glomeruli and tubules. we will focus on the diseased kidney tissues. Because we are comparing structures that co-exist within the a given tissue we will use the LMM model with a random slope. Morphological structure (`Region`) is our test variable. We control for tissue subsampling with `slide` using a random slope and intercept; the intercept adjusts for the multiple regions placed per unique tissue, since we have one tissue per slide. If multiple tissues are placed per slide, we would change the intercept variable to the unique tissue name (ex: tissue name, Block ID, etc).
+One informative exploration is to study differences between morphological structures. In this example, we can study differential expression between glomeruli and tubules. we will focus on the diseased kidney tissues. Because we are comparing structures that co-exist within the a given tissue we will use the LMM model with a random slope. Morphological structure (`Region`) is our test variable. We control for tissue subsampling with `slide name` using a random slope and intercept; the intercept adjusts for the multiple regions placed per unique tissue, since we have one tissue per slide. If multiple tissues are placed per slide, we would change the intercept variable to the unique tissue name (ex: tissue name, Block ID, etc).
 
-In this analysis we save log~2~ fold change estimates and P-values across all levels in the factor of interest. We use `p.adjust(..., method = 'fdr')` to apply a benjamini-hochberg multiple test correction.
-
-Outputs of the `mixedModelDE` function are saved as a matrix of lists, which we will convert into a table
+In this analysis we save log~2~ fold change estimates and P-values across all levels in the factor of interest. We also apply a Benjamini-Hochberg multiple test correction.
 
 ``` {r cheatDE, eval = FALSE, echo = FALSE}
 # below is work-around text to quick load DE results from a saved csv for convenience
@@ -868,7 +844,7 @@ for(status in c('DKD','normal')) {
 
 ```
 
-Note that the example uses `nCores = parallel:detectCores()` and `multiCore = FALSE` to implement the `parallel` package clustering of all available cores. If working in a Windows environment use `multicore = FALSE`. If in a unix-based environment setting `multicore = TRUE` will use parallelize using the `mcapply` package. If you do not want to use all available cores, change the `nCores` variable to the desired number.
+Note that the example uses `nCores = parallel:detectCores()` and `multiCore = FALSE` to implement the `parallel` package clustering of all available cores. If working in a Windows environment use `multicore = FALSE`. If in a unix-based environment setting `multicore = TRUE` will parallelize using the `mcapply` package. If you do not want to use all available cores, change the `nCores` to the desired number to use.
 
 ``` {r saveDETable, eval = TRUE, echo = FALSE}
 # Save DE table (either same file read in or new calculation)
@@ -889,7 +865,7 @@ kable(subset(results, Gene %in% goi), digits = 3,
 
 ## Between Slide Analysis: Diabetic Kidney Disease vs Healthy
 
-Another common exploration is to compare tissue cohorts. In this case, we would like to compare diseased versus healthy kidneys. Because we are comparing disease status, which is specific to the entire kidney, we will use the LMM model without a random slope. Disease (`testClass`) is our test variable. Like our previous LMM example, we control for tissue subsampling with `slide name` as the intercept.
+Another informative exploration is to compare tissue cohorts. In this case, we would like to compare diseased versus healthy kidneys. We will focus on glomeruli as our structure. Because we are comparing disease status, which is specific to the entire kidney, we will use the LMM model without a random slope. Disease (`testClass`) is our test variable. Like our previous LMM example, we control for tissue subsampling with `slide name` as the intercept.
 
 ``` {r DEsimple, eval = FALSE}
 # convert test variables to factors
@@ -926,6 +902,14 @@ for(region in c('glomerulus','tubule')) {
   results2 <- rbind(results2, r_test)
 }
 
+```
+
+We can review our genes of interest for this comparison as well.
+
+``` {r DEtable, echo = TRUE, results = 'asis'}
+kable(subset(results2, Gene %in% goi), digits = 3,
+      caption = 'DE results for Genes of Interest',
+      align = 'lc', row.names = FALSE)
 ```
 
 ``` {r glomindex, eval = TRUE, echo = FALSE}
@@ -985,7 +969,9 @@ ggplot(results,
 
 The volcano plot shows several genes being significantly differentially expressed between glomeruli and tubules. Note that because we use the linear mixed effect model to account for tissue specific variation, the volcano plot shape may look less typical than one generated with a linear regression model. There are some genes for which we see high fold change, but lower significance, because these genes appear to be behaving in a tissue-specific manner rather than across all kidneys.
 
-In the next section we'll explore the expression of PLA2R1 & DSP further to demonstrate the dynamics of these targets.
+Because we are exploring the relationship between expression and different tissue morphological structures, we can leverage databases to validate our findings. For example, the [Human Protein Atlas](https://www.proteinatlas.org/) is a key resource for understanding protein localization. Recognizing that there is a distinction between mRNA and protein expression, we can still find examples of top GeoMx differential expression hits that are concordant with public atlas data.
+
+In the next section, we will explore the expression of select gene targets to demonstrate their dynamics.
 
 ## Plotting Genes of Interest
 
@@ -1124,7 +1110,7 @@ ggplot(subset(results, !Gene %in% neg_probes),
   theme_bw(base_size = 16)
 ```
 
-## Session Information
+# Session Information
 
 ```{r sessInfo}
 sessionInfo()
