@@ -13,6 +13,8 @@ author:
   affiliation: NanoString Technologies, Inc
 - name: Zhi Yang
   affiliation: NanoString Technologies, Inc
+- name: Stephanie Zimmerman
+  affiliation: NanoString Technologies, Inc
 - name: Rona Vitancol
   affiliation: NanoString Technologies, Inc
 - name: David Henderson
@@ -66,7 +68,7 @@ In this vignette, we will introduce a data analysis workflow for GeoMx-NGS mRNA 
 
 The GeoMx Digital Spatial Profiler (DSP) is a platform for capturing spatially resolved high-plex gene (or protein) expression data from tissue [Merritt et al., 2020](https://pubmed.ncbi.nlm.nih.gov/32393914/).In particular, formalin-fixed paraffin-embedded (FFPE) or fresh-frozen (FF) tissue sections are stained with barcoded in-situ hybridization probes that bind to endogenous mRNA transcripts. The user then selects regions of the interest (ROI) to profile; if desired, each ROI segment can be further sub-divided into areas of illumination (AOI) based on tissue morphology. The GeoMx then photo-cleaves and collects expression barcodes for each AOI segment separately for downstream sequencing and data processing.
 
-The final results are spatially resolved unique expression datasets for every protein-coding gene (>18,000 genes) from every individual ROI/AOI segment profiled from tissue.
+The final results are spatially resolved unique expression datasets for every protein-coding gene (>18,000 genes) from every individual segments profiled from tissue.
 
 ## Motivation & Scope
 
@@ -89,6 +91,7 @@ Let's install and load the GeoMx packages we need:
 install.packages("devtools")
 devtools::install_github("Nanostring-Biostats/NanoStringNCTools")
 devtools::install_github("Nanostring-Biostats/GeomxTools", ref = "dev")
+
 ```
 
 ```{r libs, message = FALSE, warning = FALSE, eval = TRUE}
@@ -96,7 +99,7 @@ library(NanoStringNCTools)
 library(GeomxTools)
 ```
 
-## Loading the Demo Data
+## Loading Data
 
 In this vignette, we will analyze a GeoMx kidney dataset created with the human whole transcriptome atlas (WTA) assay. The dataset includes 4 diabetic kidney disease (DKD) and 3 healthy kidney tissue samples. Regions of interest (ROI) were spatially profiled to focus on two different kidney structures: tubules or glomeruli. One glomerular ROI contains the entirety of a single glomerulus. Each tubular ROI contains multiple tubules that were segmented into distal (PanCK+) and proximal (PanCK-) tubule areas of illumination (AOI).
 
@@ -106,14 +109,14 @@ The key data files are:
 
 * DCCs files - expression count data and sequencing quality metadata
 * PKCs file(s) - probe assay metadata describing the gene targets present in the data
-* Annotation file - useful tissue information, including the type of ROIs/AOIs profiled (ex: glomerulus vs. tubule), ROI/AOI area/nuclei count, and other tissue characteristics (ex: diseased vs. healthy)
+* Annotation file - useful tissue information, including the type of segment profiled (ex: glomerulus vs. tubule), segment area/nuclei count, and other tissue characteristics (ex: diseased vs. healthy)
 
 We first locate the downloaded files:
 
 ```{r quickstart, message = FALSE, warning = FALSE}
 # Reference the main folder 'file.path' containing the sub-folders with each
 # data file type:
-datadir <- file.path("~/DA Vignettes/Kidney_Dataset_for_GeomxTools/Kidney_Dataset/")
+datadir <- file.path("~/DA Vignettes/GeoMxWorkflows")
 
 # automatically list files in each directory for use
 DCCFiles <- dir(file.path(datadir, "dccs"), pattern = ".dcc$",
@@ -136,8 +139,7 @@ demoData <-
                          phenoDataSheet = "Template",
                          phenoDataDccColName = "Sample_ID",
                          protocolDataColNames = c("aoi", "roi"),
-                         experimentDataColNames = c("panel", 
-                                                    "instrument_type"))
+                         experimentDataColNames = c("panel"))
 ```
 
 All of the expression, annotation, and probe information are now linked and stored together into a single data object.
@@ -148,7 +150,7 @@ For more details on this object's structure and accessors, please refer to the "
 
 ## Modules Used
 
-First let's access the PKC files, to ensure that the expected PKCs have been loaded for this study. For the demo data we are using the file `TAP_H_WTA_1.0.pkc`.
+First let's access the PKC files, to ensure that the expected PKCs have been loaded for this study. For the demo data we are using the file `Hsa_WTA_1.0.pkc`.
 
 ``` {r modules}
 library(knitr)
@@ -291,7 +293,7 @@ QC_histogram <- function(assay_data = NULL,
 
 Now we explore each of the QC metrics for the segments.
 
-``` {r plotQCHist, fig.small = TRUE, warning = FALSE, message = FALSE}
+``` {r plotQCHist, warning = FALSE, message = FALSE}
 QC_histogram(sData(demoData), "Trimmed (%)", col_by, 80, c(0,101))
 QC_histogram(sData(demoData), "Stitched (%)", col_by, 80, c(0,101))
 QC_histogram(sData(demoData), "Aligned (%)", col_by, 75, c(0,101))
@@ -585,7 +587,7 @@ rownames(plot_detect) <- plot_detect$Freq
 
 ggplot(plot_detect, aes(x = as.factor(Freq), y = Rate, fill = Rate)) +
     geom_bar(stat = "identity") +
-    geom_text(aes(label = formatC(Number, format = "d", big.mark = ", ")),
+    geom_text(aes(label = formatC(Number, format = "d", big.mark = ",")),
               vjust = 1.6, color = "black", size = 4) +
     scale_fill_gradient2(low = "orange2", mid = "lightblue",
                          high = "dodgerblue3", midpoint = 0.65,
@@ -740,7 +742,7 @@ ggplot(pData(target_demoData),
 set.seed(42) # set the seed for tSNE as well
 tsne_out <-
   Rtsne(t(log2(assayDataElement(target_demoData , elt = "q_norm"))),
-        perplexity = ncol(target_demoData)*.1)
+        perplexity = ncol(target_demoData)*.15)
 pData(target_demoData)[, c("tSNE1", "tSNE2")] <- tsne_out$Y[, c(1,2)]
 ggplot(pData(target_demoData),
        aes(x = tSNE1, y = tSNE2, color = region, shape = class)) +
@@ -754,24 +756,28 @@ Another approach to explore the data is to calculate the coefficient of variatio
 
 We plot the results in a heatmap.
 
-``` {r CVheatmap, eval = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE}
+``` {r CVheatmap, eval = TRUE, echo = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE}
 library(pheatmap)  # for pheatmap
-calc_CV <- function(x) {sd(log2(x)) / mean(log2(x))}
+# create a log2 transform of the data for analysis
+assayDataElement(object = target_demoData, elt = "log_q") <-
+  assayDataApply(target_demoData, 2, FUN = log, base = 2, elt = "q_norm")
+
+# create CV function
+calc_CV <- function(x) {sd(x) / mean(x)}
 CV_dat <- assayDataApply(target_demoData,
-                         elt = "q_norm", MARGIN = 1, calc_CV)
+                         elt = "log_q", MARGIN = 1, calc_CV)
 # show the highest CD genes and their CV values
 sort(CV_dat, decreasing = TRUE)[1:5]
 
 # Identify genes in the top 3rd of the CV values
-GOI <- names(CV_dat)[CV_dat > quantile(CV_dat, 0.66)]
-pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = "q_norm")),
+GOI <- names(CV_dat)[CV_dat > quantile(CV_dat, 0.8)]
+pheatmap(assayDataElement(target_demoData[GOI, ], elt = "log_q"),
          scale = "row", 
          show_rownames = FALSE, show_colnames = FALSE,
          border_color = NA,
          clustering_method = "average",
          clustering_distance_rows = "correlation",
          clustering_distance_cols = "correlation",
-         cutree_cols = 2, cutree_rows = 2,
          breaks = seq(-3, 3, 0.05),
          color = colorRampPalette(c("purple3", "black", "yellow2"))(120),
          annotation_col = pData(target_demoData)[, c("class", "segment", "region")])
@@ -795,25 +801,26 @@ One informative exploration is to study differences between morphological struct
 
 In this analysis we save log~2~ fold change estimates and P-values across all levels in the factor of interest. We also apply a Benjamini-Hochberg multiple test correction.
 
-``` {r cheatDE, eval = FALSE, echo = FALSE}
+``` {r cheatDE, eval = TRUE, echo = FALSE}
 # below is work-around text to quick load DE results from a saved csv for convenience
 # THIS SECTION WILL NOT BE SHOWN, is only for speed of iteration
-results <- read.csv("~/DE_results_for_testing.csv", row.names = 1)
-colnames(results) <- c("Gene", "Estimate", "Pr(>|t|)", "FDR")
+results <- as.data.frame(read.csv("~/DE_results_for_testing.csv", row.names = 1))
+colnames(results) <- c('Gene','Subset','Contrast','Estimate','Pr(>|t|)','FDR')
 
 # turn eval to TRUE in next code block to re-run LMM code (will take ~15-30 minutes on a single core local machine)
 ```
 
-``` {r deNativeComplex, eval = TRUE, echo = TRUE}
-# create a log2 transform of the data for analysis
-assayDataElement(object = target_demoData, elt = "log_q") <-
-  assayDataApply(target_demoData, 2, FUN = log, base = 2, elt = "q_norm")
+``` {r addPhenoData, eval = TRUE}
 # convert test variables to factors
 pData(target_demoData)$testRegion <- 
   factor(pData(target_demoData)$region, c("glomerulus", "tubule"))
 pData(target_demoData)[["slide"]] <- 
      factor(pData(target_demoData)[["slide name"]])
+assayDataElement(object = target_demoData, elt = "log_q") <-
+  assayDataApply(target_demoData, 2, FUN = log, base = 2, elt = "q_norm")
 
+```
+``` {r deNativeComplex, eval = FALSE, echo = TRUE}
 # run LMM:
 # formula follows conventions defined by the lme4 package
 results <- c()
@@ -855,12 +862,12 @@ write.csv(results, "~/DE_results_for_testing.csv")
 
 ## Interpreting the results table
 
-Let's go back to our first statistical test comparing diseased glomeruli to tubules. We saved the LMM outputs into a table (`results`) containing three of the key features for differential expression: i) the log~2~ fold change value (`Estimate`) and ii), P-value (`Pr(>|t|)`), and false-discovery adjusted P-values (`FDR`). Let's take a look at a few genes of interest. The contrast column is used to interpret the log~2~ fold change value as it specifies which level are compared (e.g. positive fold change values when comparing `glomerulus - tubule` indicates an enrichment in the glomerulus).
+Let's review the results from the analysis of glomeruli to tubules in healthy (normal) patients. We saved the LMM outputs into a table (`results`) containing three of the key features for differential expression: the log~2~ fold change value (`Estimate`), P-value (`Pr(>|t|)`), and false-discovery adjusted P-values (`FDR`). Let's take a look at a few genes of interest. The contrast column is used to interpret the log~2~ fold change value as it specifies which level are compared (e.g. positive fold change values when comparing `glomerulus - tubule` indicates an enrichment in the glomerulus, negative indicates enrichment in tubules).
 
 We can perform this by simply subsetting the results table we just generated by subsetting the table.
 
 ``` {r DEtable, echo = TRUE, results = "asis"}
-kable(subset(results, Gene %in% goi), digits = 3,
+kable(subset(results, Gene %in% goi & Subset == "normal"), digits = 3,
       caption = "DE results for Genes of Interest",
       align = "lc", row.names = FALSE)
 ```
@@ -868,8 +875,15 @@ kable(subset(results, Gene %in% goi), digits = 3,
 ## Between Slide Analysis: Diabetic Kidney Disease vs Healthy
 
 Another informative exploration is to compare tissue cohorts. In this case, we would like to compare diseased versus healthy kidneys. We will focus on glomeruli as our structure. Because we are comparing disease status, which is specific to the entire kidney, we will use the LMM model without a random slope. Disease (`testClass`) is our test variable. Like our previous LMM example, we control for tissue subsampling with `slide name` as the intercept.
+``` {r cheatDE2, eval = TRUE, echo = FALSE}
+# below is work-around text to quick load DE results from a saved csv for convenience
+# THIS SECTION WILL NOT BE SHOWN, is only for speed of iteration
+results2 <- as.data.frame(read.csv("~/DE_results_for_testing2.csv", row.names = 1))
+colnames(results2) <- c('Gene','Subset','Contrast','Estimate','Pr(>|t|)','FDR')
+# turn eval to TRUE in next code block to re-run LMM code (will take ~15-30 minutes on a single core local machine)
+```
 
-``` {r DEsimple, eval = FALSE}
+``` {r DEsimple, eval = FALSE, echo = TRUE}
 # convert test variables to factors
 pData(target_demoData)$testClass <-
   factor(pData(target_demoData)$class, c("normal", "DKD"))
@@ -906,10 +920,15 @@ for(region in c("glomerulus", "tubule")) {
 
 ```
 
-We can review our genes of interest for this comparison as well.
+``` {r saveDETable2, eval = FALSE, echo = FALSE}
+# Save DE table (either same file read in or new calculation)
+write.csv(results2, "~/DE_results_for_testing2.csv")
+```
 
-``` {r DEtable, echo = TRUE, results = "asis"}
-kable(subset(results2, Gene %in% goi), digits = 3,
+We can review our genes of interest for this comparison as well. Let's focus on results from analysis of tubules
+
+``` {r DEtable2, echo = TRUE, results = "asis"}
+kable(subset(results2, Gene %in% goi & Subset == "tubule"), digits = 3,
       caption = "DE results for Genes of Interest",
       align = "lc", row.names = FALSE)
 ```
@@ -926,7 +945,7 @@ glom <- pData(target_demoData)$region == "glomerulus"
 A canonical visualization for interpreting differential gene expression results is the volcano plot.
 Let's look at the LMM results from our diseased glomeruli versus tubules comparison.
 
-``` {r volcanoPlot, fig.width = 10, fig.height = 7, fig.wide = TRUE, warning = FALSE, message = FALSE}
+``` {r volcanoPlot, fig.width = 11, fig.height = 7, fig.wide = TRUE, warning = FALSE, message = FALSE}
 library(ggrepel) 
 # Categorize Results based on P-value & FDR for plotting
 results$Color <- "NS or FC < 0.5"
@@ -941,8 +960,16 @@ results$Color <- factor(results$Color,
 # pick top genes for either side of volcano to label
 # order genes for convenience:
 results$invert_P <- (-log10(results$`Pr(>|t|)`)) * sign(results$Estimate)
-top_g <- c(results$Gene[order(results$invert_P, decreasing = TRUE)[1:30]],
-           results$Gene[order(results$invert_P, decreasing = FALSE)[1:30]])
+top_g <- c()
+for(cond in c("DKD", "normal")) {
+  ind <- results$Subset == cond
+  top_g <- c(top_g,
+             results[ind, 'Gene'][
+               order(results[ind, 'invert_P'], decreasing = TRUE)[1:15]],
+             results[ind, 'Gene'][
+               order(results[ind, 'invert_P'], decreasing = FALSE)[1:15]])
+}
+top_g <- unique(top_g)
 results <- results[, -1*ncol(results)] # remove invert_P from matrix
 
 # Graph results
@@ -961,68 +988,84 @@ ggplot(results,
                                 `NS or FC < 0.5` = "gray"),
                      guide = guide_legend(override.aes = list(size = 4))) +
   scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
-  geom_text_repel(data = subset(results, Gene %in% top_g),
+  geom_text_repel(data = subset(results, Gene %in% top_g & FDR < 0.001),
                   size = 4, point.padding = 0.15, color = "black",
                   min.segment.length = .1, box.padding = .2, lwd = 2) +
   theme_bw(base_size = 16) +
   theme(legend.position = "bottom") +
-  facet_wrap(~Subset)
+  facet_wrap(~Subset, scales = "free_y")
 ```
 
-The volcano plot shows several genes being significantly differentially expressed between glomeruli and tubules. Note that because we use the linear mixed effect model to account for tissue specific variation, the volcano plot shape may look less typical than one generated with a linear regression model. There are some genes for which we see high fold change, but lower significance, because these genes appear to be behaving in a tissue-specific manner rather than across all kidneys.
-
-Because we are exploring the relationship between expression and different tissue morphological structures, we can leverage databases to validate our findings. For example, the [Human Protein Atlas](https://www.proteinatlas.org/) is a key resource for understanding protein localization. Recognizing that there is a distinction between mRNA and protein expression, we can still find examples of top GeoMx differential expression hits that are concordant with public atlas data.
+The volcano plot shows several genes being significantly differential expressed between glomeruli and tubules, though some are specific to the disease status of the sample. Note that because we use the linear mixed effect model to account for tissue specific variation, the volcano plot shape may look less typical than one generated with a linear regression model. There are some genes for which we see high fold change, but lower significance, because these genes appear to be behaving in a sample-specific manner rather than consistently across all kidney samples.
 
 In the next section, we will explore the expression of select gene targets to demonstrate their dynamics.
 
 ## Plotting Genes of Interest
 
-A simple and effective plot to view individual genes is the violin plot. This visualization reveals both the dynamic range and shape of the distribution for a gene target. We will plot a gene enriched within the glomeruli, PLA2R1 and a gene enriched within tubules, MUC1. 
+A simple and effective plot to view individual genes is the violin plot. This visualization reveals both the dynamic range and shape of the distribution for a gene target. We selected a few genes which we validated structure-specific expression in the [Human Protein Atlas](https://www.proteinatlas.org). We will plot a gene enriched within the glomeruli, [ITGB1](https://www.proteinatlas.org/ENSG00000150093-ITGB1/tissue/kidney) and a gene enriched within tubules, [PDHA1](https://www.proteinatlas.org/ENSG00000131828-PDHA1/tissue/kidney).
 
-We can also plot these two targets against each other to show the mutually exclusive expression pattern that be used to easily distinguish the two structures. Dashed vertical lines were plotted to represent the maximum observed PLA2R1 expression in glomeruli and and horizontal represent the maximum observed ALDOA expression in the tubules.
+First let's review the model results for these targets:
 
+``` {r targetTable, eval = TRUE, as.is = TRUE}
+kable(subset(results, Gene %in% c('PDHA1','ITGB1')), row.names = FALSE)
+```
+
+Here we see that while these genes are significantly enriched in a structure, that the structure-specific expression is also specific to the healthy tissue.
+
+Let's look at the distribution across tissue structures for PDHA1.
 
 ``` {r targetExprs, eval = TRUE}
-# show expression for a single target: PODXL
+# show expression for a single target: PDHA1
 ggplot(pData(target_demoData),
        aes(x = region, fill = region,
-           y = assayDataElement(target_demoData["PLA2R1", ],
+           y = assayDataElement(target_demoData["PDHA1", ],
                                 elt = "q_norm"))) +
   geom_violin() +
   geom_jitter(width = .2) +
-  labs(y = "PLA2R1 Expression") +
+  labs(y = "PDHA1 Expression") +
   scale_y_continuous(trans = "log2") +
+  facet_wrap(~class) +
   theme_bw()
+```
 
+Now we can plot these two targets against each other to show the mutually exclusive expression pattern that be used to easily distinguish the two structures. Dashed vertical lines were plotted to represent the maximum observed PLA2R1 expression in glomeruli and and horizontal represent the maximum observed ALDOA expression in the tubules.
+
+``` {r targetExprs2, fig.width = 8, fig.wide = TRUE, eval = TRUE}
 # show expression of PLA2R1 vs DSP
 ggplot(pData(target_demoData),
-       aes(x = assayDataElement(target_demoData["MUC1", ],
+       aes(x = assayDataElement(target_demoData["PDHA1", ],
                                 elt = "q_norm"),
-           y = assayDataElement(target_demoData["PLA2R1", ],
+           y = assayDataElement(target_demoData["ITGB1", ],
                                 elt = "q_norm"),
-           color = region, shape = class)) +
+           color = region)) +
   geom_vline(xintercept =
-               max(assayDataElement(target_demoData["MUC1", glom],
+               max(assayDataElement(target_demoData["PDHA1", glom],
                                     elt = "q_norm")),
              lty = "dashed", col = "darkgray") +
   geom_hline(yintercept =
-               max(assayDataElement(target_demoData["PLA2R1", !glom],
+               max(assayDataElement(target_demoData["ITGB1", !glom],
                                     elt = "q_norm")),
              lty = "dashed", col = "darkgray") +
   geom_point(size = 3) +
   theme_bw() +
   scale_x_continuous(trans = "log2") + 
   scale_y_continuous(trans = "log2") +
-  labs(x = "MUC1 Expression", y = "PLA2R1 Expression")
+  labs(x = "PDHA1 Expression", y = "ITGB1 Expression") +
+  facet_wrap(~class)
 ```
+
+This suggests both of these genes become less specific during the disease process.
 
 ## Heatmap of Significant Genes
 
 In addition to generating individual gene boxplots or volcano plots, we can again create a heatmap from our data. This time rather than utilizing CV to select genes, we can use the P-value or FDR values to select genes. Here, we plot with all genes with an FDR < 0.001.
 
+``` {r pheat2, eval = TRUE, echo = FALSE}
+library(pheatmap)
+```
 ``` {r heatmap, eval = TRUE, fig.width = 8, fig.height = 6.5, fig.wide = TRUE}
 # select top significant genes based on significance, plot with pheatmap
-GOI <- subset(results, `FDR` < 0.001)$Gene
+GOI <- unique(subset(results, `FDR` < 0.001)$Gene)
 pheatmap(log2(assayDataElement(target_demoData[GOI, ], elt = "q_norm")),
          scale = "row", 
          show_rownames = FALSE, show_colnames = FALSE,
@@ -1083,12 +1126,13 @@ Statistics & Packages:
 
 Another visualization for differential expression is an MA plot. With this plot, we look for differences relative to expression within the baseline feature. As we have filtered out genes with low expression, the MA plot will not exhibit a traditional shape, but it can be useful in identifying targets with relatively high fold change and baseline expression. In the plot below we keep the labels genes within the top 90th percentile of expression on average with an FDR of < 0.001 and a log2 FC > 0.5.
 
-``` {r maPlot, fig.width = 10, fig.height = 8, fig.wide = TRUE, warning = FALSE, message = FALSE}
+``` {r maPlot, fig.width = 8, fig.height = 12, fig.wide = TRUE, warning = FALSE, message = FALSE}
 results$MeanExp <-
   rowMeans(assayDataElement(target_demoData,
                             elt = "q_norm"))
 
-top_g <- results$Gene[results$FDR < 0.001 &
+top_g2 <- results$Gene[results$Gene %in% top_g &
+                        results$FDR < 0.001 &
                         abs(results$Estimate) > .5 &
                         results$MeanExp > quantile(results$MeanExp, 0.9)]
 
@@ -1106,10 +1150,11 @@ ggplot(subset(results, !Gene %in% neg_probes),
                                 `FDR < 0.05` = "lightblue",
                                 `P < 0.05` = "orange2",
                                 `NS or FC < 0.5` = "gray")) +
-  geom_text_repel(data = subset(results, Gene %in% top_g),
+  geom_text_repel(data = subset(results, Gene %in% top_g2),
                   size = 4, point.padding = 0.15, color = "black",
                   min.segment.length = .1, box.padding = .2, lwd = 2) +
-  theme_bw(base_size = 16)
+  theme_bw(base_size = 16) +
+  facet_wrap(~Subset, nrow = 2, ncol = 1)
 ```
 
 # Session Information
