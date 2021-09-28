@@ -54,7 +54,10 @@ at any given time.
 The dev branch on GitHub is under active development and no guarantee 
 is made on usability at any given time.
 
-## Citation:
+## Citation
 Ortogero, N.; Yang, Z.; Vitancol, R.; Griswold, M.; Henderson, D. 
 GeomxTools: NanoString GeoMx Tools. R Package Version 1.0.0. 
 NanoString Technologies Inc.; Seattle, WA 98109, USA. 2021. 
+
+## License
+This project is licensed under the [MIT license](LICENSE).

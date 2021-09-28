@@ -1,3 +1,8 @@
+# GeomxTools 1.1.4
+
+## Revisions:
+* Update license
+
 # GeomxTools 1.1.3
 
 ## Revisions:
