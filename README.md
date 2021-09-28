@@ -54,10 +54,10 @@ at any given time.
 The dev branch on GitHub is under active development and no guarantee 
 is made on usability at any given time.
 
-## Citation:
+## Citation
 Ortogero, N.; Yang, Z.; Vitancol, R.; Griswold, M.; Henderson, D. 
 GeomxTools: NanoString GeoMx Tools. R Package Version 1.0.0. 
 NanoString Technologies Inc.; Seattle, WA 98109, USA. 2021. 
 
-## Warranty:
+## Warranty
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
