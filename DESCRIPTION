@@ -15,7 +15,7 @@ Suggests:
     testthat (>= 3.0.0),
     parallel,
     ggiraph
-License: Artistic-2.0
+License: MIT
 Collate: DccMetadata.R
          NanoStringGeoMxSet-class.R
          NanoStringGeoMxSet-validity.R
