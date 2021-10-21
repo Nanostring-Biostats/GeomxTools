@@ -1,3 +1,16 @@
+# GeomxTools 2.1.0
+
+* No changes from 1.1.4
+
+# GeomxTools 2.0.0
+
+* No changes from 1.1.4
+* Bioconductor release 3.14 version
+
+# GeomxTools 1.99.4
+
+* No changes from 1.1.4
+
 # GeomxTools 1.1.4
 
 ## Revisions:
