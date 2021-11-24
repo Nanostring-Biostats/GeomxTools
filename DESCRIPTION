@@ -14,7 +14,9 @@ Suggests:
     knitr,
     testthat (>= 3.0.0),
     parallel,
-    ggiraph
+    ggiraph,
+    Seurat,
+    SpatialExperiment
 License: MIT
 Collate: DccMetadata.R
          NanoStringGeoMxSet-class.R
@@ -37,5 +39,5 @@ biocViews: GeneExpression, Transcription, CellBasedAssays, DataImport,
            Normalization
 VignetteEngine: knitr::rmarkdown
 VignetteBuilder: knitr
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Config/testthat/edition: 3
