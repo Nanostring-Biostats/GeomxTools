@@ -25,28 +25,53 @@
 #' @export 
 #' 
 
-to.Seurat <- function(object, ident, normData = "exprs_norm", coordinates = NULL, forceRaw = FALSE){
+to.Seurat <- function(object, ident = NULL, normData = NULL, coordinates = NULL, forceRaw = FALSE){
+    
+    if (!try(requireNamespace("Seurat", quietly = TRUE))) {
+        stop("Please install Seurat from CRAN before converting to a Seurat object")
+    }else{
+        requireNamespace("Seurat", quietly = TRUE)
+    }
+    
+    
     if(object@featureType == "Probe"){
         stop("Data must be on Target level before converting to a Seurat Object")
     }
     
-    if((length(names(object@assayData)) == 1 & names(object@assayData)[1] == "exprs") & forceRaw == FALSE){
+    if(is.null(normData)){
+        stop("normData must not be NULL, please provide name of normalized counts matrix")
+    }
+    
+    if(!normData %in% names(object@assayData)){
+        stop(paste0("The normData name \"", normData, "\" is not a valid assay name. Valid names are: ", 
+                    paste(names(object@assayData), collapse = ", ")))
+    }
+    
+    normFactor_names <- "normFactors|qFactors|negFactors|hkFactors|hknormFactors"
+    
+    if(length(grep(pattern = normFactor_names, names(pData(object)))) == 0 & forceRaw == FALSE){
         stop("It is NOT recommended to use Seurat's normalization for GeoMx data. 
              Normalize using GeomxTools::normalize() or set forceRaw to TRUE if you want to continue with Raw data")
     }
     
+    
     sequencingMetrics <- c("FileVersion", "SoftwareVersion", "Date", "Plate_ID", "Well", "SeqSetId", "Raw", "Trimmed", 
                            "Stitched", "Aligned", "umiQ30", "rtsQ30", "DeduplicatedReads", "NTC_ID", "NTC")
     
-    seuratConvert <- suppressWarnings(CreateSeuratObject(counts = object@assayData[[normData]], assay = "GeoMx", 
+    seuratConvert <- suppressWarnings(Seurat::CreateSeuratObject(counts = object@assayData[[normData]], assay = "GeoMx", 
                                         project = object@experimentData@title))
-    seuratConvert <- suppressWarnings(AddMetaData(object = seuratConvert, 
+    seuratConvert <- suppressWarnings(Seurat::AddMetaData(object = seuratConvert, 
                                                   metadata = sData(object)[!colnames(sData(object)) %in% sequencingMetrics]))
-    seuratConvert@assays$GeoMx <- AddMetaData(object = seuratConvert@assays$GeoMx, metadata = fData(object))
+    seuratConvert@assays$GeoMx <- Seurat::AddMetaData(object = seuratConvert@assays$GeoMx, metadata = fData(object))
     
-    if(!ident %in% colnames(seuratConvert@meta.data)){
-        stop(paste0("ident \"", ident, "\" not found in GeoMxSet Object"))
+    if(!is.null(ident)){
+        if(!ident %in% colnames(seuratConvert@meta.data)){
+            stop(paste0("ident \"", ident, "\" not found in GeoMxSet Object"))
+        }
+        
+        Seurat::Idents(seuratConvert) <- seuratConvert[[ident]]
     }
+    
     
     seuratConvert@misc <- object@experimentData@other 
     seuratConvert@misc[["sequencingMetrics"]] <- sData(object)[colnames(sData(object)) %in% sequencingMetrics]
@@ -113,13 +138,30 @@ to.Seurat <- function(object, ident, normData = "exprs_norm", coordinates = NULL
 #' @export 
 #' 
 
-to.SpatialExperiment <- function(object, normData = "exprs_norm", coordinates = NULL, forceRaw = FALSE){
+to.SpatialExperiment <- function(object, normData = NULL, coordinates = NULL, forceRaw = FALSE){
+    
+    if (!try(requireNamespace("SpatialExperiment", quietly = TRUE))) {
+        stop("Please install SpatialExperiment from CRAN before converting to a SpatialExperiment object")
+    }else{
+        requireNamespace("SpatialExperiment", quietly = TRUE)
+    }
     
     if(object@featureType == "Probe"){
         stop("Data must be on Target level before converting to a Seurat Object")
     }
     
-    if((length(names(object@assayData)) == 1 & names(object@assayData)[1] == "exprs") & forceRaw == FALSE){
+    if(is.null(normData)){
+        stop("normData must not be NULL, please provide name of normalized counts matrix")
+    }
+    
+    if(!normData %in% names(object@assayData)){
+        stop(paste0("The normData name \"", normData, "\" is not a valid assay name. Valid names are: ", 
+                    paste(names(object@assayData), collapse = ", ")))
+    }
+    
+    normFactor_names <- "normFactors|qFactors|negFactors|hkFactors|hknormFactors"
+    
+    if(length(grep(pattern = normFactor_names, names(pData(object)))) == 0 & forceRaw == FALSE){
         stop("It is NOT recommended to use Seurat's normalization for GeoMx data. 
              Normalize using GeomxTools::normalize() or set forceRaw to TRUE if you want to continue with Raw data")
     }
@@ -136,16 +178,16 @@ to.SpatialExperiment <- function(object, normData = "exprs_norm", coordinates = 
             colnames(coord.df) <- coordinates
             sequencingMetrics <- c(sequencingMetrics, coordinates)
         }else{
-            if(!xcoord %in% colnames(seuratConvert@meta.data) &
-               !ycoord %in% colnames(seuratConvert@meta.data)){
+            if(!xcoord %in% colnames(sData(object)) &
+               !ycoord %in% colnames(sData(object))){
                 stop(paste0("xcoord \"", xcoord, "\" and ycoord \"", ycoord, "\" not found in GeoMxSet Object"))
             }
             
-            if(!xcoord %in% colnames(seuratConvert@meta.data)){
+            if(!xcoord %in% colnames(sData(object))){
                 stop(paste0("xcoord \"", xcoord, "\" not found in GeoMxSet Object"))
             }
             
-            if(!ycoord %in% colnames(seuratConvert@meta.data)){
+            if(!ycoord %in% colnames(sData(object))){
                 stop(paste0("ycoord \"", xcoord, "\" not found in GeoMxSet Object"))
             }
         }
@@ -156,10 +198,13 @@ to.SpatialExperiment <- function(object, normData = "exprs_norm", coordinates = 
         coord.df <- NULL
     }
     
-    spe <- SpatialExperiment(assay = object@assayData[[normData]],
-                             colData = sData(object)[!colnames(sData(object)) %in% sequencingMetrics],
-                             rowData = fData(object),
-                             spatialCoords = coord.df)
+    spe <- SpatialExperiment::SpatialExperiment(assay = object@assayData[[normData]],
+                                                colData = sData(object)[!colnames(sData(object)) %in% 
+                                                                            sequencingMetrics],
+                                                rowData = fData(object),
+                                                spatialCoords = coord.df)
+    
+    names(spe@assays@data) <- "GeoMx"
     
     spe@metadata <- object@experimentData@other 
     spe@metadata[["sequencingMetrics"]] <- sData(object)[colnames(sData(object)) %in% sequencingMetrics]
