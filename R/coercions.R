@@ -61,7 +61,7 @@ to.Seurat <- function(object, ident = NULL, normData = NULL, coordinates = NULL,
     seuratConvert <- suppressWarnings(Seurat::CreateSeuratObject(counts = object@assayData[[normData]], assay = "GeoMx", 
                                         project = object@experimentData@title))
     seuratConvert <- suppressWarnings(Seurat::AddMetaData(object = seuratConvert, 
-                                                  metadata = sData(object)[!colnames(sData(object)) %in% sequencingMetrics]))
+                                                  metadata = sData(object)[,!colnames(sData(object)) %in% sequencingMetrics]))
     seuratConvert@assays$GeoMx <- Seurat::AddMetaData(object = seuratConvert@assays$GeoMx, metadata = fData(object))
     
     if(!is.null(ident)){
@@ -141,13 +141,13 @@ to.Seurat <- function(object, ident = NULL, normData = NULL, coordinates = NULL,
 to.SpatialExperiment <- function(object, normData = NULL, coordinates = NULL, forceRaw = FALSE){
     
     if (!try(requireNamespace("SpatialExperiment", quietly = TRUE))) {
-        stop("Please install SpatialExperiment from CRAN before converting to a SpatialExperiment object")
+        stop("Please install SpatialExperiment from Bioconductor before converting to a SpatialExperiment object")
     }else{
         requireNamespace("SpatialExperiment", quietly = TRUE)
     }
     
     if(object@featureType == "Probe"){
-        stop("Data must be on Target level before converting to a Seurat Object")
+        stop("Data must be on Target level before converting to a SpatialExperiment Object")
     }
     
     if(is.null(normData)){
@@ -193,6 +193,8 @@ to.SpatialExperiment <- function(object, normData = NULL, coordinates = NULL, fo
         }
         
         rownames(coord.df) <- rownames(sData(object))
+        
+        coord.df <- as.matrix(coord.df)
         
     }else{
         coord.df <- NULL

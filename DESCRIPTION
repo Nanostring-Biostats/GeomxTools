@@ -19,10 +19,9 @@ Suggests:
     parallel,
     ggiraph,
     Seurat,
-    SpatialExperiment
+    SpatialExperiment (>= 1.4.0)
 License: MIT
-Collate: coercions.R
-         DccMetadata.R
+Collate: DccMetadata.R
          NanoStringGeoMxSet-class.R
          NanoStringGeoMxSet-validity.R
          NanoStringGeoMxSet-accessors.R
@@ -32,6 +31,7 @@ Collate: coercions.R
          NanoStringGeoMxSet-signatures.R
          NanoStringGeoMxSet-normalize.R
          NanoStringGeoMxSet-de.R
+         coercions.R
          readDccFile.R
          readPKCFile.R
          readNanoStringGeoMxSet.R

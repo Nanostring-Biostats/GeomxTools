@@ -80,12 +80,16 @@ test_that("Count matrix is in the correct location - SpatialExperiment", {
 sequencingMetrics <- c("FileVersion", "SoftwareVersion", "Date", "Plate_ID", "Well", "SeqSetId", "Raw", "Trimmed", 
                        "Stitched", "Aligned", "umiQ30", "rtsQ30", "DeduplicatedReads", "NTC_ID", "NTC")
 
+identMetrics <- colnames(sData(target_demoData))[!colnames(sData(target_demoData)) %in% sequencingMetrics]
+
 # pheno data in correct spot
 test_that("pheno data is in the correct location - Seurat", {
-    expect_true(all(seurat_object@meta.data[,-c(1:3)] == sData(target_demoData)[,!colnames(sData(target_demoData)) %in% sequencingMetrics]))
+    expect_true(all(seurat_object@meta.data[,colnames(seurat_object@meta.data) %in% gsub("\\W", ".", identMetrics)] == 
+                        sData(target_demoData)[,identMetrics]))
 })
 test_that("pheno data is in the correct location - SpatialExperiment", {
-    expect_true(all(all(colData(spe_object) == sData(target_demoData)[,!colnames(sData(target_demoData)) %in% sequencingMetrics])))
+    expect_true(all(all(colData(spe_object)[,colnames(colData(spe_object)) %in% identMetrics] == 
+                            sData(target_demoData)[,identMetrics])))
 })
 
 # sequencing metrics in correct spot
@@ -127,12 +131,12 @@ test_that("coordinates, when given, are in the correct location - SpatialExperim
 })
 
 # errors if coordinates columns are not valid
-test_that("coordinates, when given, are in the correct location - Seurat", {
+test_that("invalid coordinates give an error - Seurat", {
     expect_error(to.Seurat(object = target_demoData, normData = "exprs_norm", ident = "cell_line", coordinates = c("Invalid", "Ycoord")))
     expect_error(to.Seurat(object = target_demoData, normData = "exprs_norm", ident = "cell_line", coordinates = c("Xcoord", "Invalid")))
     expect_error(to.Seurat(object = target_demoData, normData = "exprs_norm", ident = "cell_line", coordinates = c("Ycoord")))
 })
-test_that("coordinates, when given, are in the correct location - SpatialExperiment", {
+test_that("invalid coordinates give an error - SpatialExperiment", {
     expect_error(to.SpatialExperiment(object = target_demoData, normData = "exprs_norm", coordinates = c("Invalid", "Ycoord")))
     expect_error(to.SpatialExperiment(object = target_demoData, normData = "exprs_norm", coordinates = c("Xcoord", "Invalid")))
     expect_error(to.SpatialExperiment(object = target_demoData, normData = "exprs_norm", coordinates = c("Ycoord")))
