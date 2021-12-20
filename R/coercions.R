@@ -49,19 +49,22 @@ to.Seurat <- function(object, ident = NULL, normData = NULL, coordinates = NULL,
     
     normFactor_names <- "normFactors|qFactors|negFactors|hkFactors|hknormFactors"
     
-    if(length(grep(pattern = normFactor_names, names(pData(object)))) == 0 & forceRaw == FALSE){
+    if(length(grep(pattern = normFactor_names, names(sData(object)))) == 0 & forceRaw == FALSE){
         stop("It is NOT recommended to use Seurat's normalization for GeoMx data. 
              Normalize using GeomxTools::normalize() or set forceRaw to TRUE if you want to continue with Raw data")
     }
     
     
     sequencingMetrics <- c("FileVersion", "SoftwareVersion", "Date", "Plate_ID", "Well", "SeqSetId", "Raw", "Trimmed", 
-                           "Stitched", "Aligned", "umiQ30", "rtsQ30", "DeduplicatedReads", "NTC_ID", "NTC")
+                           "Stitched", "Aligned", "umiQ30", "rtsQ30", "DeduplicatedReads", "NTC_ID", "NTC", "Trimmed (%)", 
+                           "Stitched (%)", "Aligned (%)", "Saturated (%)")
+    
+    QCMetrics <- "QCFlags"
     
     seuratConvert <- suppressWarnings(Seurat::CreateSeuratObject(counts = object@assayData[[normData]], assay = "GeoMx", 
                                         project = object@experimentData@title))
     seuratConvert <- suppressWarnings(Seurat::AddMetaData(object = seuratConvert, 
-                                                  metadata = sData(object)[,!colnames(sData(object)) %in% sequencingMetrics]))
+                                                  metadata = sData(object)[,!colnames(sData(object)) %in% c(sequencingMetrics, QCMetrics)]))
     seuratConvert@assays$GeoMx <- Seurat::AddMetaData(object = seuratConvert@assays$GeoMx, metadata = fData(object))
     
     if(!is.null(ident)){
@@ -75,6 +78,7 @@ to.Seurat <- function(object, ident = NULL, normData = NULL, coordinates = NULL,
     
     seuratConvert@misc <- object@experimentData@other 
     seuratConvert@misc[["sequencingMetrics"]] <- sData(object)[colnames(sData(object)) %in% sequencingMetrics]
+    seuratConvert@misc[["QCMetrics"]] <- sData(object)[colnames(sData(object)) %in% QCMetrics]
     
     if(!is.null(coordinates)){
         xcoord <- coordinates[1]
@@ -161,13 +165,16 @@ to.SpatialExperiment <- function(object, normData = NULL, coordinates = NULL, fo
     
     normFactor_names <- "normFactors|qFactors|negFactors|hkFactors|hknormFactors"
     
-    if(length(grep(pattern = normFactor_names, names(pData(object)))) == 0 & forceRaw == FALSE){
+    if(length(grep(pattern = normFactor_names, names(sData(object)))) == 0 & forceRaw == FALSE){
         stop("It is NOT recommended to use Seurat's normalization for GeoMx data. 
              Normalize using GeomxTools::normalize() or set forceRaw to TRUE if you want to continue with Raw data")
     }
     
     sequencingMetrics <- c("FileVersion", "SoftwareVersion", "Date", "Plate_ID", "Well", "SeqSetId", "Raw", "Trimmed", 
-                           "Stitched", "Aligned", "umiQ30", "rtsQ30", "DeduplicatedReads", "NTC_ID", "NTC")
+                           "Stitched", "Aligned", "umiQ30", "rtsQ30", "DeduplicatedReads", "NTC_ID", "NTC", "Trimmed (%)", 
+                           "Stitched (%)", "Aligned (%)", "Saturated (%)")
+    
+    QCMetrics <- "QCFlags"
     
     if(!is.null(coordinates)){
         xcoord <- coordinates[1]
@@ -202,7 +209,7 @@ to.SpatialExperiment <- function(object, normData = NULL, coordinates = NULL, fo
     
     spe <- SpatialExperiment::SpatialExperiment(assay = object@assayData[[normData]],
                                                 colData = sData(object)[!colnames(sData(object)) %in% 
-                                                                            sequencingMetrics],
+                                                                            c(sequencingMetrics, QCMetrics)],
                                                 rowData = fData(object),
                                                 spatialCoords = coord.df)
     
@@ -210,6 +217,7 @@ to.SpatialExperiment <- function(object, normData = NULL, coordinates = NULL, fo
     
     spe@metadata <- object@experimentData@other 
     spe@metadata[["sequencingMetrics"]] <- sData(object)[colnames(sData(object)) %in% sequencingMetrics]
+    spe@metadata[["QCMetrics"]] <- sData(object)[colnames(sData(object)) %in% QCMetrics]
     
     return(spe)
 }
