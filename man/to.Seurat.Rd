@@ -4,7 +4,13 @@
 \alias{to.Seurat}
 \title{Convert GeoMxSet Object to SeuratObject}
 \usage{
-to.Seurat(object, ident, normData = NULL, coordinates = NULL, forceRaw = FALSE)
+to.Seurat(
+  object,
+  ident = NULL,
+  normData = NULL,
+  coordinates = NULL,
+  forceRaw = FALSE
+)
 }
 \arguments{
 \item{object}{GeoMxSet object to convert}

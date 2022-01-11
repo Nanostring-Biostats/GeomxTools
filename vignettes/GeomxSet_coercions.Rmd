@@ -1,0 +1,381 @@
+---
+title: "Coercion of GeoMxSet to Seurat and SpatialExperiment Objects"
+output:
+  html_document:
+    theme: united
+    df_print: kable
+  pdf_document: default
+date: 'Compiled: `r Sys.Date()`'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 10
+)
+```
+
+# Overview
+
+This tutorial demonstrates how to coerce GeoMxSet objects into Seurat or SpatialExperiment objects and the subsequent analyses. For more examples of what analyses are available in these objects, look at these [Seurat](https://satijalab.org/seurat/articles/spatial_vignette.html) or [SpatialExperiment](https://bioconductor.org/packages/release/bioc/vignettes/SpatialExperiment/inst/doc/SpatialExperiment.html) vignettes.
+
+# Data Processing
+
+Data Processing should occur in GeomxTools. Due to the unique nature of the regions of interest (ROIs), it is recommended to use the preproccesing steps available in GeomxTools rather than the single-cell made preprocessing available in Seurat.
+
+```{r Load Libraries}
+library(GeomxTools)
+library(Seurat)
+library(SpatialDecon)
+library(patchwork)
+```
+
+```{r Read in Data}
+datadir <- system.file("extdata", "DSP_NGS_Example_Data",
+                       package="GeomxTools")
+DCCFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)
+PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
+SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
+
+demoData <-
+  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                                          pkcFiles = PKCFiles,
+                                          phenoDataFile = SampleAnnotationFile,
+                                          phenoDataSheet = "CW005",
+                                          phenoDataDccColName = "Sample_ID",
+                                          protocolDataColNames = c("aoi",
+                                                                   "cell_line",
+                                                                   "roi_rep",
+                                                                   "pool_rep",
+                                                                   "slide_rep")))
+```
+
+After reading in the object, we will do a couple of QC steps.
+
+1. Shift all 0 counts by 1 
+2. Flag low quality ROIs
+3. Flag low quality probes 
+4. Remove low quality ROIs and probes
+
+```{r GeomxTools QC}
+demoData <- shiftCountsOne(demoData, useDALogic=TRUE)
+demoData <- setSegmentQCFlags(demoData, qcCutoffs = list(percentSaturation = 45))
+demoData <- setBioProbeQCFlags(demoData)
+
+# low sequenced ROIs
+lowSaturation <- which(protocolData(demoData)[["QCFlags"]]$LowSaturation)
+
+# probes that are considered outliers 
+lowQCprobes <- which(featureData(demoData)[["QCFlags"]]$LowProbeRatio | 
+                       featureData(demoData)[["QCFlags"]]$GlobalGrubbsOutlier)
+
+# remove low quality ROIs and probes
+passedQC <- demoData[-lowQCprobes, -lowSaturation]
+
+dim(demoData)
+dim(passedQC)
+```
+
+Objects must be aggregated to Target level data before coercing. This changes the row (gene) information to be the gene name rather than the probe ID. 
+
+```{r aggregation}
+passedQC@featureType
+data.frame(assayData(passedQC)[["exprs"]][seq_len(3), seq_len(3)])
+
+target_demoData <- aggregateCounts(passedQC)
+
+target_demoData@featureType
+data.frame(assayData(target_demoData)[["exprs"]][seq_len(3), seq_len(3)])
+```
+
+It is recommended to normalize using a GeoMx specific model before coercing.
+
+```{r GeomxTools Normalization}
+norm_target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="quant",
+                                  desiredQuantile = .75, toElt = "q_norm")
+
+data.frame(assayData(norm_target_demoData)[["q_norm"]][seq_len(3), seq_len(3)])
+```
+
+# Seurat
+
+## Seurat Coercion
+
+The three errors that can occur when trying to coerce to Seurat are:
+    
+1. object must be on the **target** level
+2. object should be normalized, if you want raw data you can set *forceRaw* to TRUE
+3. normalized count matrix name must be valid 
+
+```{r coercion to Seurat mistakes, error=TRUE}
+to.Seurat(demoData)
+
+to.Seurat(target_demoData, normData = "exprs")
+
+to.Seurat(norm_target_demoData, normData = "exprs_norm")
+```
+
+
+After coercing to a Seurat object all of the metadata is still accessible. 
+
+```{r coercion to Seurat}
+demoSeurat <- to.Seurat(norm_target_demoData, normData = "q_norm")
+
+demoSeurat # overall data object
+
+head(demoSeurat, 3) # most important ROI metadata
+demoSeurat@misc[1:8] # experiment data
+
+head(demoSeurat@misc$sequencingMetrics) # sequencing metrics
+head(demoSeurat@misc$QCMetrics$QCFlags) # QC metrics
+head(demoSeurat@assays$GeoMx@meta.features) # gene metadata
+```
+
+All Seurat functionality is available after coercing. Outputs might differ if the *ident* value is set or not. 
+
+```{r simple VlnPlot}
+VlnPlot(demoSeurat, features = "nCount_GeoMx", pt.size = 0.1)
+
+demoSeurat <- to.Seurat(norm_target_demoData, normData = "q_norm", ident = "cell_line")
+VlnPlot(demoSeurat, features = "nCount_GeoMx", pt.size = 0.1)
+```
+
+## Simple GeoMx data workflow 
+
+Here is an example of a typical dimensional reduction workflow. 
+```{r typical seurat analysis, message=FALSE}
+demoSeurat <- FindVariableFeatures(demoSeurat)
+demoSeurat <- ScaleData(demoSeurat)
+demoSeurat <- RunPCA(demoSeurat, assay = "GeoMx", verbose = FALSE)
+demoSeurat <- FindNeighbors(demoSeurat, reduction = "pca", dims = seq_len(30))
+demoSeurat <- FindClusters(demoSeurat, verbose = FALSE)
+demoSeurat <- RunUMAP(demoSeurat, reduction = "pca", dims = seq_len(30))
+
+DimPlot(demoSeurat, reduction = "umap", label = TRUE, group.by = "cell_line")
+```
+
+## In-depth GeoMx data workflow
+
+Here is a work through of a more indepth DSP dataset. This is a non-small cell lung cancer (nsclc) tissue sample that has an ROI strategy to simulate a visium dataset (55 um circles evenly spaced apart). It was segmented on tumor and non-tumor. 
+
+```{r GeoMx dataset with coordinates}
+data("nsclc", package = "SpatialDecon")
+
+nsclc
+
+dim(nsclc)
+
+data.frame(nsclc@assayData$exprs[seq_len(5), seq_len(5)])
+
+head(pData(nsclc))
+```
+
+```{r rename columns, echo=FALSE}
+#this data is from an old version, column names have been updated
+#ensuring continuity with current version
+
+nsclc@featureType <- "Target"
+
+colnames(protocolData(nsclc))[colnames(protocolData(nsclc)) == "NormFactorQ3"] <- "qFactors"
+colnames(protocolData(nsclc))[colnames(protocolData(nsclc)) == "NormFactorHK"] <- "hkFactors"
+
+colnames(protocolData(nsclc))[colnames(protocolData(nsclc)) == "RawReads"] <- "Raw"
+colnames(protocolData(nsclc))[colnames(protocolData(nsclc)) == "TrimmedReads"] <- "Trimmed"
+colnames(protocolData(nsclc))[colnames(protocolData(nsclc)) == "AlignedReads"] <- "Aligned"
+colnames(protocolData(nsclc))[colnames(protocolData(nsclc)) == "StitchedReads"] <- "Stitched"
+colnames(protocolData(nsclc))[colnames(protocolData(nsclc)) == "SequencingSaturation"] <- "Saturated (%)"
+
+protocolData(nsclc) <- protocolData(nsclc)[,-which(colnames(protocolData(nsclc)) %in% c("UID"))]
+```
+
+When coercing, we can add the coordinate columns allowing for spatial graphing using Seurat. 
+
+```{r coercion to Seurat with coordinates}
+nsclcSeurat <- to.Seurat(nsclc, normData = "exprs_norm", ident = "AOI.annotation", 
+                         coordinates = c("x", "y"))
+
+nsclcSeurat
+
+VlnPlot(nsclcSeurat, features = "nCount_GeoMx", pt.size = 0.1)
+```
+
+
+```{r typical seurat analysis nsclc, message=FALSE}
+nsclcSeurat <- FindVariableFeatures(nsclcSeurat)
+nsclcSeurat <- ScaleData(nsclcSeurat)
+nsclcSeurat <- RunPCA(nsclcSeurat, assay = "GeoMx", verbose = FALSE)
+nsclcSeurat <- FindNeighbors(nsclcSeurat, reduction = "pca", dims = seq_len(30))
+nsclcSeurat <- FindClusters(nsclcSeurat, verbose = FALSE)
+nsclcSeurat <- RunUMAP(nsclcSeurat, reduction = "pca", dims = seq_len(30))
+
+DimPlot(nsclcSeurat, reduction = "umap", label = TRUE, group.by = "AOI.name")
+```
+
+### Spatial Graphing
+
+Because this dataset is segmented, we need to separate the tumor and TME sections before using the spatial graphing. These Seurat functions were created for Visium data, so they can only plot the same sized circles. 
+
+Here we are showing the gene counts in each ROI separated by segment. 
+
+```{r gene counts SpatialFeature}
+tumor <- suppressMessages(SpatialFeaturePlot(nsclcSeurat[,nsclcSeurat$AOI.name == "Tumor"], 
+                                             features = "nCount_GeoMx", pt.size.factor = 12) + 
+  labs(title = "Tumor") + 
+  theme(legend.position = "none") + 
+  scale_fill_continuous(type = "viridis",
+                        limits = c(min(nsclcSeurat$nCount_GeoMx), 
+                                   max(nsclcSeurat$nCount_GeoMx))))
+
+TME <- suppressMessages(SpatialFeaturePlot(nsclcSeurat[,nsclcSeurat$AOI.name == "TME"], 
+                                           features = "nCount_GeoMx", pt.size.factor = 12) + 
+  labs(title = "TME") + 
+  theme(legend.position = "right") +
+  scale_fill_continuous(type = "viridis", 
+                        limits = c(min(nsclcSeurat$nCount_GeoMx),
+                                   max(nsclcSeurat$nCount_GeoMx))))
+
+wrap_plots(tumor, TME)
+```
+
+Here we show the count for *A2M* 
+
+```{r A2M SpatialFeature}
+tumor <- suppressMessages(SpatialFeaturePlot(nsclcSeurat[,nsclcSeurat$AOI.name == "Tumor"], 
+                                             features = "A2M", pt.size.factor = 12) + 
+  labs(title = "Tumor") + 
+  theme(legend.position = "none") + 
+  scale_fill_continuous(type = "viridis",
+                        limits = c(min(nsclcSeurat@assays$GeoMx@counts["A2M",]), 
+                                   max(nsclcSeurat@assays$GeoMx@counts["A2M",]))))
+
+TME <- suppressMessages(SpatialFeaturePlot(nsclcSeurat[,nsclcSeurat$AOI.name == "TME"], 
+                                           features = "A2M", pt.size.factor = 12) + 
+  labs(title = "TME") + 
+  theme(legend.position = "right") +
+  scale_fill_continuous(type = "viridis", 
+                        limits = c(min(nsclcSeurat@assays$GeoMx@counts["A2M",]),
+                                   max(nsclcSeurat@assays$GeoMx@counts["A2M",]))))
+
+wrap_plots(tumor, TME)
+```
+Using the FindMarkers built in function from Seurat, we can determine the most differentially expressed genes in *Tumor* and *TME*
+
+```{r DE SpatialFeature}
+Idents(nsclcSeurat) <- nsclcSeurat$AOI.name
+de_genes <- FindMarkers(nsclcSeurat, ident.1 = "Tumor", ident.2 = "TME")
+
+de_genes <- de_genes[order(abs(de_genes$avg_log2FC), decreasing = TRUE),]
+de_genes <- de_genes[is.finite(de_genes$avg_log2FC) & de_genes$p_val < 1e-25,]
+
+
+
+for(i in rownames(de_genes)[1:2]){
+  print(data.frame(de_genes[i,]))
+  
+  tumor <- suppressMessages(SpatialFeaturePlot(nsclcSeurat[,nsclcSeurat$AOI.name == "Tumor"], 
+                                               features = i, pt.size.factor = 12) + 
+  labs(title = "Tumor") + 
+  theme(legend.position = "none") + 
+  scale_fill_continuous(type = "viridis",
+                        limits = c(min(nsclcSeurat@assays$GeoMx@counts[i,]), 
+                                   max(nsclcSeurat@assays$GeoMx@counts[i,]))))
+
+  TME <- suppressMessages(SpatialFeaturePlot(nsclcSeurat[,nsclcSeurat$AOI.name == "TME"], 
+                                             features = i, pt.size.factor = 12) + 
+    labs(title = "TME") + 
+    theme(legend.position = "right") +
+    scale_fill_continuous(type = "viridis", 
+                          limits = c(min(nsclcSeurat@assays$GeoMx@counts[i,]),
+                                     max(nsclcSeurat@assays$GeoMx@counts[i,]))))
+  
+  print(wrap_plots(tumor, TME))
+}
+
+```
+
+# SpatialExperiment
+
+SpatialExperiment is an S4 class inheriting from SingleCellExperiment. It is meant as a data storage object rather than an analysis suite like Seurat. Because of this, this section won't have the fancy analysis outputs like the Seurat section had but will show where in the object all the pieces are stored.  
+
+```{r load spe}
+library(SpatialExperiment)
+```
+
+## SpatialExperiment Coercion
+
+The three errors that can occur when trying to coerce to SpatialExperiment are:
+
+1. object must be on the **target** level
+2. object should be normalized, if you want raw data you can set *forceRaw* to TRUE
+3. normalized count matrix name must be valid 
+
+```{r coercion to SpatialExperiment mistakes, error=TRUE}
+to.SpatialExperiment(demoData)
+
+to.SpatialExperiment(target_demoData, normData = "exprs")
+
+to.SpatialExperiment(norm_target_demoData, normData = "exprs_norm")
+```
+
+After coercing to a SpatialExperiment object all of the metadata is still accessible. 
+
+```{r coercion to SpatialExperiment}
+demoSPE <- to.SpatialExperiment(norm_target_demoData, normData = "q_norm")
+
+demoSPE # overall data object
+
+data.frame(head(colData(demoSPE))) # most important ROI metadata
+
+demoSPE@metadata[1:8] # experiment data
+
+head(demoSPE@metadata$sequencingMetrics) # sequencing metrics
+head(demoSPE@metadata$QCMetrics$QCFlags) # QC metrics
+data.frame(head(rowData(demoSPE))) # gene metadata
+```
+
+When coercing, we can add the coordinate columns and they will be appended to the correct location in SpatialExperiment
+
+```{r SpatialExperiment coercion}
+
+nsclcSPE <- to.SpatialExperiment(nsclc, normData = "exprs_norm", coordinates = c("x", "y"))
+
+nsclcSPE
+
+data.frame(head(spatialCoords(nsclcSPE)))
+```
+With the coordinates and the metadata, we can create spatial graphing figures similar to Seurat's
+```{r graphing with SPE}
+figureData <- as.data.frame(cbind(colData(nsclcSPE), spatialCoords(nsclcSPE)))
+
+figureData <- cbind(figureData, A2M=as.numeric(nsclcSPE@assays@data$GeoMx["A2M",]))
+
+tumor <- ggplot(figureData[figureData$AOI.name == "Tumor",], aes(x=x, y=y, color = A2M))+
+  geom_point(size = 6)+
+  scale_color_continuous(type = "viridis",
+                        limits = c(min(figureData$A2M), 
+                                   max(figureData$A2M)))+
+  theme(legend.position = "none", panel.grid = element_blank(),
+        panel.background = element_rect(fill = "white"),
+        axis.title = element_blank(), axis.text = element_blank(), 
+        axis.ticks = element_blank(), axis.line = element_blank())+
+  labs(title = "Tumor")
+
+
+TME <- ggplot(figureData[figureData$AOI.name == "TME",], aes(x=x, y=y, color = A2M))+
+  geom_point(size = 6)+
+  scale_color_continuous(type = "viridis",
+                        limits = c(min(figureData$A2M), 
+                                   max(figureData$A2M))) +
+  theme(panel.grid = element_blank(), 
+        panel.background = element_rect(fill = "white"), axis.title = element_blank(), 
+        axis.text = element_blank(), axis.ticks = element_blank(), axis.line = element_blank())+
+  labs(title = "TME")
+
+wrap_plots(tumor, TME)
+```
+
+# Further Development
+We are actively working to get the tissue image attached to both objects so that figures are printing on top of the tissue image. In addition, we are working on a separate NanoString package to be able to plot the spatial data specific to GeoMx like segmentation and irregular shaped ROIs. 
+
+
