@@ -79,6 +79,13 @@ export(shiftCountsOne)
 export(summarizeNegatives)
 export(mixedModelDE)
 
+export(igg_names)
+export(hk_names)
+export(compute_normalization_factors)
+export(qc_protein_signal)
+export(plot_concordance)
+export(plot_normFactor_concordance)
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S3 methods
 

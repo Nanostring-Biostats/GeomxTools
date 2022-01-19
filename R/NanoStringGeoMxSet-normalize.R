@@ -190,6 +190,55 @@ subtractBackground <- function(object, data_type, toElt, fromElt, byPanel=TRUE) 
     return(object)
 }
 
+
+#' protein normalization
+#' @export
+## Protein Normalization
+compute_normalization_factors <- function(object, igg.names = NULL, hk.names = NULL,
+                                          area = NULL, nuclei = NULL) {
+  
+  if(is.null(igg.names)){
+    igg.names <- igg_names(object)
+  }
+  
+  if(is.null(hk.names)){
+    hk.names <- hk_names(object)
+  }
+  
+  segmentAnnotations = sData(object)
+  targetAnnotations = fData(object)
+  dataset = exprs(object)
+  
+  # igg and hk factors:
+  if (length(igg.names) > 1) {
+    igg.factor <- exp(colMeans(log(pmax(dataset[igg.names, , drop = FALSE], 1))))
+  }
+  if (length(hk.names) > 1) {
+    hk.factor <- exp(colMeans(log(pmax(dataset[hk.names, , drop = FALSE], 1))))
+  }
+  
+  # area and nuclei factors:
+  if (any(colnames(segmentAnnotations) == area)) {
+    area.factor <- as.numeric(segmentAnnotations[[area]])
+  }
+  if (any(colnames(segmentAnnotations) == nuclei)) {
+    nuclei.factor <- as.numeric(segmentAnnotations[[nuclei]])
+  }
+  
+  # matrix of all available factors:
+  factornames <- c("igg.factor", "hk.factor", "area.factor", "nuclei.factor")
+  names(factornames) <- c("Neg geomean", "HK geomean", "Area", "Nuclei")
+  factornames <- factornames[is.element(factornames, ls())]
+  
+  factors <- c()
+  for (fname in factornames) {
+    factors <- cbind(factors, get(fname))
+  }
+  colnames(factors) <- names(factornames)
+  
+  return(factors)
+}
+
 ############  NOT USED OR TESTED IN DEV  ############
 
 #' Check QC Flags in the GeoMxSet and removes the probe or sample from the object

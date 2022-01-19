@@ -590,3 +590,142 @@ setProbeCountFlags <- function(object, cutoff=DEFAULTS[["minProbeCount"]]) {
         object <- appendFeatureFlags(object, probeCountFlags)
         return(object)
 }
+
+
+## Protein QC
+
+concordance_plot <- function(mat, col = rgb(0, 0, 0, 0.5),
+                             collegend = NULL, legend.main = NULL,
+                             main = "", pch = 16, cex = 1.5, ...) {
+
+    # subsidiary function for printing the SD of a ratio, for use by pairs():
+    print.sd.log.ratio <- function(x, y, digits = 2, prefix = "", cex.cor = 1, ...) {
+        usr <- par("usr")
+        on.exit(par(usr))
+        par(usr = c(0, 1, 0, 1))
+        pairwise.stat <- sd(log2(pmax(x, 1)) - log2(pmax(y, 1)), na.rm = TRUE)
+        txt <- round(pairwise.stat, 2)
+        txt <- paste0(prefix, txt)
+        legend("center", legend = txt, box.col = "white", cex = 1.5)
+    }
+
+    # draw pairs plot:
+    par(mar = c(4, 4, 2, 1))
+
+    pairs(mat,
+          log = "xy",
+          upper.panel = points,
+          lower.panel = print.sd.log.ratio,
+          oma = c(3, 3, 3, 35),
+          col = col,
+          pch = pch,
+          cex = cex,
+          labels = colnames(mat),
+          main = main
+    )
+    # draw a legend:
+    if (length(collegend) > 0) {
+        legend("right",
+               col = c(NA, collegend, NA, NA),
+               legend = c(legend.main, names(collegend), "", "Numbers show SD(log2(ratios))"),
+               pch = 16
+        )
+    }
+}
+
+#' Add QC flags to feature and protocol data simultaneously
+#' 
+#' @export
+qc_protein_signal <- function(object, neg.names, targetAnnotations = NULL,
+                              neg.thresh = 20, qccols = c("#00008B80", "#FF000080")) {
+
+  
+    object <- object[fData(object)$AnalyteType == "Protein",]
+    raw <- exprs(object)
+  
+    # estimate background:
+    negfactor <- pmax(colMeans(raw[neg.names, , drop = FALSE]), 1)
+
+    # calc snr
+    snr <- sweep(raw, 2, negfactor, "/")
+
+    igginds <- which(is.element(rownames(snr), neg.names))
+    o <- c(igginds, setdiff(order(apply(snr, 1, median)), igginds))
+
+    protnames <- rownames(snr)
+    
+    par(mar = c(11, 4, 2, 1))
+    boxplot(t(log2(snr[o, ])),
+            las = 2,
+            outline = FALSE,
+            ylim = range(log2(snr+1)),
+            names = protnames[o],
+            ylab = "Log2 signal-to-background ratio",
+            cex.axis = .85 - 0.3 * (nrow(snr) > 60)
+    )
+    axis(2, at = 1, labels = 1, las = 2, cex = 0.5)
+    points(jitter(rep(1:nrow(snr), ncol(snr))),
+           log2(snr[o, ]),
+           col = "#00008B80",
+           pch = 16, cex = 0.5
+    )
+    abline(h = 0)
+    abline(v = length(igginds) + 0.5, lty = 2)
+    abline(h = 1, lty = 2)
+    # legend("bottomright", pch = 16, col = qccols, legend = c(paste0(c("Neg mean >= ", "Neg mean < "), neg.thresh)))
+}
+
+#' Add QC flags to feature and protocol data simultaneously
+#' 
+#' @export
+plot_concordance <- function(geneList, object, plot_factors){
+  cols <- assign_colors(annot = sData(object)[, plot_factors, drop = FALSE])
+  
+  if (length(geneList) > 1) {
+    par(mar = c(4, 4, 4, 1))
+    for (varname in plot_factors) {
+      tempmat <- t(pmax(exprs(object)[geneList, ], 1))
+      colnames(tempmat) <- paste0(colnames(tempmat), " counts")
+      concordance_plot(
+        mat = tempmat,
+        col = cols[[varname]][as.character(sData(object)[, varname])],
+        collegend = cols[[varname]],
+        legend.main = varname,
+        main = "Negative controls"
+      )
+    }
+  }
+}
+
+
+#' Add QC flags to feature and protocol data simultaneously
+#' 
+#' @export
+plot_normFactor_concordance <- function(object, plot_factors, normfactors = NULL){
+  cols <- assign_colors(annot = sData(object)[, plot_factors, drop = FALSE])
+  
+  if(is.null(normfactors)){
+    normfactors <- compute_normalization_factors(object)
+  }
+  
+  if (ncol(normfactors) > 1) {
+      par(mar = c(4, 4, 2, 1))
+      # pairs plots:
+      for (varname in names(cols)) {
+          tempmat <- pmax(normfactors, 1)
+          colnames(tempmat)[colnames(tempmat) == "HK geomean"] <- "HK geomean\n(counts)"
+          colnames(tempmat)[colnames(tempmat) == "Neg geomean"] <- "Neg geomean\n(counts)"
+          colnames(tempmat)[colnames(tempmat) == "Nuclei"] <- "Nuclei\n(counts)"
+          colnames(tempmat)[colnames(tempmat) == "Area"] <- "Area (microns squared)"
+
+          concordance_plot(
+              mat = tempmat,
+              col = cols[[varname]][as.character(sData(object)[, varname])],
+              collegend = cols[[varname]],
+              legend.main = varname,
+              main = "Normalization factors"
+          )
+      }
+  }
+}
+

@@ -37,6 +37,7 @@ generate_pkc_lookup <- function(jsons_vec) {
                           Module=character(), 
                           CodeClass=character(), 
                           ProbeID=character(),
+                          AnalyteType=character(),
                           stringsAsFactors=FALSE)
   for (curr_idx in seq_len(length(jsons_vec))) {
     curr_module <- names(jsons_vec)[curr_idx]
@@ -45,10 +46,14 @@ generate_pkc_lookup <- function(jsons_vec) {
       curr_targ <- targ[["DisplayName"]]
       curr_code_class <- gsub("\\d+$", "", targ[["CodeClass"]])
       for (prb in targ[["Probes"]]) {
-        curr_RTS_ID <- prb$RTS_ID
+        if(targ[["AnalyteType"]] == "Protein"){
+          curr_RTS_ID <- targ$RTS_ID
+        }else{
+          curr_RTS_ID <- prb$RTS_ID
+        }
         curr_probe_ID <- prb$ProbeID
         lookup_df[nrow(lookup_df) + 1, ] <- 
-          list(curr_RTS_ID, curr_targ, curr_module, curr_code_class, curr_probe_ID)
+          list(curr_RTS_ID, curr_targ, curr_module, curr_code_class, curr_probe_ID, targ[["AnalyteType"]])
       }
     }
   }
