@@ -89,11 +89,14 @@ target_demoData@featureType
 data.frame(assayData(target_demoData)[["exprs"]][seq_len(3), seq_len(3)])
 ```
 
-It is recommended to normalize using a GeoMx specific model before coercing.
+It is recommended to normalize using a GeoMx specific model before coercing. The normalized data
+is now in the assayData slot called "q_norm".
 
 ```{r GeomxTools Normalization}
 norm_target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="quant",
                                   desiredQuantile = .75, toElt = "q_norm")
+
+names(norm_target_demoData@assayData)
 
 data.frame(assayData(norm_target_demoData)[["q_norm"]][seq_len(3), seq_len(3)])
 ```
