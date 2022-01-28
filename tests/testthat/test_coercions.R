@@ -122,11 +122,11 @@ test_that("sequencing metrics are in the correct location - SpatialExperiment", 
 # sequencing metrics in correct spot
 test_that("QC metrics are in the correct location - Seurat", {
     expect_true(all(seurat_object@misc$QCMetrics$QCFlags == sData(target_demoData)[,colnames(sData(target_demoData)) %in% QCMetrics]))
-    expect_true(all(noQC_seurat_object@misc$QCMetrics$QCFlags == sData(noQC)[,colnames(sData(noQC)) %in% QCMetrics]))
+    expect_true(all(noQC_seurat_object@misc$QCMetrics == sData(noQC)[,colnames(sData(noQC)) %in% QCMetrics]))
 })
 test_that("QC metrics are in the correct location - SpatialExperiment", {
     expect_true(all(all(spe_object@metadata$QCMetrics$QCFlags == sData(target_demoData)[,colnames(sData(target_demoData)) %in% QCMetrics])))
-    expect_true(all(all(noQC_spe_object@metadata$QCMetrics$QCFlags == sData(noQC)[,colnames(sData(noQC)) %in% QCMetrics])))
+    expect_true(all(all(noQC_spe_object@metadata$QCMetrics == sData(noQC)[,colnames(sData(noQC)) %in% QCMetrics])))
 })
 
 

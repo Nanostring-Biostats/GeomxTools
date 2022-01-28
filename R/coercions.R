@@ -80,6 +80,10 @@ to.Seurat <- function(object, ident = NULL, normData = NULL, coordinates = NULL,
     seuratConvert@misc[["sequencingMetrics"]] <- sData(object)[colnames(sData(object)) %in% sequencingMetrics]
     seuratConvert@misc[["QCMetrics"]] <- sData(object)[colnames(sData(object)) %in% QCMetrics]
     
+    if(ncol(seuratConvert@misc[["QCMetrics"]]) == 0){
+      seuratConvert@misc[["QCMetrics"]] <- NULL
+    }
+    
     if(!is.null(coordinates)){
         xcoord <- coordinates[1]
         ycoord <- coordinates[2]
@@ -218,6 +222,10 @@ to.SpatialExperiment <- function(object, normData = NULL, coordinates = NULL, fo
     spe@metadata <- object@experimentData@other 
     spe@metadata[["sequencingMetrics"]] <- sData(object)[colnames(sData(object)) %in% sequencingMetrics]
     spe@metadata[["QCMetrics"]] <- sData(object)[colnames(sData(object)) %in% QCMetrics]
+    
+    if(ncol(spe@metadata[["QCMetrics"]]) == 0){
+      spe@metadata[["QCMetrics"]] <- NULL
+    }
     
     return(spe)
 }

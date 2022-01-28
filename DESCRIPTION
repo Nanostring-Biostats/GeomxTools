@@ -19,7 +19,9 @@ Suggests:
     parallel,
     ggiraph,
     Seurat,
-    SpatialExperiment (>= 1.4.0)
+    SpatialExperiment (>= 1.4.0),
+    SpatialDecon,
+    patchwork 
 License: MIT
 Collate: DccMetadata.R
          NanoStringGeoMxSet-class.R
