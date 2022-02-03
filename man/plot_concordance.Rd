@@ -15,6 +15,8 @@ plot_concordance(geneList, object, plot_factors)
 \item{neg.names}{names of IgGs, if NULL IgGs will be detected automatically}
 }
 \description{
+For use with protein data ONLY.
+
 Upper panels are the concordance plot.
 Lower panels are the standard deviation of the log2-ratios between the genes.
 }

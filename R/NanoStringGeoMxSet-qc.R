@@ -639,6 +639,9 @@ concordance_plot <- function(mat, col = rgb(0, 0, 0, 0.5),
 
 #' Generate Protein QC signal boxplot figure
 #' 
+#' @description 
+#' For use with protein data ONLY.
+#' 
 #' @param object name of the object class to subset
 #' \enumerate{
 #'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
@@ -704,6 +707,8 @@ qc_protein_signal <- function(object, neg.names=NULL) {
 #' Generate concordance figure of genes based on user provided factors
 #' 
 #' @description 
+#' For use with protein data ONLY.
+#' 
 #' Upper panels are the concordance plot.
 #' Lower panels are the standard deviation of the log2-ratios between the genes. 
 #' 
@@ -753,6 +758,8 @@ plot_concordance <- function(geneList, object, plot_factors){
 #' Generate concordance figure of normalization factors based on user provided factors
 #' 
 #' @description 
+#' For use with protein data ONLY.
+#' 
 #' Upper panels are the concordance plot.
 #' Lower panels are the standard deviation of the log2-ratios between the normalization factors 
 #' 

@@ -15,7 +15,7 @@ qc_protein_signal(object, neg.names = NULL)
 \item{neg.names}{names of IgGs, if NULL IgGs will be detected automatically}
 }
 \description{
-Generate Protein QC signal boxplot figure
+For use with protein data ONLY.
 }
 \examples{
 testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
