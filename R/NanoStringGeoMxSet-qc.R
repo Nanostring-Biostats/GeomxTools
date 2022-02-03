@@ -712,11 +712,12 @@ qc_protein_signal <- function(object, neg.names=NULL) {
 #' Upper panels are the concordance plot.
 #' Lower panels are the standard deviation of the log2-ratios between the genes. 
 #' 
+#' @param geneList names of genes to plot concordance, normally IgGs. 
 #' @param object name of the object class to subset
 #' \enumerate{
 #'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 #' }
-#' @param neg.names names of IgGs, if NULL IgGs will be detected automatically
+#' @param plot_factors segment factor to color the plot by
 #' 
 #' @examples
 #' testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
@@ -767,7 +768,7 @@ plot_concordance <- function(geneList, object, plot_factors){
 #' \enumerate{
 #'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 #' }
-#' @param neg.names names of IgGs, if NULL IgGs will be detected automatically
+#' @param plot_factors segment factor to color the plot by
 #' @param normfactors normalization factors from compute_normalization_factors(). If NULL these are calculated automatically. 
 #' 
 #' @examples

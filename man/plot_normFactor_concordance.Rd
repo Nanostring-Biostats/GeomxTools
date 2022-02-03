@@ -12,9 +12,9 @@ plot_normFactor_concordance(object, plot_factors, normfactors = NULL)
     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 }}
 
-\item{normfactors}{normalization factors from compute_normalization_factors(). If NULL these are calculated automatically.}
+\item{plot_factors}{segment factor to color the plot by}
 
-\item{neg.names}{names of IgGs, if NULL IgGs will be detected automatically}
+\item{normfactors}{normalization factors from compute_normalization_factors(). If NULL these are calculated automatically.}
 }
 \description{
 For use with protein data ONLY.

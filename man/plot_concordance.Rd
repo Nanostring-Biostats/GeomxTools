@@ -7,12 +7,14 @@
 plot_concordance(geneList, object, plot_factors)
 }
 \arguments{
+\item{geneList}{names of genes to plot concordance, normally IgGs.}
+
 \item{object}{name of the object class to subset
 \enumerate{
     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 }}
 
-\item{neg.names}{names of IgGs, if NULL IgGs will be detected automatically}
+\item{plot_factors}{segment factor to color the plot by}
 }
 \description{
 For use with protein data ONLY.

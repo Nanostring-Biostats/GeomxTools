@@ -2,7 +2,7 @@
 % Please edit documentation in R/NanoStringGeoMxSet-normalize.R
 \name{compute_normalization_factors}
 \alias{compute_normalization_factors}
-\title{protein normalization}
+\title{Generate normalization factors}
 \usage{
 compute_normalization_factors(
   object,
@@ -12,6 +12,34 @@ compute_normalization_factors(
   nuclei = NULL
 )
 }
+\arguments{
+\item{object}{name of the object class to subset
+\enumerate{
+    \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+}}
+
+\item{igg.names}{names of IgGs, if NULL IgGs will be detected automatically}
+
+\item{hk.names}{names of HK, if NULL HK will be detected automatically}
+
+\item{area}{name of area column in annotation sheet, optional}
+
+\item{nuclei}{name of nuclei column in annotation sheet, optional}
+}
 \description{
-protein normalization
+For use with protein data ONLY.
+
+Generate normalization factors for protein data to determine the best normalization method
+}
+\examples{
+testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+"proteinData.rds", package = "GeomxTools"))
+
+proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
+
+normfactors <- compute_normalization_factors(object = proteinData)
+
+normfactors_withAreaNuclei <- compute_normalization_factors(object = proteinData,
+area = "AOI.Size.um2", nuclei = "Nuclei.Counts")
+
 }

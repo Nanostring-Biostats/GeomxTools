@@ -220,9 +220,35 @@ subtractBackground <- function(object, data_type, toElt, fromElt, byPanel=TRUE) 
 }
 
 
-#' protein normalization
+#' Generate normalization factors 
+#' 
+#' @description 
+#' For use with protein data ONLY.
+#' 
+#' Generate normalization factors for protein data to determine the best normalization method
+#' 
+#' @param object name of the object class to subset
+#' \enumerate{
+#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+#' }
+#' @param igg.names names of IgGs, if NULL IgGs will be detected automatically
+#' @param hk.names names of HK, if NULL HK will be detected automatically
+#' @param area name of area column in annotation sheet, optional
+#' @param nuclei name of nuclei column in annotation sheet, optional
+#' 
+#' @examples
+#' testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+#' "proteinData.rds", package = "GeomxTools"))
+#' 
+#' proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
+#' 
+#' normfactors <- compute_normalization_factors(object = proteinData)
+#' 
+#' normfactors_withAreaNuclei <- compute_normalization_factors(object = proteinData,
+#' area = "AOI.Size.um2", nuclei = "Nuclei.Counts")
+#' 
 #' @export
-## Protein Normalization
+
 compute_normalization_factors <- function(object, igg.names = NULL, hk.names = NULL,
                                           area = NULL, nuclei = NULL) {
   
