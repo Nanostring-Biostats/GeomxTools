@@ -218,3 +218,40 @@ function(dccFiles,
                              check = FALSE, 
                              dimLabels = c("RTS_ID", "SampleID")) )
 }
+
+#' Subset GeomxSet Object by AnalyteType
+#' 
+#' @param object name of the object class to subset
+#' \enumerate{
+#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+#' }
+#' @param analyte analyte for returned object
+#' 
+#' @return list containing multiple GeomxSet objects named by AnalyteType
+#' 
+#' @examples
+#' testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+#' "proteinData.rds", package = "GeomxTools"))
+#' 
+#' proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
+#' RNAData <- analyteSubset(object = aggTestData, analyte = "RNA")
+#' 
+#' @export
+#'
+analyteSubset <- function(object, analyte){
+  if(length(unique(fData(object)$AnalyteType)) > 1){
+    if(!tolower(analyte) %in% tolower(unique(fData(object)$AnalyteType))){
+      stop(paste("Given analyte is not in dataset; options:", paste(unique(fData(object)$AnalyteType), collapse = ", ")))
+    }
+    
+    objects <- list()
+    pkcs <- object@annotation
+    
+    object <- subset(object, subset = tolower(AnalyteType) == tolower(analyte))
+    object@annotation <- pkcs[pkcs %in% paste0(unique(fData(object)$Module), ".pkc")]
+    
+    return(object)
+  }else{
+    warning("Only one analyte present, no subsetting neccesary")
+  }
+}

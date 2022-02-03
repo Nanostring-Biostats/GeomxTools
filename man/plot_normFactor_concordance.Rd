@@ -2,10 +2,30 @@
 % Please edit documentation in R/NanoStringGeoMxSet-qc.R
 \name{plot_normFactor_concordance}
 \alias{plot_normFactor_concordance}
-\title{Add QC flags to feature and protocol data simultaneously}
+\title{Generate concordance figure of normalization factors based on user provided factors}
 \usage{
 plot_normFactor_concordance(object, plot_factors, normfactors = NULL)
 }
+\arguments{
+\item{object}{name of the object class to subset
+\enumerate{
+    \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+}}
+
+\item{normfactors}{normalization factors from compute_normalization_factors(). If NULL these are calculated automatically.}
+
+\item{neg.names}{names of IgGs, if NULL IgGs will be detected automatically}
+}
 \description{
-Add QC flags to feature and protocol data simultaneously
+Upper panels are the concordance plot.
+Lower panels are the standard deviation of the log2-ratios between the normalization factors
+}
+\examples{
+testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+"proteinData.rds", package = "GeomxTools"))
+
+proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
+
+plot_normFactor_concordance(object = proteinData, plot_factors = "Segment_Type")
+
 }

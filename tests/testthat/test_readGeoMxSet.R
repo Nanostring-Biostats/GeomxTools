@@ -50,7 +50,7 @@ testthat::test_that("test that the column names and the rownames of testData@phe
                             "pool_rep",
                             "slide_rep")
   experimentDataColNames <- c("panel")
-  pheno_tab <- openxlsx::read.xlsx(SampleAnnotationFile, sheet = 'CW005')
+  pheno_tab <- readxl::read_xlsx(SampleAnnotationFile, sheet = 'CW005')
   colnames(pheno_tab) <- str_replace_all(colnames(pheno_tab),'\\.',' ')
   expect_true(all(basename(DCCFiles) %in% rownames(testData@phenoData@data)))
   expect_true(all(colnames(pheno_tab) %in% c(names(testData@phenoData@data), # what is pheno_tab?

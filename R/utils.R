@@ -113,9 +113,13 @@ shiftCountsOne <- function(object, elt="exprs", useDALogic=FALSE) {
 #' @export
 #' 
 igg_names <- function(object){
-  names <- featureData(object)$Target[featureData(object)$AnalyteType == "Protein" &
-                                        featureData(object)$CodeClass == "Negative"]
-  return(names)
+  if("Protein" %in% fData(object)$AnalyteType){
+    names <- featureData(object)$Target[featureData(object)$AnalyteType == "Protein" &
+                                          featureData(object)$CodeClass == "Negative"]
+    return(names)
+  }else{
+    warning("No Protein data in object so no IgG probes to return")
+  }
 }
 
 #' Return the House Keeper positive controls for protein
@@ -127,9 +131,13 @@ igg_names <- function(object){
 #' @export
 #' 
 hk_names <- function(object){
-  names <- featureData(object)$Target[featureData(object)$AnalyteType == "Protein" &
-                                        featureData(object)$CodeClass == "Control"]
-  return(names)
+  if("Protein" %in% fData(object)$AnalyteType){
+    names <- featureData(object)$Target[featureData(object)$AnalyteType == "Protein" &
+                                          featureData(object)$CodeClass == "Control"]
+    return(names)
+  }else{
+    warning("No Protein data in object so no HK probes to return")
+  }
 }
 
 assign_colors <- function(annot) {

@@ -28,6 +28,9 @@ setMethod(
            data_type = c("RNA", "protein"), fromElt = "exprs", toElt = "exprs_norm",
            housekeepers = HOUSEKEEPERS, ...) {
     norm_method <- match.arg(norm_method)
+    if(length(unique(fData(object)$AnalyteType)) > 1){
+      stop("Please split dataset by analyte before normalizing")
+    }
     switch(norm_method,
       "quant" = {
         quantileNorm(object,
@@ -81,37 +84,60 @@ negNorm <- function(object, data_type, toElt, fromElt) {
     stop("Error: Module is not specified in the object. Check your GeoMxSet object. \n")
   }
 
-  # check if single panel
-  pools <- as.list(unique(fData(object)[["Module"]]))
-  pool_neg_norm <- lapply(
-    pools,
-    function(pool) {
-      # Get pool and corresponding target counts
-      pool_neg <- fData(object)[which(fData(object)$CodeClass == "Negative" &
-                                            fData(object)$Module == pool), "TargetName"]
-      if (length(pool_neg) < 1) {
-        stop(paste0(
-          "Error: No negative could be located for probe pool ",
-          pool, "."
-        ))
-      }
-      if (length(pool_neg) > 1) {
-        stop(paste0(
-          "Error: More than one negative was located for probe pool ",
-          pool, "."
-        ))
-      }
-      pool_targets <- fData(object)[which(fData(object)$Module == pool), "TargetName"]
-      # Calculate normalization factor and normalized counts
-      pool_neg_factors <-
-        exprs(object[pool_neg,])/exp(mean(log(exprs(object[pool_neg,]))))
-      pool_counts <- as.matrix(exprs(object[pool_targets,])) %*%
+  if(all(fData(object)$AnalyteType == "Protein")){
+    neg.names <- igg_names(object)
+    
+    # estimate background:
+    negfactor <- apply(exprs(object[neg.names,, drop = FALSE]), 2, function(x){pmax(ngeoMean(x), 1)})
+    
+    pool_neg_factors <-
+      negfactor/exp(mean(log(negfactor)))
+    pool_counts <- as.matrix(exprs(object)) %*%
+      diag(1 / pool_neg_factors)
+    
+    # match format of RNA pool_neg_factors
+    pool_neg_factors <- t(as.matrix(pool_neg_factors))
+    rownames(pool_neg_factors) <- "IgGs"
+    
+    pool_neg_norm <- list()
+    pool_neg_norm[[1]] <- list(normFactors = pool_neg_factors, norm_exprs = pool_counts)
+  }else if(any(fData(object)$AnalyteType == "Protein")){
+    stop("Please split data by analyte before normalization")
+  }else{
+    # check if single panel
+    pools <- as.list(unique(fData(object)[["Module"]]))
+    pool_neg_norm <- lapply(
+      pools,
+      function(pool) {
+        # Get pool and corresponding target counts
+        pool_neg <- fData(object)[which(fData(object)$CodeClass == "Negative" &
+                                          fData(object)$Module == pool), "TargetName"]
+        if (length(pool_neg) < 1) {
+          stop(paste0(
+            "Error: No negative could be located for probe pool ",
+            pool, "."
+          ))
+        }
+        if (length(pool_neg) > 1) {
+          stop(paste0(
+            "Error: More than one negative was located for probe pool ",
+            pool, "."
+          ))
+        }
+        pool_targets <- fData(object)[which(fData(object)$Module == pool), "TargetName"]
+        # Calculate normalization factor and normalized counts
+        pool_neg_factors <-
+          exprs(object[pool_neg,])/exp(mean(log(exprs(object[pool_neg,]))))
+        pool_counts <- as.matrix(exprs(object[pool_targets,])) %*%
           diag(1 / pool_neg_factors[1:ncol(pool_neg_factors)])
-
-      norm_list <- list(normFactors = pool_neg_factors, norm_exprs = pool_counts)
-      return(norm_list)
-    }
-  )
+        
+        norm_list <- list(normFactors = pool_neg_factors, norm_exprs = pool_counts)
+        return(norm_list)
+      }
+    )
+  }
+  
+  
 
   ## Save the normfactors in desired pData element
   if (toElt != "exprs_norm") {
@@ -136,6 +162,9 @@ hkNorm <- function(object, data_type, toElt, fromElt, housekeepers) {
     stop("Housekeeping normalization is for collapsed data set.
             Run function aggregateCounts() to collapse the probes to targets.\n")
   } else {
+    if(all(fData(object)$AnalyteType == "Protein") & all(housekeepers == HOUSEKEEPERS)){
+      housekeepers <- hk_names(object)
+    }
     hksubset <- subset(object, subset = TargetName %in% housekeepers)
     hks <- apply(exprs(hksubset), 2, function(x) ngeoMean(x))
     ## Save the normfactors in desired pData element
@@ -211,10 +240,10 @@ compute_normalization_factors <- function(object, igg.names = NULL, hk.names = N
   
   # igg and hk factors:
   if (length(igg.names) > 1) {
-    igg.factor <- exp(colMeans(log(pmax(dataset[igg.names, , drop = FALSE], 1))))
+    igg.factor <- apply(dataset[igg.names, , drop = FALSE], 2, function(x){pmax(ngeoMean(x), 1)})
   }
   if (length(hk.names) > 1) {
-    hk.factor <- exp(colMeans(log(pmax(dataset[hk.names, , drop = FALSE], 1))))
+    hk.factor <- apply(dataset[hk.names, , drop = FALSE], 2, function(x){pmax(ngeoMean(x), 1)})
   }
   
   # area and nuclei factors:

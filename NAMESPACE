@@ -31,6 +31,10 @@ importFrom(parallel, makeCluster)
 importFrom(parallel, stopCluster)
 importFrom(BiocGenerics, design)
 importFrom(BiocGenerics, "design<-")
+importFrom("grDevices", "col2rgb", "colors", "rgb")
+importFrom("graphics", "abline", "axis", "boxplot", "legend", "pairs",
+           "par", "points")
+importFrom(stats, median)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
@@ -78,7 +82,7 @@ export(setSeqQCFlags)
 export(shiftCountsOne)
 export(summarizeNegatives)
 export(mixedModelDE)
-
+export(analyteSubset)
 export(igg_names)
 export(hk_names)
 export(compute_normalization_factors)

@@ -2,10 +2,30 @@
 % Please edit documentation in R/NanoStringGeoMxSet-qc.R
 \name{plot_concordance}
 \alias{plot_concordance}
-\title{Add QC flags to feature and protocol data simultaneously}
+\title{Generate concordance figure of genes based on user provided factors}
 \usage{
 plot_concordance(geneList, object, plot_factors)
 }
+\arguments{
+\item{object}{name of the object class to subset
+\enumerate{
+    \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+}}
+
+\item{neg.names}{names of IgGs, if NULL IgGs will be detected automatically}
+}
 \description{
-Add QC flags to feature and protocol data simultaneously
+Upper panels are the concordance plot.
+Lower panels are the standard deviation of the log2-ratios between the genes.
+}
+\examples{
+testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+"proteinData.rds", package = "GeomxTools"))
+
+proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
+
+igg.names <- igg_names(proteinData)
+
+qc_protein_signal(object = proteinData, neg.names = igg.names)
+
 }

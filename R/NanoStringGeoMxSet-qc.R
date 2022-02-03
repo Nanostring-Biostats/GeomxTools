@@ -154,8 +154,10 @@ setSaturationFlags <- function(object, cutoff=DEFAULTS[["percentSaturation"]]) {
 #' 
 setBackgroundQCFlags <- function(object, qcCutoffs=DEFAULTS) {
     qcCutoffs <- checkCutoffs(qcCutoffs)
-    object <- setLowNegFlags(object=object, 
-        cutoff=qcCutoffs[["minNegativeCount"]])
+    if(any(fData(object)$AnalyteType == "RNA")){
+      object <- setLowNegFlags(object=object, 
+                               cutoff=qcCutoffs[["minNegativeCount"]])
+    }
     object <- setHighNTCFlags(object=object, 
         cutoff=qcCutoffs[["maxNTCCount"]])
     return(object)
@@ -554,8 +556,10 @@ removeFlagProbes <- function(object, removeFlagCols=NULL) {
 
 #NEO make sure that when collapsed count occurs feature data QCFlags is removed
 setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
-    object <- 
+    if(any(fData(object)$AnalyteType == "RNA")){
+      object <- 
         setLOQFlags(object, cutoff=qcCutoffs[["loqCutoff"]])
+    }  
     object <- 
         setHighCountFlags(object=object, cutoff=qcCutoffs[["highCountCutoff"]])
     return(object)
@@ -633,18 +637,41 @@ concordance_plot <- function(mat, col = rgb(0, 0, 0, 0.5),
     }
 }
 
-#' Add QC flags to feature and protocol data simultaneously
+#' Generate Protein QC signal boxplot figure
+#' 
+#' @param object name of the object class to subset
+#' \enumerate{
+#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+#' }
+#' @param neg.names names of IgGs, if NULL IgGs will be detected automatically
+#' 
+#' @examples
+#' testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+#' "proteinData.rds", package = "GeomxTools"))
+#' 
+#' proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
+#' 
+#' igg.names <- igg_names(proteinData)
+#' 
+#' qc_protein_signal(object = proteinData, neg.names = igg.names)
 #' 
 #' @export
-qc_protein_signal <- function(object, neg.names, targetAnnotations = NULL,
-                              neg.thresh = 20, qccols = c("#00008B80", "#FF000080")) {
 
+qc_protein_signal <- function(object, neg.names=NULL) {
+    
+    if(any(fData(object)$AnalyteType == "Protein") == FALSE){
+      stop("This figure is only meant for protein data")
+    }  
+  
+    if(is.null(neg.names)){
+      neg.names <- igg_names(object)
+    }
   
     object <- object[fData(object)$AnalyteType == "Protein",]
     raw <- exprs(object)
   
     # estimate background:
-    negfactor <- pmax(colMeans(raw[neg.names, , drop = FALSE]), 1)
+    negfactor <- apply(raw[neg.names, , drop = FALSE], 2, function(x){pmax(ngeoMean(x), 1)})
 
     # calc snr
     snr <- sweep(raw, 2, negfactor, "/")
@@ -672,13 +699,38 @@ qc_protein_signal <- function(object, neg.names, targetAnnotations = NULL,
     abline(h = 0)
     abline(v = length(igginds) + 0.5, lty = 2)
     abline(h = 1, lty = 2)
-    # legend("bottomright", pch = 16, col = qccols, legend = c(paste0(c("Neg mean >= ", "Neg mean < "), neg.thresh)))
 }
 
-#' Add QC flags to feature and protocol data simultaneously
+#' Generate concordance figure of genes based on user provided factors
+#' 
+#' @description 
+#' Upper panels are the concordance plot.
+#' Lower panels are the standard deviation of the log2-ratios between the genes. 
+#' 
+#' @param object name of the object class to subset
+#' \enumerate{
+#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+#' }
+#' @param neg.names names of IgGs, if NULL IgGs will be detected automatically
+#' 
+#' @examples
+#' testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+#' "proteinData.rds", package = "GeomxTools"))
+#' 
+#' proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
+#' 
+#' igg.names <- igg_names(proteinData)
+#' 
+#' qc_protein_signal(object = proteinData, neg.names = igg.names)
 #' 
 #' @export
+
 plot_concordance <- function(geneList, object, plot_factors){
+  
+  if(!plot_factors %in% colnames(sData(object))){
+    stop("Given plot_factors are not in dataset, spelling and capitalization matter")
+  }
+  
   cols <- assign_colors(annot = sData(object)[, plot_factors, drop = FALSE])
   
   if (length(geneList) > 1) {
@@ -698,10 +750,34 @@ plot_concordance <- function(geneList, object, plot_factors){
 }
 
 
-#' Add QC flags to feature and protocol data simultaneously
+#' Generate concordance figure of normalization factors based on user provided factors
+#' 
+#' @description 
+#' Upper panels are the concordance plot.
+#' Lower panels are the standard deviation of the log2-ratios between the normalization factors 
+#' 
+#' @param object name of the object class to subset
+#' \enumerate{
+#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+#' }
+#' @param neg.names names of IgGs, if NULL IgGs will be detected automatically
+#' @param normfactors normalization factors from compute_normalization_factors(). If NULL these are calculated automatically. 
+#' 
+#' @examples
+#' testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+#' "proteinData.rds", package = "GeomxTools"))
+#' 
+#' proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
+#' 
+#' plot_normFactor_concordance(object = proteinData, plot_factors = "Segment_Type")
 #' 
 #' @export
+
 plot_normFactor_concordance <- function(object, plot_factors, normfactors = NULL){
+  if(!plot_factors %in% colnames(sData(object))){
+    stop("Given plot_factors are not in dataset, spelling and capitalization matter")
+  }
+  
   cols <- assign_colors(annot = sData(object)[, plot_factors, drop = FALSE])
   
   if(is.null(normfactors)){

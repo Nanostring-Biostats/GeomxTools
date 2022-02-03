@@ -46,14 +46,14 @@ generate_pkc_lookup <- function(jsons_vec) {
       curr_targ <- targ[["DisplayName"]]
       curr_code_class <- gsub("\\d+$", "", targ[["CodeClass"]])
       for (prb in targ[["Probes"]]) {
-        if(targ[["AnalyteType"]] == "Protein"){
+        if(curr_json[["AnalyteType"]] == "Protein"){
           curr_RTS_ID <- targ$RTS_ID
         }else{
           curr_RTS_ID <- prb$RTS_ID
         }
         curr_probe_ID <- prb$ProbeID
         lookup_df[nrow(lookup_df) + 1, ] <- 
-          list(curr_RTS_ID, curr_targ, curr_module, curr_code_class, curr_probe_ID, targ[["AnalyteType"]])
+          list(curr_RTS_ID, curr_targ, curr_module, curr_code_class, curr_probe_ID, curr_json[["AnalyteType"]])
       }
     }
   }
