@@ -13,7 +13,7 @@
 readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile, 
                      phenoDataSheet, phenoDataDccColName = "Sample_ID",
                      phenoDataColPrefix = "", protocolDataColNames = NULL,
-                     experimentDataColNames = NULL, ...)
+                     experimentDataColNames = NULL, configFile = NULL, ...)
 }
 
 \arguments{
