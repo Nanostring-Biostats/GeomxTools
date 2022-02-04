@@ -82,5 +82,5 @@ export(mixedModelDE)
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S3 methods
 
-
-
+export(to.Seurat)
+export(to.SpatialExperiment)

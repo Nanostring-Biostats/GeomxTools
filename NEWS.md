@@ -1,3 +1,8 @@
+# GeomxTools 2.1.1
+
+## Revisions:
+* Add coercion to Seurat and SpatialExperiment
+
 # GeomxTools 2.1.0
 
 * No changes from 1.1.4

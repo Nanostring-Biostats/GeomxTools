@@ -56,7 +56,7 @@ is made on usability at any given time.
 
 ## Citation
 Ortogero, N.; Yang, Z.; Vitancol, R.; Griswold, M.; Henderson, D. 
-GeomxTools: NanoString GeoMx Tools. R Package Version 1.0.0. 
+GeomxTools: NanoString GeoMx Tools. R Package Version 2.1.1. 
 NanoString Technologies Inc.; Seattle, WA 98109, USA. 2021. 
 
 ## License
