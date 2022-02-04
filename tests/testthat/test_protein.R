@@ -98,6 +98,7 @@ test_that("Concordance plots are plotted", {
 })
 
 proteinData <- normalize(proteinData, norm_method = "hk", toElt="hk_norm")
+proteinData <- normalize(proteinData, norm_method = "hk", toElt="hk_norm_givenHK", housekeepers = hk.names)
 proteinData <- normalize(proteinData, norm_method = "neg", toElt="neg_norm")
 proteinData <- normalize(proteinData, norm_method = "quant", toElt="q3_norm")
 
@@ -105,6 +106,8 @@ test_that("Protein data is normalized",{
   expect_true(all(proteinData@assayData$exprs != proteinData@assayData$hk_norm))
   expect_true(all(proteinData@assayData$exprs != proteinData@assayData$neg_norm))
   expect_true(all(proteinData@assayData$exprs != proteinData@assayData$q3_norm))
+  
+  expect_equal(proteinData@assayData$hk_norm, proteinData@assayData$hk_norm_givenHK)
   
   expect_true(all(c("hk_norm_hkFactors", "neg_norm_negFactors", "q3_norm_qFactors") %in% 
                     colnames(pData(proteinData))))

@@ -7,6 +7,7 @@ function(dccFiles,
          phenoDataColPrefix = "",
          protocolDataColNames = NULL,
          experimentDataColNames = NULL,
+         configFile = NULL,
          ...)
 {
   # check inputs
@@ -120,7 +121,7 @@ function(dccFiles,
     pkcData <- readPKCFile(pkcFiles)
 
     pkcHeader <- S4Vectors::metadata(pkcData)
-    pkcHeader[["PKCFileDate"]] <- as.character(pkcHeader[["PKCFileDate"]])
+    # pkcHeader[["PKCFileDate"]] <- as.character(pkcHeader[["PKCFileDate"]])
 
     pkcData$RTS_ID <- gsub("RNA", "RTS00", pkcData$RTS_ID)
 
@@ -136,6 +137,16 @@ function(dccFiles,
   if (length(setdiff(unique(probeAssay[["RTS_ID"]]), rownames(pkcData))) > 0L){
     stop("Missing PKC files, not all probes are not in specified PKC files.")
   }
+  
+  if(!is.null(configFile)){
+    pkcProbes <- compareToConfig(config = configFile, pkcProbes = pkcData, pkcHeader = pkcHeader)
+    
+    pkcData <- pkcProbes$pkcData
+    pkcHeader <- pkcProbes$pkcHeader
+    
+    pkcFiles <- paste0(unique(pkcData$Module), ".pkc")
+  }
+  
   zeroProbes <- setdiff(rownames(pkcData), unique(probeAssay[["RTS_ID"]]))
   zeroProbeAssay <- data.frame(RTS_ID=pkcData[zeroProbes, "RTS_ID"],
     Count=rep(0, length(zeroProbes)),
@@ -217,6 +228,34 @@ function(dccFiles,
                              protocolData = protocol,
                              check = FALSE, 
                              dimLabels = c("RTS_ID", "SampleID")) )
+}
+
+
+
+compareToConfig <- function(config, pkcProbes, pkcHeader){
+  if(!file.exists(config)){
+    stop("Given config file does not exist")
+  }
+  
+  config <- readLines(config)
+  targets <- config[(which(config == "[Targets]")+1):length(config)]
+  targets <- str_split(string = targets, pattern = " = ", simplify = T)[,1]
+  
+  if(any(!pkcProbes$RTS_ID %in% targets)){
+    extraPKCs <- unique(pkcProbes$Module[which(!pkcProbes$RTS_ID %in% targets)])
+    warning(paste0("Extra PKC files were provided and will be removed from further analysis: ", paste(extraPKCs, collapse = ", ")),
+            immediate. = TRUE)
+    
+    pkcs <- unique(pkcProbes$Module[!pkcProbes$Module %in% extraPKCs])
+  
+    pkcProbes <- pkcProbes[pkcProbes$Module %in% pkcs,]
+    
+    for(i in names(pkcHeader)){
+      pkcHeader[[i]] <- pkcHeader[[i]][names(pkcHeader[[i]]) %in% pkcs]
+    }
+  }
+  
+  return(list(pkcData=pkcProbes, pkcHeader=pkcHeader))
 }
 
 #' Subset GeomxSet Object by AnalyteType

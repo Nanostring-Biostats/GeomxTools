@@ -158,3 +158,24 @@ testthat::test_that("test that only valid ... gets translated to read_xlsx()", {
                                                                        "numeric", rep("text", 4)))))
 })
 
+testthat::test_that("PKCs are removed if they aren't in the config", {
+  testDataWithExtraConfig <- 
+    suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                                            pkcFiles = c(PKCFiles, paste0(system.file("extdata", "DSP_Proteogenomics_Example_Data",
+                                                                                      package="GeomxTools"), "/Hs_P_NGS_ADPath_Ext_v1.0.pkc")),
+                                            phenoDataFile = SampleAnnotationFile,
+                                            phenoDataSheet = "CW005",
+                                            phenoDataDccColName = "Sample_ID",
+                                            protocolDataColNames = c("aoi",
+                                                                     "cell_line",
+                                                                     "roi_rep",
+                                                                     "pool_rep",
+                                                                     "slide_rep"),
+                                            experimentDataColNames = c("panel"),
+                                            configFile = paste0(datadir, "/fakeTesting_config.ini")))
+  
+  expect_identical(testData@annotation, testDataWithExtraConfig@annotation)
+  expect_identical(rownames(testData), rownames(testDataWithExtraConfig))
+  expect_identical(fData(testData), fData(testDataWithExtraConfig))
+})
+
