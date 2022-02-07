@@ -704,15 +704,13 @@ qc_protein_signal <- function(object, neg.names=NULL) {
     abline(h = 1, lty = 2)
 }
 
-#' Generate concordance figure of genes based on user provided factors
+#' Generate concordance figure of targets based on user provided factors
 #' 
-#' @description 
-#' For use with protein data ONLY.
-#' 
+#' @description  
 #' Upper panels are the concordance plot.
-#' Lower panels are the standard deviation of the log2-ratios between the genes. 
+#' Lower panels are the standard deviation of the log2-ratios between the targets 
 #' 
-#' @param geneList names of genes to plot concordance, normally IgGs. 
+#' @param targetList names of targets to plot concordance, normally IgGs. 
 #' @param object name of the object class to subset
 #' \enumerate{
 #'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
@@ -724,14 +722,16 @@ qc_protein_signal <- function(object, neg.names=NULL) {
 #' "proteinData.rds", package = "GeomxTools"))
 #' 
 #' proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
+#' RNAData <- analyteSubset(object = aggTestData, analyte = "RNA")
 #' 
 #' igg.names <- igg_names(proteinData)
 #' 
-#' qc_protein_signal(object = proteinData, neg.names = igg.names)
+#' plot_concordance(targetList = igg.names, object = proteinData, plot_factors = "Segment_Type)
+#' plot_concordance(targetList = c("C1orf43", "GPI", "OAZ1"), object = RNAData, plot_factors = "Segment_Type)
 #' 
 #' @export
 
-plot_concordance <- function(geneList, object, plot_factors){
+plot_concordance <- function(targetList, object, plot_factors){
   
   if(!plot_factors %in% colnames(sData(object))){
     stop("Given plot_factors are not in dataset, spelling and capitalization matter")
@@ -739,17 +739,16 @@ plot_concordance <- function(geneList, object, plot_factors){
   
   cols <- assign_colors(annot = sData(object)[, plot_factors, drop = FALSE])
   
-  if (length(geneList) > 1) {
+  if (length(targetList) > 1) {
     par(mar = c(4, 4, 4, 1))
     for (varname in plot_factors) {
-      tempmat <- t(pmax(exprs(object)[geneList, ], 1))
+      tempmat <- t(pmax(exprs(object)[targetList, ], 1))
       colnames(tempmat) <- paste0(colnames(tempmat), " counts")
       concordance_plot(
         mat = tempmat,
         col = cols[[varname]][as.character(sData(object)[, varname])],
         collegend = cols[[varname]],
-        legend.main = varname,
-        main = "Negative controls"
+        legend.main = varname
       )
     }
   }

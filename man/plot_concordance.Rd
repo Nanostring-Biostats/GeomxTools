@@ -2,12 +2,12 @@
 % Please edit documentation in R/NanoStringGeoMxSet-qc.R
 \name{plot_concordance}
 \alias{plot_concordance}
-\title{Generate concordance figure of genes based on user provided factors}
+\title{Generate concordance figure of targets based on user provided factors}
 \usage{
-plot_concordance(geneList, object, plot_factors)
+plot_concordance(targetList, object, plot_factors)
 }
 \arguments{
-\item{geneList}{names of genes to plot concordance, normally IgGs.}
+\item{targetList}{names of targets to plot concordance, normally IgGs.}
 
 \item{object}{name of the object class to subset
 \enumerate{
@@ -17,19 +17,19 @@ plot_concordance(geneList, object, plot_factors)
 \item{plot_factors}{segment factor to color the plot by}
 }
 \description{
-For use with protein data ONLY.
-
 Upper panels are the concordance plot.
-Lower panels are the standard deviation of the log2-ratios between the genes.
+Lower panels are the standard deviation of the log2-ratios between the targets
 }
 \examples{
 testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
 "proteinData.rds", package = "GeomxTools"))
 
 proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
+RNAData <- analyteSubset(object = aggTestData, analyte = "RNA")
 
 igg.names <- igg_names(proteinData)
 
-qc_protein_signal(object = proteinData, neg.names = igg.names)
+plot_concordance(targetList = igg.names, object = proteinData, plot_factors = "Segment_Type)
+plot_concordance(targetList = c("C1orf43", "GPI", "OAZ1"), object = RNAData, plot_factors = "Segment_Type)
 
 }

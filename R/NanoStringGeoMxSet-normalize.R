@@ -252,6 +252,10 @@ subtractBackground <- function(object, data_type, toElt, fromElt, byPanel=TRUE) 
 compute_normalization_factors <- function(object, igg.names = NULL, hk.names = NULL,
                                           area = NULL, nuclei = NULL) {
   
+  if(!any(fData(object)$AnalyteType == "Protein")){
+    stop("This function is only for protein data.")
+  }
+  
   if(is.null(igg.names)){
     igg.names <- igg_names(object)
   }

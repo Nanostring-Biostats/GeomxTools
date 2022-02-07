@@ -75,6 +75,11 @@ test_that("Warnings are given if protein data is run through setBioProbeQCFlags"
 igg.names <- igg_names(proteinData)
 hk.names <- hk_names(proteinData)
 
+HOUSEKEEPERS <- c(
+  "C1orf43", "GPI", "OAZ1", "POLR2A", "PSMB2", "RAB7A",
+  "SDHA", "SNRPD3", "TBC1D10B", "TPM4", "TUBB", "UBB"
+)
+
 test_that("Expected IgGs are returned",{
   expect_true(all(grepl(pattern = "IgG", igg.names)))
   expect_equal(length(igg.names), length(grep(pattern = "IgG", fData(proteinData)$TargetName)))
@@ -95,6 +100,8 @@ test_that("Concordance plots are plotted", {
   expect_error(plot_concordance(igg.names, proteinData, "Segment_Typ"))
   expect_error(plot_concordance(igg.names, proteinData, "Segment_Type"), NA)
   expect_error(plot_concordance(igg.names, proteinData, "Tissue"), NA)
+  
+  expect_error(plot_concordance(HOUSEKEEPERS[1:4], RNAData, "Segment_Type"), NA)
 })
 
 proteinData <- normalize(proteinData, norm_method = "hk", toElt="hk_norm")
@@ -135,6 +142,8 @@ test_that("compute_normalization_factors vs normalization",{
   expect_equal(as.numeric(dim(normfactors)), as.numeric(c(ncol(proteinData), 2)))
   expect_equal(as.numeric(dim(normfactors_area)), as.numeric(c(ncol(proteinData), 3)))
   expect_equal(as.numeric(dim(normfactors_area_nuc)), as.numeric(c(ncol(proteinData), 4)))
+  
+  expect_error(compute_normalization_factors(object = RNAData))
 })
 
 test_that("QC plots are plotted", {
@@ -142,6 +151,8 @@ test_that("QC plots are plotted", {
                                            normfactors = normfactors), NA)
   expect_error(qc_protein_signal(object = proteinData,
                                  neg.names = igg.names), NA)
+  
+  expect_error(qc_protein_signal(object = RNAData))
 })
 
 
