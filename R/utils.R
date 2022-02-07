@@ -112,7 +112,7 @@ shiftCountsOne <- function(object, elt="exprs", useDALogic=FALSE) {
 #' 
 #' @export
 #' 
-igg_names <- function(object){
+iggNames <- function(object){
   if("Protein" %in% fData(object)$AnalyteType){
     names <- featureData(object)$Target[featureData(object)$AnalyteType == "Protein" &
                                           featureData(object)$CodeClass == "Negative"]
@@ -130,7 +130,7 @@ igg_names <- function(object){
 #' 
 #' @export
 #' 
-hk_names <- function(object){
+hkNames <- function(object){
   if("Protein" %in% fData(object)$AnalyteType){
     names <- featureData(object)$Target[featureData(object)$AnalyteType == "Protein" &
                                           featureData(object)$CodeClass == "Control"]
@@ -138,43 +138,6 @@ hk_names <- function(object){
   }else{
     warning("No Protein data in object so no HK probes to return")
   }
-}
-
-assign_colors <- function(annot) {
-  # vector of colors to choose from:
-  colvec <- c(
-    "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFFF33", 
-    "#A65628", "#F781BF", "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", 
-    "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", "#8DD3C7", 
-    "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", 
-    "#FCCDE5", "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F", "#A6CEE3", 
-    "#B2DF8A", "#FB9A99", "#FDBF6F", "#CAB2D6", "#FFFF99", "#33A02C", 
-    "#FF7F00", "#B15928", "#1F78B4", "#E31A1C", "#6A3D9A", sample(colors(), 100)
-  )
-  # subsidiary function to fade colors (works like the "alpha" function from the "scales" package)
-  fadecols <- function(cols, fade = .5) {
-    fcols <- c()
-    for (i in 1:length(cols))
-    {
-      tmp <- as.vector(col2rgb(cols[i]) / 256)
-      fcols[i] <- rgb(tmp[1], tmp[2], tmp[3], fade)
-    }
-    return(fcols)
-  }
-  colvec <- fadecols(colvec, 0.7)
-  
-  # assign colors:
-  cols <- list()
-  colorby <- colnames(annot)
-  for (varname in colorby) {
-    varlevels <- as.character(unique(annot[, varname]))
-    cols[[varname]] <- colvec[1:length(varlevels)]
-    names(cols[[varname]]) <- varlevels
-    # remove the used colors from further consideration:
-    colvec <- setdiff(colvec, cols[[varname]]) # (disabling this so the more bold colors are re-used)
-  }
-  
-  return(cols)
 }
 
 #### NOT TESTED OR USED ####

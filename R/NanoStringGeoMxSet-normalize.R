@@ -85,7 +85,7 @@ negNorm <- function(object, data_type, toElt, fromElt) {
   }
 
   if(all(fData(object)$AnalyteType == "Protein")){
-    neg.names <- igg_names(object)
+    neg.names <- iggNames(object)
     
     # estimate background:
     negfactor <- apply(exprs(object[neg.names,, drop = FALSE]), 2, function(x){pmax(ngeoMean(x), 1)})
@@ -100,7 +100,7 @@ negNorm <- function(object, data_type, toElt, fromElt) {
     rownames(pool_neg_factors) <- "IgGs"
     
     pool_neg_norm <- list()
-    pool_neg_norm[[1]] <- list(normFactors = pool_neg_factors, norm_exprs = pool_counts)
+    pool_neg_norm[[1L]] <- list(normFactors = pool_neg_factors, norm_exprs = pool_counts)
   }else if(any(fData(object)$AnalyteType == "Protein")){
     stop("Please split data by analyte before normalization")
   }else{
@@ -163,7 +163,7 @@ hkNorm <- function(object, data_type, toElt, fromElt, housekeepers) {
             Run function aggregateCounts() to collapse the probes to targets.\n")
   } else {
     if(all(fData(object)$AnalyteType == "Protein") & all(housekeepers == HOUSEKEEPERS)){
-      housekeepers <- hk_names(object)
+      housekeepers <- hkNames(object)
     }
     hksubset <- subset(object, subset = TargetName %in% housekeepers)
     hks <- apply(exprs(hksubset), 2, function(x) ngeoMean(x))
@@ -242,14 +242,14 @@ subtractBackground <- function(object, data_type, toElt, fromElt, byPanel=TRUE) 
 #' 
 #' proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
 #' 
-#' normfactors <- compute_normalization_factors(object = proteinData)
+#' normfactors <- computeCormalizationFactors(object = proteinData)
 #' 
-#' normfactors_withAreaNuclei <- compute_normalization_factors(object = proteinData,
+#' normfactors_withAreaNuclei <- computeCormalizationFactors(object = proteinData,
 #' area = "AOI.Size.um2", nuclei = "Nuclei.Counts")
 #' 
 #' @export
 
-compute_normalization_factors <- function(object, igg.names = NULL, hk.names = NULL,
+computeNormalizationFactors <- function(object, igg.names = NULL, hk.names = NULL,
                                           area = NULL, nuclei = NULL) {
   
   if(!any(fData(object)$AnalyteType == "Protein")){
@@ -257,11 +257,11 @@ compute_normalization_factors <- function(object, igg.names = NULL, hk.names = N
   }
   
   if(is.null(igg.names)){
-    igg.names <- igg_names(object)
+    igg.names <- iggNames(object)
   }
   
   if(is.null(hk.names)){
-    hk.names <- hk_names(object)
+    hk.names <- hkNames(object)
   }
   
   segmentAnnotations = sData(object)

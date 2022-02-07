@@ -8,7 +8,8 @@ Authors@R: c(person("Nicole", "Ortogero", email = "nortogero@nanostring.com", ro
              person("Zhi", "Yang", email = "zyang@nanostring.com", role = c("aut")))
 Depends: R (>= 3.6), Biobase, NanoStringNCTools, S4Vectors
 Imports: BiocGenerics, rjson, readxl, EnvStats, reshape2, methods, 
-         utils, stats, data.table, outliers, lmerTest, dplyr, stringr
+         utils, stats, data.table, outliers, lmerTest, dplyr, stringr,
+         grDevices, graphics
 Suggests: 
     rmarkdown,
     knitr,
