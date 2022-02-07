@@ -382,4 +382,6 @@ wrap_plots(tumor, TME)
 # Further Development
 We are actively working to get the tissue image attached to both objects so that figures are printing on top of the tissue image. In addition, we are working on a separate NanoString package to be able to plot the spatial data specific to GeoMx like segmentation and irregular shaped ROIs. 
 
-
+```{r}
+sessionInfo()
+```
