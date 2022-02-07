@@ -146,11 +146,16 @@ test_that("compute_normalization_factors vs normalization",{
   expect_error(compute_normalization_factors(object = RNAData))
 })
 
+
+
 test_that("QC plots are plotted", {
   expect_error(plot_normFactor_concordance(object = proteinData, plot_factors = "Segment_Type", 
                                            normfactors = normfactors), NA)
-  expect_error(qc_protein_signal(object = proteinData,
+  expect_error(proteinOrder <- qc_protein_signal(object = proteinData,
                                  neg.names = igg.names), NA)
+  
+  expect_true(all(proteinOrder %in% rownames(proteinData)))
+  expect_true(all(rownames(proteinData) %in% proteinOrder))
   
   expect_error(qc_protein_signal(object = RNAData))
 })

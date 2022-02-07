@@ -648,6 +648,8 @@ concordance_plot <- function(mat, col = rgb(0, 0, 0, 0.5),
 #' }
 #' @param neg.names names of IgGs, if NULL IgGs will be detected automatically
 #' 
+#' @return protein names in the order of the figure
+#' 
 #' @examples
 #' testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
 #' "proteinData.rds", package = "GeomxTools"))
@@ -656,7 +658,7 @@ concordance_plot <- function(mat, col = rgb(0, 0, 0, 0.5),
 #' 
 #' igg.names <- igg_names(proteinData)
 #' 
-#' qc_protein_signal(object = proteinData, neg.names = igg.names)
+#' proteinOrder <- qc_protein_signal(object = proteinData, neg.names = igg.names)
 #' 
 #' @export
 
@@ -688,7 +690,7 @@ qc_protein_signal <- function(object, neg.names=NULL) {
     boxplot(t(log2(snr[o, ])),
             las = 2,
             outline = FALSE,
-            ylim = range(log2(snr+1)),
+            ylim = range(log2(snr)),
             names = protnames[o],
             ylab = "Log2 signal-to-background ratio",
             cex.axis = .85 - 0.3 * (nrow(snr) > 60)
@@ -702,6 +704,8 @@ qc_protein_signal <- function(object, neg.names=NULL) {
     abline(h = 0)
     abline(v = length(igginds) + 0.5, lty = 2)
     abline(h = 1, lty = 2)
+    
+    return(rownames(snr[o,]))
 }
 
 #' Generate concordance figure of targets based on user provided factors
