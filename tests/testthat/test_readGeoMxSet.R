@@ -179,3 +179,41 @@ testthat::test_that("PKCs are removed if they aren't in the config", {
   expect_identical(fData(testData), fData(testDataWithExtraConfig))
 })
 
+datadir <- system.file("extdata", "DSP_Proteogenomics_Example_Data",
+                       package="GeomxTools")
+DCCFiles <- unzip(zipfile = file.path(datadir,  "/DCCs.zip"))
+PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
+annots <- file.path(datadir, "Annotation.xlsx")
+
+RNAData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                                                   pkcFiles = PKCFiles,
+                                                   phenoDataFile = annots,
+                                                   phenoDataSheet = "Annotations",
+                                                   phenoDataDccColName = "Sample_ID",
+                                                   protocolDataColNames = c("Tissue", 
+                                                                            "Segment_Type", 
+                                                                            "ROI.Size")))
+
+
+ProteinData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                                                       pkcFiles = PKCFiles,
+                                                       phenoDataFile = annots,
+                                                       phenoDataSheet = "Annotations",
+                                                       phenoDataDccColName = "Sample_ID",
+                                                       protocolDataColNames = c("Tissue", 
+                                                                                "Segment_Type", 
+                                                                                "ROI.Size"),
+                                                       analyte = "protein"))
+
+testthat::test_that("only a single analyte is read in to a GeoMxSet object",{
+  expect_false(dim(RNAData)["Features"] == dim(ProteinData)["Features"])
+  expect_true(dim(RNAData)["Samples"] == dim(ProteinData)["Samples"])
+  expect_false(analyte(RNAData) == analyte(ProteinData))
+  expect_true(analyte(RNAData) == "RNA")
+  expect_true(analyte(ProteinData) == "Protein")
+  expect_false(all(annotation(RNAData) == annotation(ProteinData)))
+  expect_false(any(rownames(RNAData) %in% rownames(ProteinData)))
+  expect_true(all(colnames(RNAData) %in% colnames(ProteinData)))
+  expect_true(all(sData(RNAData) == sData(ProteinData)))
+})
+

@@ -11,9 +11,10 @@
 
 \usage{
 readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile, 
-                     phenoDataSheet, phenoDataDccColName = "Sample_ID",
-                     phenoDataColPrefix = "", protocolDataColNames = NULL,
-                     experimentDataColNames = NULL, configFile = NULL, ...)
+                       phenoDataSheet, phenoDataDccColName = "Sample_ID",
+                       phenoDataColPrefix = "", protocolDataColNames = NULL,
+                       experimentDataColNames = NULL,  
+                       configFile = NULL, analyte = "RNA", ...)
 }
 
 \arguments{
@@ -32,6 +33,7 @@ readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile,
   \item{protocolDataColNames}{Character list of column names from \code{phenoDataFile} containing data about the experimental protocol or sequencing data.}
   \item{experimentDataColNames}{Character list of column names from \code{phenoDataFile} containing data about the experiment's meta-data.}
   \item{configFile}{An optional character string representing the path to the corresponding config file. This is used to ensure the only the correct PKC files are added}
+  \item{analyte}{GeoMxSet objects can only hold one analyte at a time. For studies with multiple analytes, which one should be read in? Options: RNA (default) and Protein}
   \item{...}{Optional parameters to pass to \code{readxl::read_xlsx} function for annotation read in}
 }
 

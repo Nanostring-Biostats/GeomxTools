@@ -32,14 +32,12 @@ For use with protein data ONLY.
 Generate normalization factors for protein data to determine the best normalization method
 }
 \examples{
-testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
 "proteinData.rds", package = "GeomxTools"))
 
-proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
+normfactors <- computeNormalizationFactors(object = proteinData)
 
-normfactors <- computeCormalizationFactors(object = proteinData)
-
-normfactors_withAreaNuclei <- computeCormalizationFactors(object = proteinData,
+normfactors_withAreaNuclei <- computeNormalizationFactors(object = proteinData,
 area = "AOI.Size.um2", nuclei = "Nuclei.Counts")
 
 }

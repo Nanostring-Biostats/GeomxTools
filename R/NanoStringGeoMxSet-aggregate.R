@@ -71,7 +71,8 @@ aggregateCounts <- function(object, FUN=ngeoMean) {
         annotation = annotation(object),
         protocolData = protocolData(object),
         featureType = "Target",
-        check = FALSE)
+        check = FALSE,
+        analyte = analyte(object))
     return(targetObject)
 }
 

@@ -53,10 +53,8 @@ concordancePlot <- function(mat, col = rgb(0, 0, 0, 0.5),
 #' @return protein names in the order of the figure
 #' 
 #' @examples
-#' testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+#' proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
 #' "proteinData.rds", package = "GeomxTools"))
-#' 
-#' proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
 #' 
 #' igg.names <- iggNames(proteinData)
 #' 
@@ -66,7 +64,7 @@ concordancePlot <- function(mat, col = rgb(0, 0, 0, 0.5),
 
 qcProteinSignal <- function(object, neg.names=NULL) {
   
-  if(any(fData(object)$AnalyteType == "Protein") == FALSE){
+  if(analyte(object) != "Protein"){
     stop("This figure is only meant for protein data")
   }  
   
@@ -74,7 +72,6 @@ qcProteinSignal <- function(object, neg.names=NULL) {
     neg.names <- iggNames(object)
   }
   
-  object <- object[fData(object)$AnalyteType == "Protein",]
   raw <- exprs(object)
   
   # estimate background:
@@ -124,16 +121,14 @@ qcProteinSignal <- function(object, neg.names=NULL) {
 #' @param plotFactors segment factor to color the plot by
 #' 
 #' @examples
-#' testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+#' proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
 #' "proteinData.rds", package = "GeomxTools"))
-#' 
-#' proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
-#' RNAData <- analyteSubset(object = aggTestData, analyte = "RNA")
 #' 
 #' igg.names <- iggNames(proteinData)
 #' 
-#' plotConcordance(targetList = igg.names, object = proteinData, plotFactors = "Segment_Type)
-#' plotConcordance(targetList = c("C1orf43", "GPI", "OAZ1"), object = RNAData, plotFactors = "Segment_Type)
+#' plotConcordance(targetList = igg.names, object = proteinData, plotFactors = "Segment_Type")
+#' plotConcordance(targetList = c("C1orf43", "GPI", "OAZ1"), object = RNAData, 
+#'                 plotFactors = "Segment_Type")
 #' 
 #' @export
 
@@ -141,6 +136,14 @@ plotConcordance <- function(targetList, object, plotFactors){
   
   if(!plotFactors %in% colnames(sData(object))){
     stop("Given plotFactors are not in dataset, spelling and capitalization matter")
+  }
+  
+  if(all(!targetList %in% rownames(object))){
+    stop("Given targetList does not match target names in object")
+  }else if(any(!targetList %in% rownames(object))){
+    notIn <- targetList[which(!targetList %in% rownames(object))]
+    warning(paste("These targets from targetList do not match target names in object and will not be part of analysis:", 
+                  paste(notIn, collapse = ", ")))
   }
   
   cols <- assignColors(annot = sData(object)[, plotFactors, drop = FALSE])
@@ -177,16 +180,19 @@ plotConcordance <- function(targetList, object, plotFactors){
 #' @param normfactors normalization factors from computeNormalizationFactors(). If NULL these are calculated automatically. 
 #' 
 #' @examples
-#' testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+#' proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
 #' "proteinData.rds", package = "GeomxTools"))
-#' 
-#' proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
 #' 
 #' plotNormFactorConcordance(object = proteinData, plotFactors = "Segment_Type")
 #' 
 #' @export
 
 plotNormFactorConcordance <- function(object, plotFactors, normfactors = NULL){
+  
+  if(analyte(object) != "Protein"){
+    stop("This figure is only meant for protein data")
+  }  
+  
   if(!plotFactors %in% colnames(sData(object))){
     stop("Given plotFactors are not in dataset, spelling and capitalization matter")
   }

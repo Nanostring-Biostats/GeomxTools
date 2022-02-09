@@ -14,7 +14,7 @@ lines <- suppressWarnings(c(readLines(file.path(PKCFiles[1])), readLines(file.pa
 
 # req 1: test that the column names of PKC files are in correct format:------
 testthat::test_that("test that the column names of PKC files are in correct format", {
-  expect_true(all(colnames(pkcFile) == c("RTS_ID", "Target", "Module", "CodeClass", "ProbeID", "AnalyteType", "Negative")))
+  expect_true(all(colnames(pkcFile) == c("RTS_ID", "Target", "Module", "CodeClass", "ProbeID", "Negative")))
 })
 
 

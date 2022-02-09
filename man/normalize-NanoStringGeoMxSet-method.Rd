@@ -7,7 +7,6 @@
 \S4method{normalize}{NanoStringGeoMxSet}(
   object,
   norm_method = c("quant", "neg", "hk", "subtractBackground"),
-  data_type = c("RNA", "protein"),
   fromElt = "exprs",
   toElt = "exprs_norm",
   housekeepers = HOUSEKEEPERS,
@@ -18,8 +17,6 @@
 \item{object}{name of the object class to perform normalization on}
 
 \item{norm_method}{the normalization method to be applied on the object}
-
-\item{data_type}{the data type of the object. Values maybe RNA, protein.}
 
 \item{fromElt}{name of the assayDataElement to normalize}
 

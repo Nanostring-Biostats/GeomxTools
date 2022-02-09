@@ -8,6 +8,7 @@ function(dccFiles,
          protocolDataColNames = NULL,
          experimentDataColNames = NULL,
          configFile = NULL,
+         analyte = "RNA",
          ...)
 {
   # check inputs
@@ -147,6 +148,27 @@ function(dccFiles,
     pkcFiles <- paste0(unique(pkcData$Module), ".pkc")
   }
   
+  if(tolower(analyte) == "protein"){
+    analyte <- "Protein"
+  }else if(tolower(analyte) == "rna"){
+    analyte <- "RNA"
+  }
+  
+  pkcs <- names(which(tolower(pkcHeader$AnalyteType) == tolower(analyte)))
+  
+  if(length(pkcs) == 0){
+    stop(paste("Given analyte is not valid: options =", paste(unique(pkcHeader$AnalyteType), collapse = ", ")))
+  }
+  
+  pkcFiles <- paste0(pkcs, ".pkc")
+  
+  pkcData <- pkcData[pkcData$Module %in% pkcs,]
+  for(i in names(pkcHeader)){
+    pkcHeader[[i]] <- pkcHeader[[i]][names(pkcHeader[[i]]) %in% pkcs]
+  }
+  
+  probeAssay <- probeAssay[probeAssay[["RTS_ID"]] %in% pkcData[["RTS_ID"]],]
+  
   zeroProbes <- setdiff(rownames(pkcData), unique(probeAssay[["RTS_ID"]]))
   zeroProbeAssay <- data.frame(RTS_ID=pkcData[zeroProbes, "RTS_ID"],
     Count=rep(0, length(zeroProbes)),
@@ -227,7 +249,8 @@ function(dccFiles,
                              annotation = annotation,
                              protocolData = protocol,
                              check = FALSE, 
-                             dimLabels = c("RTS_ID", "SampleID")) )
+                             dimLabels = c("RTS_ID", "SampleID"),
+                             analyte = analyte) )
 }
 
 
@@ -258,39 +281,21 @@ compareToConfig <- function(config, pkcProbes, pkcHeader){
   return(list(pkcData=pkcProbes, pkcHeader=pkcHeader))
 }
 
-#' Subset GeomxSet Object by AnalyteType
-#' 
-#' @param object name of the object class to subset
-#' \enumerate{
-#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
-#' }
-#' @param analyte analyte for returned object
-#' 
-#' @return list containing multiple GeomxSet objects named by AnalyteType
-#' 
-#' @examples
-#' testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
-#' "proteinData.rds", package = "GeomxTools"))
-#' 
-#' proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
-#' RNAData <- analyteSubset(object = aggTestData, analyte = "RNA")
-#' 
-#' @export
-#'
-analyteSubset <- function(object, analyte){
-  if(length(unique(fData(object)$AnalyteType)) > 1){
-    if(!tolower(analyte) %in% tolower(unique(fData(object)$AnalyteType))){
-      stop(paste("Given analyte is not in dataset; options:", paste(unique(fData(object)$AnalyteType), collapse = ", ")))
-    }
-    
-    objects <- list()
-    pkcs <- object@annotation
-    
-    object <- subset(object, subset = tolower(AnalyteType) == tolower(analyte))
-    object@annotation <- pkcs[pkcs %in% paste0(unique(fData(object)$Module), ".pkc")]
-    
-    return(object)
-  }else{
-    warning("Only one analyte present, no subsetting neccesary")
-  }
-}
+
+# analyteSubset <- function(object, analyte){
+#   if(length(unique(fData(object)$AnalyteType)) > 1){
+#     if(!tolower(analyte) %in% tolower(unique(fData(object)$AnalyteType))){
+#       stop(paste("Given analyte is not in dataset; options:", paste(unique(fData(object)$AnalyteType), collapse = ", ")))
+#     }
+#     
+#     objects <- list()
+#     pkcs <- object@annotation
+#     
+#     object <- subset(object, subset = tolower(AnalyteType) == tolower(analyte))
+#     object@annotation <- pkcs[pkcs %in% paste0(unique(fData(object)$Module), ".pkc")]
+#     
+#     return(object)
+#   }else{
+#     warning("Only one analyte present, no subsetting neccesary")
+#   }
+# }

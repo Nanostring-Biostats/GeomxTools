@@ -21,10 +21,8 @@ protein names in the order of the figure
 For use with protein data ONLY.
 }
 \examples{
-testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
 "proteinData.rds", package = "GeomxTools"))
-
-proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
 
 igg.names <- iggNames(proteinData)
 

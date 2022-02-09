@@ -59,7 +59,7 @@ exportMethods(NanoStringGeoMxSet, show,
               featureType, "featureType<-",
               signatures, "signatures<-", signatureScores,
               design, "design<-", signatureGroups,
-              checkQCFlags, normalize)
+              checkQCFlags, normalize, analyte)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -83,7 +83,6 @@ export(setSeqQCFlags)
 export(shiftCountsOne)
 export(summarizeNegatives)
 export(mixedModelDE)
-export(analyteSubset)
 export(iggNames)
 export(hkNames)
 export(computeNormalizationFactors)

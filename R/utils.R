@@ -85,6 +85,11 @@ shiftCountsOne <- function(object, elt="exprs", useDALogic=FALSE) {
         stop("The exprs matrix has already been shifted by one. ",
              "This operation will not be repeated.")
     }
+  
+    if(analyte(object) == "Protein"){
+      stop("This shift is only meant for RNA data")
+    }
+    
     assayDataElement(object, "rawZero") <- 
         assayDataElement(object, elt=elt)
     experimentData(object)@other$shiftedByOne <- TRUE
@@ -113,9 +118,8 @@ shiftCountsOne <- function(object, elt="exprs", useDALogic=FALSE) {
 #' @export
 #' 
 iggNames <- function(object){
-  if("Protein" %in% fData(object)$AnalyteType){
-    names <- featureData(object)$Target[featureData(object)$AnalyteType == "Protein" &
-                                          featureData(object)$CodeClass == "Negative"]
+  if(analyte(object) == "Protein"){
+    names <- featureData(object)$Target[featureData(object)$CodeClass == "Negative"]
     return(names)
   }else{
     warning("No Protein data in object so no IgG probes to return")
@@ -131,9 +135,8 @@ iggNames <- function(object){
 #' @export
 #' 
 hkNames <- function(object){
-  if("Protein" %in% fData(object)$AnalyteType){
-    names <- featureData(object)$Target[featureData(object)$AnalyteType == "Protein" &
-                                          featureData(object)$CodeClass == "Control"]
+  if(analyte(object) == "Protein"){
+    names <- featureData(object)$Target[featureData(object)$CodeClass == "Control"]
     return(names)
   }else{
     warning("No Protein data in object so no HK probes to return")

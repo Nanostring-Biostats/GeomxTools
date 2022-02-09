@@ -154,7 +154,7 @@ setSaturationFlags <- function(object, cutoff=DEFAULTS[["percentSaturation"]]) {
 #' 
 setBackgroundQCFlags <- function(object, qcCutoffs=DEFAULTS) {
     qcCutoffs <- checkCutoffs(qcCutoffs)
-    if(all(fData(object)$AnalyteType == "RNA")){
+    if(analyte(object) == "RNA"){
       object <- setLowNegFlags(object=object, 
                                cutoff=qcCutoffs[["minNegativeCount"]])
     }
@@ -556,7 +556,7 @@ removeFlagProbes <- function(object, removeFlagCols=NULL) {
 
 #NEO make sure that when collapsed count occurs feature data QCFlags is removed
 setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
-    if(any(fData(object)$AnalyteType == "RNA")){
+    if(analtye(object) == "RNA"){
       object <- 
         setLOQFlags(object, cutoff=qcCutoffs[["loqCutoff"]])
     }  

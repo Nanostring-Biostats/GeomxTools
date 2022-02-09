@@ -1,20 +1,61 @@
 library(GeomxTools)
 library(testthat)
 
-testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
-                                      "proteinData.rds", package = "GeomxTools"))
-aggTestData <- aggregateCounts(testData)
+datadir <- system.file("extdata","DSP_Proteogenomics_Example_Data",
+                       package = "GeomxTools")
 
-proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
-RNAData <- analyteSubset(object = aggTestData, analyte = "RNA")
+DCCFiles <- unzip(zipfile = file.path(datadir,  "/DCCs.zip"))
+PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
+SampleAnnotationFile <- file.path(datadir, "Annotation.xlsx")
+
+
+RNAData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                                                   pkcFiles = PKCFiles,
+                                                   phenoDataFile = SampleAnnotationFile,
+                                                   phenoDataSheet = "Annotations",
+                                                   phenoDataDccColName = "Sample_ID",
+                                                   protocolDataColNames = c("Tissue", 
+                                                                            "Segment_Type", 
+                                                                            "ROI.Size"),
+                                                   configFile = NULL,
+                                                   analyte = "RNA",
+                                                   phenoDataColPrefix = "",
+                                                   experimentDataColNames = NULL))
+
+proteinData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                                                       pkcFiles = PKCFiles,
+                                                       phenoDataFile = SampleAnnotationFile,
+                                                       phenoDataSheet = "Annotations",
+                                                       phenoDataDccColName = "Sample_ID",
+                                                       protocolDataColNames = c("Tissue", 
+                                                                                "Segment_Type", 
+                                                                                "ROI.Size"),
+                                                       configFile = NULL,
+                                                       analyte = "protein",
+                                                       phenoDataColPrefix = "",
+                                                       experimentDataColNames = NULL))
+
+RNAData <- aggregateCounts(RNAData)
+proteinData <- suppressWarnings(aggregateCounts(proteinData))
 
 testthat::test_that("Datasets can be subset by given analyte", {
-  expect_true(all(fData(proteinData)$AnalyteType == "Protein"))
-  expect_true(all(fData(proteinData)$AnalyteType != "RNA"))
-  expect_true(all(fData(RNAData)$AnalyteType == "RNA"))
-  expect_true(all(fData(RNAData)$AnalyteType != "Protein"))
+  expect_true(all(analyte(proteinData) == "Protein"))
+  expect_true(all(analyte(proteinData) != "RNA"))
+  expect_true(all(analyte(RNAData) == "RNA"))
+  expect_true(all(analyte(RNAData) != "Protein"))
   
-  expect_error(analyteSubset(aggTestData, "TEST"))
+  expect_error(suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                                      pkcFiles = PKCFiles,
+                                      phenoDataFile = SampleAnnotationFile,
+                                      phenoDataSheet = "Annotations",
+                                      phenoDataDccColName = "Sample_ID",
+                                      protocolDataColNames = c("Tissue", 
+                                                               "Segment_Type", 
+                                                               "ROI.Size"),
+                                      configFile = NULL,
+                                      analyte = "TEST",
+                                      phenoDataColPrefix = "",
+                                      experimentDataColNames = NULL)))
   
   expect_true(all(proteinData@annotation %in% paste0(unique(fData(proteinData)$Module), ".pkc")))
   expect_true(all(RNAData@annotation %in% paste0(unique(fData(RNAData)$Module), ".pkc")))
@@ -39,16 +80,16 @@ proteinData <- setSegmentQCFlags(proteinData,
                                                 percentAligned=80, 
                                                 percentSaturation=50))
 
-aggTestData_seqQC <- setSeqQCFlags(aggTestData, 
+RNAData_seqQC <- setSeqQCFlags(RNAData, 
                                    qcCutoffs=list(minSegmentReads=1000, 
                                                   percentAligned=80, 
                                                   percentSaturation=50))
 
-aggTestData_background <- setBackgroundQCFlags(aggTestData_seqQC, 
+RNAData_background <- setBackgroundQCFlags(RNAData_seqQC, 
                                                qcCutoffs=list(minNegativeCount=10, 
                                                               maxNTCCount=60))
 
-aggTestData <- setSegmentQCFlags(aggTestData, 
+RNAData <- setSegmentQCFlags(RNAData, 
                                  qcCutoffs=list(minNuclei=20,
                                                 minArea=16000,
                                                 minNegativeCount=10,
@@ -60,8 +101,8 @@ aggTestData <- setSegmentQCFlags(aggTestData,
 test_that("Correct segment flags are added to protein data",{
   expect_equal(ncol(protocolData(proteinData_seqQC)$QCFlags), ncol(protocolData(proteinData_background)$QCFlags))
   expect_equal(ncol(protocolData(proteinData_seqQC)$QCFlags), ncol(protocolData(proteinData)$QCFlags))
-  #expect_gt(ncol(protocolData(aggTestData_background)$QCFlags), ncol(protocolData(aggTestData_seqQC)$QCFlags))
-  expect_equal(ncol(protocolData(aggTestData_background)$QCFlags), ncol(protocolData(aggTestData)$QCFlags))
+  expect_gt(ncol(protocolData(RNAData_background)$QCFlags), ncol(protocolData(RNAData_seqQC)$QCFlags))
+  expect_equal(ncol(protocolData(RNAData_background)$QCFlags), ncol(protocolData(RNAData)$QCFlags))
 })
 
 
@@ -86,14 +127,12 @@ test_that("Expected IgGs are returned",{
   expect_true(all(igg.names == fData(proteinData)$TargetName[fData(proteinData)$CodeClass == "Negative"]))
   
   expect_warning(length(iggNames(RNAData)) == 0)
-  expect_equal(iggNames(aggTestData), igg.names)
 })
 
 test_that("Expected HK are returned",{
   expect_true(all(hk.names == fData(proteinData)$TargetName[fData(proteinData)$CodeClass == "Control"]))
   
   expect_warning(length(hkNames(RNAData)) == 0)
-  expect_equal(hkNames(aggTestData), hk.names)
 })
 
 test_that("Concordance plots are plotted", {
@@ -108,19 +147,18 @@ proteinData <- normalize(proteinData, norm_method = "hk", toElt="hk_norm")
 proteinData <- normalize(proteinData, norm_method = "hk", toElt="hk_norm_givenHK", housekeepers = hk.names)
 proteinData <- normalize(proteinData, norm_method = "neg", toElt="neg_norm")
 proteinData <- normalize(proteinData, norm_method = "quant", toElt="q3_norm")
+proteinData <- normalize(proteinData, norm_method = "subtractBackground", toElt="bgSub_norm")
 
 test_that("Protein data is normalized",{
   expect_true(all(proteinData@assayData$exprs != proteinData@assayData$hk_norm))
   expect_true(all(proteinData@assayData$exprs != proteinData@assayData$neg_norm))
   expect_true(all(proteinData@assayData$exprs != proteinData@assayData$q3_norm))
+  expect_true(all(proteinData@assayData$exprs != proteinData@assayData$bgSub_norm))
   
   expect_equal(proteinData@assayData$hk_norm, proteinData@assayData$hk_norm_givenHK)
   
   expect_true(all(c("hk_norm_hkFactors", "neg_norm_negFactors", "q3_norm_qFactors") %in% 
                     colnames(pData(proteinData))))
-  
-  expect_error(normalize(aggTestData, norm_method = "neg"))
-  expect_error(normalize(aggTestData, norm_method = "hk"))
 })
 
 

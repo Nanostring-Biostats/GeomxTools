@@ -23,10 +23,8 @@ Upper panels are the concordance plot.
 Lower panels are the standard deviation of the log2-ratios between the normalization factors
 }
 \examples{
-testData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
 "proteinData.rds", package = "GeomxTools"))
-
-proteinData <- analyteSubset(object = aggTestData, analyte = "protein")
 
 plotNormFactorConcordance(object = proteinData, plotFactors = "Segment_Type")
 
