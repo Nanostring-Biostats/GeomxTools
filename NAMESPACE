@@ -89,6 +89,7 @@ export(computeNormalizationFactors)
 export(qcProteinSignal)
 export(plotConcordance)
 export(plotNormFactorConcordance)
+export(qcProteinSignalNames)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S3 methods

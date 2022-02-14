@@ -4,7 +4,7 @@
 \alias{plotNormFactorConcordance}
 \title{Generate concordance figure of normalization factors based on user provided factors}
 \usage{
-plotNormFactorConcordance(object, plotFactors, normfactors = NULL)
+plotNormFactorConcordance(object, plotFactor, normfactors = NULL)
 }
 \arguments{
 \item{object}{name of the object class to subset
@@ -12,7 +12,7 @@ plotNormFactorConcordance(object, plotFactors, normfactors = NULL)
     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 }}
 
-\item{plotFactors}{segment factor to color the plot by}
+\item{plotFactor}{segment factor to color the plot by}
 
 \item{normfactors}{normalization factors from computeNormalizationFactors(). If NULL these are calculated automatically.}
 }
@@ -26,6 +26,7 @@ Lower panels are the standard deviation of the log2-ratios between the normaliza
 proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
 "proteinData.rds", package = "GeomxTools"))
 
-plotNormFactorConcordance(object = proteinData, plotFactors = "Segment_Type")
+normConcord <- plotNormFactorConcordance(object = proteinData, plotFactor = "Segment_Type")
+normConcord()
 
 }

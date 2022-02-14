@@ -6,6 +6,10 @@ output:
     df_print: kable
   pdf_document: default
 date: 'Compiled: `r Sys.Date()`'
+vignette: >
+  %\VignetteIndexEntry{Protein data using GeomxTools}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 ```{r setup, include=FALSE}
@@ -67,7 +71,7 @@ proteinData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
 RNAData <- aggregateCounts(RNAData)
 RNAData
 
-proteinData <- aggregateCounts(proteinData)
+#Protein Data is aggregated automatically on readin
 proteinData
 ```
 
@@ -107,7 +111,7 @@ igg.names
 
 For the target QC step, we identify proteins will no useful signal using this figure. 
 ```{r target QC, fig.width= 16, fig.height=7}
-proteinOrder <- qcProteinSignal(object = proteinData, neg.names = igg.names)
+fig <- qcProteinSignal(object = proteinData, neg.names = igg.names)
 ```
 
   -	IgGs are plotted on the far left of the plot.
@@ -117,30 +121,38 @@ proteinOrder <- qcProteinSignal(object = proteinData, neg.names = igg.names)
 
 To remove proteins we will first pick a protein where all of the proteins to the left of it should be removed from analysis due to low signal. Here we will pick **Tyrosine Hydroxylase** since the protein to the right, **HSC70**, has meaningful signal. And replot the figure without the super low proteins. 
 
-```{r, fig.width= 12, fig.height=7}
+```{r, fig.width= 16, fig.height=7}
+proteinOrder <- qcProteinSignalNames(object = proteinData, neg.names = igg.names)
 length(proteinOrder)
+
+tyrosineHydroxylase <- which(proteinOrder == "Tyrosine Hydroxylase")
+
+fig()
+rect(xleft = 3.5, xright = tyrosineHydroxylase, ybottom = -6, ytop = 10, density = 2, col = "red", lty = 3)
 
 #Right most protein where all proteins to the left will get removed
 #start at 4 to keep the 3 IgG targets
-proteinOrder <- proteinOrder[-c(4:which(proteinOrder == "Tyrosine Hydroxylase"))]
+proteinOrder <- proteinOrder[-c(4:tyrosineHydroxylase)]
 length(proteinOrder)
 
 #replot with fewer targets
-proteinOrder <- qcProteinSignal(object = proteinData[proteinOrder,], neg.names = igg.names)
+fig <- qcProteinSignal(object = proteinData[proteinOrder,], neg.names = igg.names)
 ```
 
 From this figure, we can see that there are a couple more proteins that, due to low signal, should be removed from the analysis. After removing these proteins we will replot again. 
 ```{r, fig.width= 12, fig.height=7}
+proteinOrder <- qcProteinSignalNames(object = proteinData[proteinOrder,], neg.names = igg.names)
 #which proteins to remove from analysis
 lowTargets <- c("pan-RAS", "Neprilysin", "Olig2", "P2ry12", "p53", "NY-ESO-1", "INPP4B", "CD31", "Phospho-Alpha-synuclein (S129)", "Bcl-2")
 proteinOrder <- proteinOrder[-c(which(proteinOrder %in% lowTargets))]
 length(proteinOrder)
 
-proteinOrder <- qcProteinSignal(object = proteinData[proteinOrder,], neg.names = igg.names)
+fig <- qcProteinSignal(object = proteinData[proteinOrder,], neg.names = igg.names)
 ```
 If there are no more proteins to remove from analysis, we will subset the dataset to only contain the proteins that are above background. 
 ```{r}
 dim(proteinData)
+proteinOrder <- qcProteinSignalNames(object = proteinData[proteinOrder,], neg.names = igg.names)
 proteinData <- proteinData[proteinOrder,]
 dim(proteinData)
 ```
@@ -152,8 +164,8 @@ After filtering targets, we move onto normalization. There are many types of nor
 The first is a concordance plot of a list of targets, normally the IgGs or HK, colored by ROI factors like tissue or segment type. The upper panels are the concordance plots and the lower panels are the standard deviation of the log2-ratios between the targets. Our motivating theory is simple: if several targets all accurately measure signal strength, they should be highly correlated with each other. More precisely, the log-ratios between them should have low SDs.
 
 ```{r IgG concordance}
-plotConcordance(object = proteinData, targetList = igg.names, plotFactors = "Segment_Type")
-plotConcordance(object = proteinData, targetList = igg.names, plotFactors = "Tissue")
+fig <- plotConcordance(object = proteinData, targetList = igg.names, plotFactor = "Segment_Type")
+fig <- plotConcordance(object = proteinData, targetList = igg.names, plotFactor = "Tissue")
 ```
 
 Above we see good concordance amongst the IgGs, confirming they all can be used. Numbers in the lower-left panels show the SD of the log2-ratios between IgGs. Importantly, we do not see a tendency for one IgG to be offset from the others, suggesting there’s no between-slide bias in calculation of background.
@@ -166,8 +178,8 @@ normfactors <- computeNormalizationFactors(object = proteinData,
                                            area = "AOI.Size.um2",
                                            nuclei = "Nuclei.Counts")
 
-plotNormFactorConcordance(object = proteinData, plotFactors = "Segment_Type",
-                          normfactors = normfactors)
+fig <- plotNormFactorConcordance(object = proteinData, plotFactor = "Segment_Type",
+                                 normfactors = normfactors)
 ```
 
 From this plot we can conclude that:

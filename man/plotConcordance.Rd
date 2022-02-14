@@ -4,7 +4,7 @@
 \alias{plotConcordance}
 \title{Generate concordance figure of targets based on user provided factors}
 \usage{
-plotConcordance(targetList, object, plotFactors)
+plotConcordance(targetList, object, plotFactor)
 }
 \arguments{
 \item{targetList}{names of targets to plot concordance, normally IgGs.}
@@ -14,7 +14,7 @@ plotConcordance(targetList, object, plotFactors)
     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 }}
 
-\item{plotFactors}{segment factor to color the plot by}
+\item{plotFactor}{segment factor to color the plot by}
 }
 \description{
 Upper panels are the concordance plot.
@@ -26,8 +26,12 @@ proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_D
 
 igg.names <- iggNames(proteinData)
 
-plotConcordance(targetList = igg.names, object = proteinData, plotFactors = "Segment_Type")
-plotConcordance(targetList = c("C1orf43", "GPI", "OAZ1"), object = RNAData, 
-                plotFactors = "Segment_Type")
+protSegTypeFig <- plotConcordance(targetList = igg.names, object = proteinData, 
+                                  plotFactor = "Segment_Type")
+protSegTypeFig()
+
+RNASegTypeFig <- plotConcordance(targetList = c("C1orf43", "GPI", "OAZ1"), 
+                                 object = RNAData,plotFactor = "Segment_Type")
+RNASegTypeFig()
 
 }

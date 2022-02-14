@@ -158,11 +158,14 @@ testthat::test_that("test that only valid ... gets translated to read_xlsx()", {
                                                                        "numeric", rep("text", 4)))))
 })
 
+proteinDatadir <- system.file("extdata", "DSP_Proteogenomics_Example_Data",
+                       package="GeomxTools")
+proteinPKCs <- unzip(zipfile = file.path(proteinDatadir,  "/pkcs.zip"))
+
 testthat::test_that("PKCs are removed if they aren't in the config", {
   testDataWithExtraConfig <- 
     suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
-                                            pkcFiles = c(PKCFiles, paste0(system.file("extdata", "DSP_Proteogenomics_Example_Data",
-                                                                                      package="GeomxTools"), "/Hs_P_NGS_ADPath_Ext_v1.0.pkc")),
+                                            pkcFiles = c(PKCFiles, proteinPKCs[1]),
                                             phenoDataFile = SampleAnnotationFile,
                                             phenoDataSheet = "CW005",
                                             phenoDataDccColName = "Sample_ID",
@@ -179,14 +182,11 @@ testthat::test_that("PKCs are removed if they aren't in the config", {
   expect_identical(fData(testData), fData(testDataWithExtraConfig))
 })
 
-datadir <- system.file("extdata", "DSP_Proteogenomics_Example_Data",
-                       package="GeomxTools")
-DCCFiles <- unzip(zipfile = file.path(datadir,  "/DCCs.zip"))
-PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
-annots <- file.path(datadir, "Annotation.xlsx")
+DCCFiles <- unzip(zipfile = file.path(proteinDatadir,  "/DCCs.zip"))
+annots <- file.path(proteinDatadir, "Annotation.xlsx")
 
 RNAData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
-                                                   pkcFiles = PKCFiles,
+                                                   pkcFiles = proteinPKCs,
                                                    phenoDataFile = annots,
                                                    phenoDataSheet = "Annotations",
                                                    phenoDataDccColName = "Sample_ID",
@@ -196,7 +196,7 @@ RNAData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
 
 
 ProteinData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
-                                                       pkcFiles = PKCFiles,
+                                                       pkcFiles = proteinPKCs,
                                                        phenoDataFile = annots,
                                                        phenoDataSheet = "Annotations",
                                                        phenoDataDccColName = "Sample_ID",
@@ -211,6 +211,8 @@ testthat::test_that("only a single analyte is read in to a GeoMxSet object",{
   expect_false(analyte(RNAData) == analyte(ProteinData))
   expect_true(analyte(RNAData) == "RNA")
   expect_true(analyte(ProteinData) == "Protein")
+  expect_true(featureType(RNAData) == "Probe")
+  expect_true(featureType(ProteinData) == "Target")
   expect_false(all(annotation(RNAData) == annotation(ProteinData)))
   expect_false(any(rownames(RNAData) %in% rownames(ProteinData)))
   expect_true(all(colnames(RNAData) %in% colnames(ProteinData)))

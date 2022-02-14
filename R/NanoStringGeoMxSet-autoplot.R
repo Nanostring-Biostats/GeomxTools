@@ -1,4 +1,24 @@
-## Protein QC
+#' Produce concordance pairs plots
+#' 
+#' @description 
+#' Draws a pairs plot of concordance between multiple factors/ probes
+#' Upper panels are the concordance plot.
+#' Lower panels are the standard deviation of the log2-ratios between the targets 
+#' 
+#' @param mat Matrix of values to be compared. Could be e.g. IgG probe counts,
+#'  or different normalization factors. Each variable/factor is in a column.
+#' @param col Vector of colors for points
+#' @param collegend Named vector of colors, used to draw a legend.
+#' @param legend.main Title for the color legend, used to name the variable of interest
+#' @param main Plot title
+#' @param pch point type argument passed to pairs()
+#' @param cex point size argument passed to pairs()
+#' @param ... Additional arguments passed to pairs()
+#' @examples
+#' # simulate HKs:
+#' x = pmax(rnorm(100, 50, 10), 0)
+#' mat = sweep(matrix(rnorm(300, 0, 5), 100), 1, x, "+")
+#' concordancePlot(mat = mat, col = rep(c("blue", "orange"), each = 50))
 
 concordancePlot <- function(mat, col = rgb(0, 0, 0, 0.5),
                              collegend = NULL, legend.main = NULL,
@@ -18,25 +38,29 @@ concordancePlot <- function(mat, col = rgb(0, 0, 0, 0.5),
   # draw pairs plot:
   par(mar = c(4, 4, 2, 1))
   
-  pairs(mat,
-        log = "xy",
-        upper.panel = points,
-        lower.panel = print.sd.log.ratio,
-        oma = c(3, 3, 3, 35),
-        col = col,
-        pch = pch,
-        cex = cex,
-        labels = colnames(mat),
-        main = main
-  )
-  # draw a legend:
-  if (length(collegend) > 0) {
-    legend("right",
-           col = c(NA, collegend, NA, NA),
-           legend = c(legend.main, names(collegend), "", "Numbers show SD(log2(ratios))"),
-           pch = 16
+  concordance_plot <- function(){
+    pairs(mat,
+          log = "xy",
+          upper.panel = points,
+          lower.panel = print.sd.log.ratio,
+          oma = c(3, 3, 3, 35),
+          col = col,
+          pch = pch,
+          cex = cex,
+          labels = colnames(mat),
+          main = main
     )
+    # draw a legend:
+    if (length(collegend) > 0) {
+      legend("right",
+             col = c(NA, collegend, NA, NA),
+             legend = c(legend.main, names(collegend), "", "Numbers show SD(log2(ratios))"),
+             pch = 16
+      )
+    }
   }
+  
+  return(concordance_plot)
 }
 
 #' Generate Protein QC signal boxplot figure
@@ -50,7 +74,7 @@ concordancePlot <- function(mat, col = rgb(0, 0, 0, 0.5),
 #' }
 #' @param neg.names names of IgGs, if NULL IgGs will be detected automatically
 #' 
-#' @return protein names in the order of the figure
+#' @return figure function
 #' 
 #' @examples
 #' proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
@@ -58,12 +82,66 @@ concordancePlot <- function(mat, col = rgb(0, 0, 0, 0.5),
 #' 
 #' igg.names <- iggNames(proteinData)
 #' 
-#' proteinOrder <- qcProteinSignal(object = proteinData, neg.names = igg.names)
+#' qcFig <- qcProteinSignal(object = proteinData, neg.names = igg.names)
+#' 
+#' qcFig()
 #' 
 #' @export
 
 qcProteinSignal <- function(object, neg.names=NULL) {
+  if(analyte(object) != "Protein"){
+    stop("This figure is only meant for protein data")
+  }  
   
+  if(is.null(neg.names)){
+    neg.names <- iggNames(object)
+  }
+  
+  snr <- snrOrder(object, neg.names)
+  
+  protnames <- rownames(snr)
+  
+  fig <- function(){
+    par(mar = c(11, 4, 2, 1))
+    boxplot(t(log2(snr)),
+            las = 2,
+            outline = FALSE,
+            ylim = range(log2(snr)),
+            names = protnames,
+            ylab = "Log2 signal-to-background ratio",
+            cex.axis = .85 - 0.3 * (nrow(snr) > 60)
+    )
+    axis(2, at = 1, labels = 1, las = 2, cex = 0.5)
+    points(jitter(rep(1:nrow(snr), ncol(snr))),
+           log2(snr),
+           col = "#00008B80",
+           pch = 16, cex = 0.5
+    )
+    abline(h = 0)
+    abline(v = length(neg.names) + 0.5, lty = 2)
+    abline(h = 1, lty = 2)
+  }
+  
+  fig()
+  
+  return(fig)
+}
+
+#' Generate ordered SNR matrix
+#' 
+#' @description 
+#' For use with protein data ONLY.
+#' 
+#' @param object name of the object class to subset
+#' \enumerate{
+#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+#' }
+#' @param neg.names names of IgGs, if NULL IgGs will be detected automatically
+#' 
+#' @return SNR matrix in increasing order
+#' 
+
+snrOrder <- function(object, neg.names){
   if(analyte(object) != "Protein"){
     stop("This figure is only meant for protein data")
   }  
@@ -83,26 +161,51 @@ qcProteinSignal <- function(object, neg.names=NULL) {
   igginds <- which(is.element(rownames(snr), neg.names))
   o <- c(igginds, setdiff(order(apply(snr, 1, median)), igginds))
   
-  protnames <- rownames(snr)
+  return(snr[o,])
+}
+
+#' Generate list of proteins ordered by SNR
+#' 
+#' @description 
+#' For use with protein data ONLY.
+#' 
+#' @param object name of the object class to subset
+#' \enumerate{
+#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+#' }
+#' @param neg.names names of IgGs, if NULL IgGs will be detected automatically
+#' 
+#' @return protein names in increasing SNR order
+#' 
+#' @examples
+#' proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+#' "proteinData.rds", package = "GeomxTools"))
+#' 
+#' igg.names <- iggNames(proteinData)
+#' 
+#' proteinOrder <- qcProteinSignalNames(object = proteinData, neg.names = igg.names)
+#' 
+#' @export
+
+qcProteinSignalNames <- function(object, neg.names){
+  if(analyte(object) != "Protein"){
+    stop("This figure is only meant for protein data")
+  }  
   
-  par(mar = c(11, 4, 2, 1))
-  boxplot(t(log2(snr[o, ])),
-          las = 2,
-          outline = FALSE,
-          ylim = range(log2(snr)),
-          names = protnames[o],
-          ylab = "Log2 signal-to-background ratio",
-          cex.axis = .85 - 0.3 * (nrow(snr) > 60)
-  )
-  axis(2, at = 1, labels = 1, las = 2, cex = 0.5)
-  points(jitter(rep(1:nrow(snr), ncol(snr))),
-         log2(snr[o, ]),
-         col = "#00008B80",
-         pch = 16, cex = 0.5
-  )
-  abline(h = 0)
-  abline(v = length(igginds) + 0.5, lty = 2)
-  abline(h = 1, lty = 2)
+  if(is.null(neg.names)){
+    neg.names <- iggNames(object)
+  }
+  
+  raw <- exprs(object)
+  
+  # estimate background:
+  negfactor <- apply(raw[neg.names, , drop = FALSE], 2, function(x){pmax(ngeoMean(x), 1)})
+  
+  # calc snr
+  snr <- sweep(raw, 2, negfactor, "/")
+  
+  igginds <- which(is.element(rownames(snr), neg.names))
+  o <- c(igginds, setdiff(order(apply(snr, 1, median)), igginds))
   
   return(rownames(snr[o,]))
 }
@@ -118,7 +221,7 @@ qcProteinSignal <- function(object, neg.names=NULL) {
 #' \enumerate{
 #'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 #' }
-#' @param plotFactors segment factor to color the plot by
+#' @param plotFactor segment factor to color the plot by
 #' 
 #' @examples
 #' proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
@@ -126,16 +229,29 @@ qcProteinSignal <- function(object, neg.names=NULL) {
 #' 
 #' igg.names <- iggNames(proteinData)
 #' 
-#' plotConcordance(targetList = igg.names, object = proteinData, plotFactors = "Segment_Type")
-#' plotConcordance(targetList = c("C1orf43", "GPI", "OAZ1"), object = RNAData, 
-#'                 plotFactors = "Segment_Type")
+#' protSegTypeFig <- plotConcordance(targetList = igg.names, object = proteinData, 
+#'                                   plotFactor = "Segment_Type")
+#' protSegTypeFig()
+#' 
+#' RNASegTypeFig <- plotConcordance(targetList = c("C1orf43", "GPI", "OAZ1"), 
+#'                                  object = RNAData,plotFactor = "Segment_Type")
+#' RNASegTypeFig()
 #' 
 #' @export
 
-plotConcordance <- function(targetList, object, plotFactors){
+plotConcordance <- function(targetList, object, plotFactor){
   
-  if(!plotFactors %in% colnames(sData(object))){
-    stop("Given plotFactors are not in dataset, spelling and capitalization matter")
+  if(!plotFactor %in% colnames(sData(object))){
+    stop("Given plotFactor are not in dataset, spelling and capitalization matter")
+  }
+  
+  if (length(targetList) <= 1) {
+    stop("At least 2 targets must be given for comparisons")
+  }
+  
+  if(length(plotFactor) > 1){
+    plotFactor <- plotFactor[1]
+    warning("Only the first plotFactor will be plotted, please call function again for other factors")
   }
   
   if(all(!targetList %in% rownames(object))){
@@ -146,21 +262,22 @@ plotConcordance <- function(targetList, object, plotFactors){
                   paste(notIn, collapse = ", ")))
   }
   
-  cols <- assignColors(annot = sData(object)[, plotFactors, drop = FALSE])
+  cols <- assignColors(annot = sData(object)[, plotFactor, drop = FALSE])
   
-  if (length(targetList) > 1) {
-    par(mar = c(4, 4, 4, 1))
-    for (varname in plotFactors) {
-      tempmat <- t(pmax(exprs(object)[targetList, ], 1))
-      colnames(tempmat) <- paste0(colnames(tempmat), " counts")
-      concordancePlot(
-        mat = tempmat,
-        col = cols[[varname]][as.character(sData(object)[, varname])],
-        collegend = cols[[varname]],
-        legend.main = varname
-      )
-    }
-  }
+  par(mar = c(4, 4, 4, 1))
+
+  tempmat <- t(pmax(exprs(object)[targetList, ], 1))
+  colnames(tempmat) <- paste0(colnames(tempmat), " counts")
+  fig <- concordancePlot(
+    mat = tempmat,
+    col = cols[[plotFactor]][as.character(sData(object)[, plotFactor])],
+    collegend = cols[[plotFactor]],
+    legend.main = plotFactor
+  )
+  
+  fig()
+
+  return(fig)
 }
 
 
@@ -176,52 +293,62 @@ plotConcordance <- function(targetList, object, plotFactors){
 #' \enumerate{
 #'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
 #' }
-#' @param plotFactors segment factor to color the plot by
+#' @param plotFactor segment factor to color the plot by
 #' @param normfactors normalization factors from computeNormalizationFactors(). If NULL these are calculated automatically. 
 #' 
 #' @examples
 #' proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
 #' "proteinData.rds", package = "GeomxTools"))
 #' 
-#' plotNormFactorConcordance(object = proteinData, plotFactors = "Segment_Type")
+#' normConcord <- plotNormFactorConcordance(object = proteinData, plotFactor = "Segment_Type")
+#' normConcord()
 #' 
 #' @export
 
-plotNormFactorConcordance <- function(object, plotFactors, normfactors = NULL){
+plotNormFactorConcordance <- function(object, plotFactor, normfactors = NULL){
   
   if(analyte(object) != "Protein"){
     stop("This figure is only meant for protein data")
   }  
   
-  if(!plotFactors %in% colnames(sData(object))){
-    stop("Given plotFactors are not in dataset, spelling and capitalization matter")
+  if(length(plotFactor) > 1){
+    plotFactor <- plotFactor[1]
+    warning("Only the first plotFactor will be plotted, please call function again for other factors")
   }
   
-  cols <- assignColors(annot = sData(object)[, plotFactors, drop = FALSE])
+  if(!plotFactor %in% colnames(sData(object))){
+    stop("Given plotFactor are not in dataset, spelling and capitalization matter")
+  }
+  
+  cols <- assignColors(annot = sData(object)[, plotFactor, drop = FALSE])
   
   if(is.null(normfactors)){
     normfactors <- computeNormalizationFactors(object)
   }
   
-  if (ncol(normfactors) > 1) {
-    par(mar = c(4, 4, 2, 1))
-    # pairs plots:
-    for (varname in names(cols)) {
-      tempmat <- pmax(normfactors, 1)
-      colnames(tempmat)[colnames(tempmat) == "HK geomean"] <- "HK geomean\n(counts)"
-      colnames(tempmat)[colnames(tempmat) == "Neg geomean"] <- "Neg geomean\n(counts)"
-      colnames(tempmat)[colnames(tempmat) == "Nuclei"] <- "Nuclei\n(counts)"
-      colnames(tempmat)[colnames(tempmat) == "Area"] <- "Area (microns squared)"
-      
-      concordancePlot(
-        mat = tempmat,
-        col = cols[[varname]][as.character(sData(object)[, varname])],
-        collegend = cols[[varname]],
-        legend.main = varname,
-        main = "Normalization factors"
-      )
-    }
+  if(ncol(normfactors) <= 1){
+    stop("At least 2 normfactors must be given for comparison")
   }
+  
+  par(mar = c(4, 4, 2, 1))
+  # pairs plots:
+  tempmat <- pmax(normfactors, 1)
+  colnames(tempmat)[colnames(tempmat) == "HK geomean"] <- "HK geomean\n(counts)"
+  colnames(tempmat)[colnames(tempmat) == "Neg geomean"] <- "Neg geomean\n(counts)"
+  colnames(tempmat)[colnames(tempmat) == "Nuclei"] <- "Nuclei\n(counts)"
+  colnames(tempmat)[colnames(tempmat) == "Area"] <- "Area (microns squared)"
+  
+  fig <- concordancePlot(
+    mat = tempmat,
+    col = cols[[plotFactor]][as.character(sData(object)[, plotFactor])],
+    collegend = cols[[plotFactor]],
+    legend.main = plotFactor,
+    main = "Normalization factors"
+  ) 
+  
+  fig()
+  
+  return(fig)
 }
 
 assignColors <- function(annot) {

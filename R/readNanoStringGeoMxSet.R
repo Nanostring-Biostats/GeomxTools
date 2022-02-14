@@ -242,18 +242,31 @@ function(dccFiles,
                                  dimLabels = c("sampleNames", "sampleColumns"))
   
   # Create NanoStringGeoMxSet
-  return( NanoStringGeoMxSet(assayData = assay,
-                             phenoData = pheno,
-                             featureData = feature,
-                             experimentData = experiment,
-                             annotation = annotation,
-                             protocolData = protocol,
-                             check = FALSE, 
-                             dimLabels = c("RTS_ID", "SampleID"),
-                             analyte = analyte) )
+  GxT <- NanoStringGeoMxSet(assayData = assay,
+                            phenoData = pheno,
+                            featureData = feature,
+                            experimentData = experiment,
+                            annotation = annotation,
+                            protocolData = protocol,
+                            check = FALSE, 
+                            dimLabels = c("RTS_ID", "SampleID"),
+                            analyte = analyte)
+  
+  if(analyte(GxT) == "Protein"){
+    GxT <- suppressWarnings(aggregateCounts(GxT))
+  }
+  
+  return(GxT)
 }
 
-
+#' Compare given PKC probes to probes in config file
+#' 
+#' Check if extra PKCs are given based on probes in config file
+#' 
+#' @param config file path to config file
+#' @param pkcProbes probe information from readPKCFile
+#' @param pkcHeader pkc metadata from readPKCFile
+#' 
 
 compareToConfig <- function(config, pkcProbes, pkcHeader){
   if(!file.exists(config)){
@@ -264,17 +277,28 @@ compareToConfig <- function(config, pkcProbes, pkcHeader){
   targets <- config[(which(config == "[Targets]")+1):length(config)]
   targets <- str_split(string = targets, pattern = " = ", simplify = T)[,1]
   
-  if(any(!pkcProbes$RTS_ID %in% targets)){
-    extraPKCs <- unique(pkcProbes$Module[which(!pkcProbes$RTS_ID %in% targets)])
-    warning(paste0("Extra PKC files were provided and will be removed from further analysis: ", paste(extraPKCs, collapse = ", ")),
-            immediate. = TRUE)
-    
-    pkcs <- unique(pkcProbes$Module[!pkcProbes$Module %in% extraPKCs])
+  extraProbes <- which(!pkcProbes$RTS_ID %in% targets)
   
-    pkcProbes <- pkcProbes[pkcProbes$Module %in% pkcs,]
+  if(length(extraProbes) > 0){
+    extraPKCs <- unique(pkcProbes$Module[extraProbes])
     
-    for(i in names(pkcHeader)){
-      pkcHeader[[i]] <- pkcHeader[[i]][names(pkcHeader[[i]]) %in% pkcs]
+    for(pkc in extraPKCs){
+      if(all(which(pkcProbes$Module == pkc) %in% extraProbes) == FALSE){
+        extraPKCs <- extraPKCs[-which(extraPKCs == pkc)]
+      }
+    }
+    
+    if(length(extraPKCs) > 0){
+      warning(paste0("Extra PKC files were provided and will be removed from further analysis: ", paste(extraPKCs, collapse = ", ")),
+              immediate. = TRUE)
+      
+      pkcs <- unique(pkcProbes$Module[!pkcProbes$Module %in% extraPKCs])
+      
+      pkcProbes <- pkcProbes[pkcProbes$Module %in% pkcs,]
+      
+      for(i in names(pkcHeader)){
+        pkcHeader[[i]] <- pkcHeader[[i]][names(pkcHeader[[i]]) %in% pkcs]
+      }
     }
   }
   

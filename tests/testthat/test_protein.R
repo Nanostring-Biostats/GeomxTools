@@ -36,13 +36,15 @@ proteinData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
                                                        experimentDataColNames = NULL))
 
 RNAData <- aggregateCounts(RNAData)
-proteinData <- suppressWarnings(aggregateCounts(proteinData))
 
 testthat::test_that("Datasets can be subset by given analyte", {
-  expect_true(all(analyte(proteinData) == "Protein"))
-  expect_true(all(analyte(proteinData) != "RNA"))
-  expect_true(all(analyte(RNAData) == "RNA"))
-  expect_true(all(analyte(RNAData) != "Protein"))
+  expect_true(analyte(proteinData) == "Protein")
+  expect_true(analyte(proteinData) != "RNA")
+  expect_true(analyte(RNAData) == "RNA")
+  expect_true(analyte(RNAData) != "Protein")
+  
+  expect_true(featureType(RNAData) == "Probe")
+  expect_true(featureType(proteinData) == "Target")
   
   expect_error(suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
                                       pkcFiles = PKCFiles,
@@ -99,6 +101,9 @@ RNAData <- setSegmentQCFlags(RNAData,
                                                 percentSaturation=50))
 
 test_that("Correct segment flags are added to protein data",{
+  expect_false("LowNegatives" %in% colnames(protocolData(proteinData)$QCFlags))
+  expect_false("LowNegatives" %in% colnames(protocolData(proteinData_seqQC)$QCFlags))
+  expect_false("LowNegatives" %in% colnames(protocolData(proteinData_background)$QCFlags))
   expect_equal(ncol(protocolData(proteinData_seqQC)$QCFlags), ncol(protocolData(proteinData_background)$QCFlags))
   expect_equal(ncol(protocolData(proteinData_seqQC)$QCFlags), ncol(protocolData(proteinData)$QCFlags))
   expect_gt(ncol(protocolData(RNAData_background)$QCFlags), ncol(protocolData(RNAData_seqQC)$QCFlags))
@@ -126,21 +131,28 @@ test_that("Expected IgGs are returned",{
   expect_equal(length(igg.names), length(grep(pattern = "IgG", fData(proteinData)$TargetName)))
   expect_true(all(igg.names == fData(proteinData)$TargetName[fData(proteinData)$CodeClass == "Negative"]))
   
-  expect_warning(length(iggNames(RNAData)) == 0)
+  expect_warning(iggNames(RNAData))
 })
 
 test_that("Expected HK are returned",{
   expect_true(all(hk.names == fData(proteinData)$TargetName[fData(proteinData)$CodeClass == "Control"]))
   
-  expect_warning(length(hkNames(RNAData)) == 0)
+  expect_warning(hkNames(RNAData))
 })
 
 test_that("Concordance plots are plotted", {
   expect_error(plotConcordance(igg.names, proteinData, "Segment_Typ"))
-  expect_error(plotConcordance(igg.names, proteinData, "Segment_Type"), NA)
-  expect_error(plotConcordance(igg.names, proteinData, "Tissue"), NA)
+  expect_error(fig <- plotConcordance(igg.names, proteinData, "Segment_Type"), NA)
+  expect_true(class(fig) == "function")
+  expect_error(fig(), NA)
   
-  expect_error(plotConcordance(HOUSEKEEPERS[1:4], RNAData, "Segment_Type"), NA)
+  expect_error(fig <- plotConcordance(igg.names, proteinData, "Tissue"), NA)
+  expect_true(class(fig) == "function")
+  expect_error(fig(), NA)
+  
+  expect_error(fig <- plotConcordance(HOUSEKEEPERS[1:4], RNAData, "Segment_Type"), NA)
+  expect_true(class(fig) == "function")
+  expect_error(fig(), NA)
 })
 
 proteinData <- normalize(proteinData, norm_method = "hk", toElt="hk_norm")
@@ -187,10 +199,18 @@ test_that("computeNormalizationFactors vs normalization",{
 
 
 test_that("QC plots are plotted", {
-  expect_error(plotNormFactorConcordance(object = proteinData, plotFactors = "Segment_Type", 
+  expect_error(fig <- plotNormFactorConcordance(object = proteinData, plotFactor = "Segment_Type", 
                                          normfactors = normfactors), NA)
-  expect_error(proteinOrder <- qcProteinSignal(object = proteinData,
+  expect_true(class(fig) == "function")
+  expect_error(fig(), NA)
+  
+  expect_error(fig <- qcProteinSignal(object = proteinData,
                                  neg.names = igg.names), NA)
+  expect_true(class(fig) == "function")
+  expect_error(fig(), NA)
+  
+  proteinOrder <- qcProteinSignalNames(object = proteinData,
+                                       neg.names = igg.names)
   
   expect_true(all(proteinOrder %in% rownames(proteinData)))
   expect_true(all(rownames(proteinData) %in% proteinOrder))
