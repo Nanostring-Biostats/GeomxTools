@@ -153,7 +153,7 @@ snrOrder <- function(object, neg.names){
   raw <- exprs(object)
   
   # estimate background:
-  negfactor <- apply(raw[neg.names, , drop = FALSE], 2, function(x){pmax(ngeoMean(x), 1)})
+  negfactor <- apply(raw[neg.names, , drop = FALSE], 2, function(x){pmax(mean(x), 1)})
   
   # calc snr
   snr <- sweep(raw, 2, negfactor, "/")
@@ -199,7 +199,7 @@ qcProteinSignalNames <- function(object, neg.names){
   raw <- exprs(object)
   
   # estimate background:
-  negfactor <- apply(raw[neg.names, , drop = FALSE], 2, function(x){pmax(ngeoMean(x), 1)})
+  negfactor <- apply(raw[neg.names, , drop = FALSE], 2, function(x){pmax(mean(x), 1)})
   
   # calc snr
   snr <- sweep(raw, 2, negfactor, "/")
