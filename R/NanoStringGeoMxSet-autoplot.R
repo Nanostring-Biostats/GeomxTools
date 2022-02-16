@@ -14,11 +14,6 @@
 #' @param pch point type argument passed to pairs()
 #' @param cex point size argument passed to pairs()
 #' @param ... Additional arguments passed to pairs()
-#' @examples
-#' # simulate HKs:
-#' x = pmax(rnorm(100, 50, 10), 0)
-#' mat = sweep(matrix(rnorm(300, 0, 5), 100), 1, x, "+")
-#' concordancePlot(mat = mat, col = rep(c("blue", "orange"), each = 50))
 
 concordancePlot <- function(mat, col = rgb(0, 0, 0, 0.5),
                              collegend = NULL, legend.main = NULL,
@@ -143,7 +138,7 @@ qcProteinSignal <- function(object, neg.names=NULL) {
 
 snrOrder <- function(object, neg.names){
   if(analyte(object) != "Protein"){
-    stop("This figure is only meant for protein data")
+    stop("This function is only meant for protein data")
   }  
   
   if(is.null(neg.names)){
@@ -161,7 +156,7 @@ snrOrder <- function(object, neg.names){
   igginds <- which(is.element(rownames(snr), neg.names))
   o <- c(igginds, setdiff(order(apply(snr, 1, median)), igginds))
   
-  return(snr[o,])
+  return(snr[o,, drop=FALSE])
 }
 
 #' Generate list of proteins ordered by SNR
@@ -188,26 +183,7 @@ snrOrder <- function(object, neg.names){
 #' @export
 
 qcProteinSignalNames <- function(object, neg.names){
-  if(analyte(object) != "Protein"){
-    stop("This figure is only meant for protein data")
-  }  
-  
-  if(is.null(neg.names)){
-    neg.names <- iggNames(object)
-  }
-  
-  raw <- exprs(object)
-  
-  # estimate background:
-  negfactor <- apply(raw[neg.names, , drop = FALSE], 2, function(x){pmax(mean(x), 1)})
-  
-  # calc snr
-  snr <- sweep(raw, 2, negfactor, "/")
-  
-  igginds <- which(is.element(rownames(snr), neg.names))
-  o <- c(igginds, setdiff(order(apply(snr, 1, median)), igginds))
-  
-  return(rownames(snr[o,]))
+  return(rownames(snrOrder(object, neg.names)))
 }
 
 #' Generate concordance figure of targets based on user provided factors

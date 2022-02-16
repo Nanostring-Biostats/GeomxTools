@@ -9,8 +9,6 @@ HOUSEKEEPERS <- c(
 #' @param fromElt name of the assayDataElement to normalize
 #' @param toElt name of the assayDataElement to store normalized values
 #' @param housekeepers optional vector of housekeeper target names
-#' @param byPanel = TRUE, TRUE background subtraction done within panel, 
-#'        FALSE background aggregated from all negatives regardless of panel
 #' @param ... optional arguments
 #' @return a NanoStringGeoMxSet object with normalized counts and normalized factors
 #' @examples

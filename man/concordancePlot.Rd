@@ -38,9 +38,3 @@ Draws a pairs plot of concordance between multiple factors/ probes
 Upper panels are the concordance plot.
 Lower panels are the standard deviation of the log2-ratios between the targets
 }
-\examples{
-# simulate HKs:
-x = pmax(rnorm(100, 50, 10), 0)
-mat = sweep(matrix(rnorm(300, 0, 5), 100), 1, x, "+")
-concordancePlot(mat = mat, col = rep(c("blue", "orange"), each = 50))
-}

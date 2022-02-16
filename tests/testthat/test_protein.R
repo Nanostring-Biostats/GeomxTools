@@ -35,7 +35,6 @@ proteinData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
                                                        phenoDataColPrefix = "",
                                                        experimentDataColNames = NULL))
 
-RNAData <- aggregateCounts(RNAData)
 
 testthat::test_that("Datasets can be subset by given analyte", {
   expect_true(analyte(proteinData) == "Protein")
@@ -63,6 +62,7 @@ testthat::test_that("Datasets can be subset by given analyte", {
   expect_true(all(RNAData@annotation %in% paste0(unique(fData(RNAData)$Module), ".pkc")))
 })
 
+RNAData <- aggregateCounts(RNAData)
 
 proteinData_seqQC <- setSegmentQCFlags(proteinData, 
                              qcCutoffs=list(minSegmentReads=1000, 

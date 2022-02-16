@@ -25,9 +25,6 @@
 \item{housekeepers}{optional vector of housekeeper target names}
 
 \item{...}{optional arguments}
-
-\item{byPanel}{= TRUE, TRUE background subtraction done within panel, 
-FALSE background aggregated from all negatives regardless of panel}
 }
 \value{
 a NanoStringGeoMxSet object with normalized counts and normalized factors
