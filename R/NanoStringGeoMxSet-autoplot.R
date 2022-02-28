@@ -114,10 +114,7 @@ qcProteinSignal <- function(object, neg.names=NULL) {
     )
     abline(h = 0)
     abline(v = length(neg.names) + 0.5, lty = 2)
-    abline(h = 1, lty = 2)
   }
-  
-  fig()
   
   return(fig)
 }
@@ -250,8 +247,6 @@ plotConcordance <- function(targetList, object, plotFactor){
     collegend = cols[[plotFactor]],
     legend.main = plotFactor
   )
-  
-  fig()
 
   return(fig)
 }
@@ -322,7 +317,6 @@ plotNormFactorConcordance <- function(object, plotFactor, normfactors = NULL){
     main = "Normalization factors"
   ) 
   
-  fig()
   
   return(fig)
 }
