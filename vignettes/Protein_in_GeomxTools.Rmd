@@ -184,7 +184,7 @@ dim(proteinData)
 
 For more information on protein normalization please refer to our [whitepaper](https://nanostring.com/resources/introduction-to-geomx-normalization-protein/). 
 
-After filtering targets, we move onto normalization. There are many types of normalization and we have two built in figures types to help decide what is the best method for the dataset. 
+After filtering targets, we move onto normalization. There are many types of normalization and we have two built in figure types to help decide what is the best method for the dataset. 
 
 The first is a concordance plot of a list of targets, normally the IgGs or HK, colored by ROI factors like tissue or segment type. The upper panels are the concordance plots and the lower panels are the standard deviation of the log2-ratios between the targets. This figure does not show correlations because that calculation is increased with the large range that these values can take (`r min(exprs(proteinData[igg.names,]))`-`r as.integer(max(exprs(proteinData[igg.names,])))` in this example). SD(log2(ratios)) measures essentially the same thing but is invariant to that range. However the metrics are inversed, high correlation = low SDs. 
 
