@@ -4,34 +4,13 @@
 \alias{concordancePlot}
 \title{Produce concordance pairs plots}
 \usage{
-concordancePlot(
-  mat,
-  col = rgb(0, 0, 0, 0.5),
-  collegend = NULL,
-  legend.main = NULL,
-  main = "",
-  pch = 16,
-  cex = 1.5,
-  ...
-)
+concordancePlot(dat, plotFactor)
 }
 \arguments{
-\item{mat}{Matrix of values to be compared. Could be e.g. IgG probe counts,
+\item{dat}{dataframe of values to be compared. Could be e.g. IgG probe counts,
 or different normalization factors. Each variable/factor is in a column.}
 
-\item{col}{Vector of colors for points}
-
-\item{collegend}{Named vector of colors, used to draw a legend.}
-
-\item{legend.main}{Title for the color legend, used to name the variable of interest}
-
-\item{main}{Plot title}
-
-\item{pch}{point type argument passed to pairs()}
-
-\item{cex}{point size argument passed to pairs()}
-
-\item{...}{Additional arguments passed to pairs()}
+\item{plotFactor}{segment factor to color the plot by}
 }
 \description{
 Draws a pairs plot of concordance between multiple factors/ probes

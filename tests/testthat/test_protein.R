@@ -143,16 +143,16 @@ test_that("Expected HK are returned",{
 test_that("Concordance plots are plotted", {
   expect_error(plotConcordance(igg.names, proteinData, "Segment_Typ"))
   expect_error(fig <- plotConcordance(igg.names, proteinData, "Segment_Type"), NA)
-  expect_true(class(fig) == "function")
-  expect_error(fig(), NA)
+  expect_true(class(fig)[1] == "gg")
+  expect_error(fig, NA)
   
   expect_error(fig <- plotConcordance(igg.names, proteinData, "Tissue"), NA)
-  expect_true(class(fig) == "function")
-  expect_error(fig(), NA)
+  expect_true(class(fig)[1] == "gg")
+  expect_error(fig, NA)
   
   expect_error(fig <- plotConcordance(HOUSEKEEPERS[1:4], RNAData, "Segment_Type"), NA)
-  expect_true(class(fig) == "function")
-  expect_error(fig(), NA)
+  expect_true(class(fig)[1] == "gg")
+  expect_error(fig, NA)
 })
 
 proteinData <- normalize(proteinData, norm_method = "hk", toElt="hk_norm")
@@ -201,8 +201,8 @@ test_that("computeNormalizationFactors vs normalization",{
 test_that("QC plots are plotted", {
   expect_error(fig <- plotNormFactorConcordance(object = proteinData, plotFactor = "Segment_Type", 
                                          normfactors = normfactors), NA)
-  expect_true(class(fig) == "function")
-  expect_error(fig(), NA)
+  expect_true(class(fig)[1] == "gg")
+  expect_error(fig, NA)
   
   expect_error(fig <- qcProteinSignal(object = proteinData,
                                  neg.names = igg.names), NA)

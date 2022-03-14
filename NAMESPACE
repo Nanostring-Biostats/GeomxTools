@@ -3,6 +3,7 @@
 import(S4Vectors)
 import(Biobase)
 import(NanoStringNCTools)
+import(ggplot2)
 importClassesFrom(S4Vectors, DataFrame)
 importClassesFrom(NanoStringNCTools, SignatureSet)
 importFrom(rjson, fromJSON)
@@ -36,6 +37,10 @@ importFrom("grDevices", "col2rgb", "colors", "rgb")
 importFrom("graphics", "abline", "axis", "boxplot", "legend", "pairs",
            "par", "points")
 importFrom(stats, median)
+importFrom(rlang, expr_text)
+importFrom(GGally, ggpairs)
+importFrom(GGally, wrap)
+
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 classes
