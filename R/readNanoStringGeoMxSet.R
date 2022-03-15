@@ -7,6 +7,7 @@ function(dccFiles,
          phenoDataColPrefix = "",
          protocolDataColNames = NULL,
          experimentDataColNames = NULL,
+         defaultPKCVersions = NULL,
          ...)
 {
   # check inputs
@@ -117,7 +118,7 @@ function(dccFiles,
   if (is.null(pkcFiles)) {
     stop("Please specify an input for pkcFiles")
   } else if (!is.null(pkcFiles)) {
-    pkcData <- readPKCFile(pkcFiles)
+    pkcData <- readPKCFile(pkcFiles, use_versions=defaultPKCVersions)
 
     pkcHeader <- S4Vectors::metadata(pkcData)
     pkcHeader[["PKCFileDate"]] <- as.character(pkcHeader[["PKCFileDate"]])

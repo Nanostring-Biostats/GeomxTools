@@ -1,5 +1,5 @@
 readPKCFile <-
-function(file)
+function(file, default_versions=NULL)
 {
   pkc_json_list <- lapply(file, function(pkc_file) {rjson::fromJSON(file = pkc_file)})
   pkc_names <- 
@@ -27,6 +27,17 @@ function(file)
   
   S4Vectors::metadata(rtsid_lookup_df) <- header
   
+  # Check for multiple versions of pkc
+  pkc_base_names <- apply(pkc_names, sub, pattern="_[^_]+$", replacement="")
+  multiversion <- unique(pkc_base_names[duplicated(pkc_base_names)])
+  if (length(multiversion) > 0) {
+    if (!is.null(default_versions)) {
+      default_names <- apply(default_versions, basename)
+      default_names <- apply(default_versions, sub, pattern="_[^_]+$", replacement="")
+    }
+    rtsid_lookup_df <- resolve_version_conflicts(multiversion, rtsid_lookup_df)
+  }
+
   return(rtsid_lookup_df)
 }
 
@@ -37,6 +48,8 @@ generate_pkc_lookup <- function(jsons_vec) {
                           Module=character(), 
                           CodeClass=character(), 
                           ProbeID=character(),
+                          GeneID=list(),
+                          SystematicName=list(),
                           stringsAsFactors=FALSE)
   for (curr_idx in seq_len(length(jsons_vec))) {
     curr_module <- names(jsons_vec)[curr_idx]
@@ -47,8 +60,11 @@ generate_pkc_lookup <- function(jsons_vec) {
       for (prb in targ[["Probes"]]) {
         curr_RTS_ID <- prb$RTS_ID
         curr_probe_ID <- prb$ProbeID
+        curr_gene_ID <- prb$GeneID
+        curr_syst_name <- prb$SystematicName
         lookup_df[nrow(lookup_df) + 1, ] <- 
-          list(curr_RTS_ID, curr_targ, curr_module, curr_code_class, curr_probe_ID)
+          list(curr_RTS_ID, curr_targ, curr_module, curr_code_class, 
+               curr_probe_ID, curr_gene_ID, curr_syst_name)
       }
     }
   }
@@ -85,3 +101,4 @@ generate_pkc_targ_notes <- function(jsons_vec, lookup_tab) {
   return(notes_df)
 }
 
+resolve_version_conflicts <- function(probe_annot_df)
