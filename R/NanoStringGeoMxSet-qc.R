@@ -328,25 +328,27 @@ setGrubbsFlags <- function(object,
                            alphaCutoff=DEFAULTS[["outlierTestAlpha"]], 
                            minCount=DEFAULTS[["minProbeCount"]],
                            percFail=DEFAULTS[["percentFailGrubbs"]]) {
-    # Skip targets with less than 3 probes
-    multiProbeTable <- with(object, table(TargetName)) >= 3L
-    multiProbeTargs <- 
-        names(multiProbeTable)[which(multiProbeTable, arr.ind=TRUE)]
-    if (length(multiProbeTargs) > 0) {
-        multiObject <- 
-            object[fData(object)[["TargetName"]] %in% multiProbeTargs, ]
-    } else {
-        warning("Object has no targets with at least 3 probes. ",
-                "No outlier testing can be performed.")
-        return(object)
-    }
 
+    #Remove probes with low probe ratios prior to Grubb's test
     if (!"ProbeRatio" %in% fvarLabels(object)) {
         warning("Probe ratio QC has not yet been performed. ",
                 "Suggests running probe ratio QC then re-running Grubbs QC.")
     } else {
         multiObject <- 
-            multiObject[!fData(multiObject)[["QCFlags"]][, "LowProbeRatio"], ]
+            object[!fData(object)[["QCFlags"]][, "LowProbeRatio"], ]
+    }
+    
+    # Skip targets with less than 3 probes
+    multiProbeTable <- with(multiObject, table(TargetName)) >= 3L
+    multiProbeTargs <- 
+        names(multiProbeTable)[which(multiProbeTable, arr.ind=TRUE)]
+    if (length(multiProbeTargs) > 0) {
+        multiObject <- 
+            multiObject[fData(multiObject)[["TargetName"]] %in% multiProbeTargs, ]
+    } else {
+        warning("Object has no targets with at least 3 probes. ",
+                "No outlier testing can be performed.")
+        return(object)
     }
 
     grubbsResults <- 
