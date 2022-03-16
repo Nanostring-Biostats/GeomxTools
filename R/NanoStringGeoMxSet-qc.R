@@ -358,6 +358,7 @@ setGrubbsFlags <- function(object,
                 esBy(modObject, GROUP="TargetName", simplify=FALSE, FUN=function(y) {
                     currExprs <- assayDataElement(y, elt="log10")
                     currResult <- apply(currExprs, 2, function(z) { 
+                        z <- z[!is.na(z)]
                         if (max(z) < logtBase(minCount, base=10)) {
                             return(NA)
                         }
