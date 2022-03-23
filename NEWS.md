@@ -1,6 +1,11 @@
+# GeomxTools 2.1.2
+
+## Bug fixes:
+* Bug fix in outlier testing
+
 # GeomxTools 2.1.1
 
-## Revisions:
+## New features:
 * Add coercion to Seurat and SpatialExperiment
 
 # GeomxTools 2.1.0
