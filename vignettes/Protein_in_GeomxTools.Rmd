@@ -136,7 +136,7 @@ rect(xleft = genesOfInterest[3]-1, xright = genesOfInterest[3]+1,
 ```
 
   -	Negative controls (IgGs) (cyan) are plotted on the far left of the plot.
-  -	Tyrosine Hydroxylase (orange) hovers around background in all segments and should probably be excluded from analysis. 
+  -	Tyrosine Hydroxylase (orange) hovers around background in all segments and might need to be excluded from analysis. 
   -	ApoA-I (green) is mostly near-background, but it has meaningfully high signal in a handful of segments. 
   -	EpCAM (pink) seems to have lower background than the negative controls. But its long range, and especially the existence of points well above background, suggests this protein has interpretable data. 
 
@@ -196,16 +196,16 @@ The first is a concordance plot of a list of targets, normally the IgGs or HK, c
 
 Our motivating theory is simple: if several targets all accurately measure signal strength, they should be highly correlated with each other. More precisely, the log-ratios between them should have low SDs.
 
-```{r IgG concordance, fig.height=10, fig.width=10}
+```{r IgG concordance, fig.height=8, fig.width=8}
 plotConcordance(object = proteinData, targetList = igg.names, plotFactor = "Tissue")
 ```
 
-Above we see good concordance amongst the IgGs, confirming they all can be used. Numbers in the lower-left panels show the SD of the log2-ratios between IgGs. Importantly, we do not see a tendency for one IgG to be offset from the others, suggesting there’s no between-slide bias in calculation of background.
+Above we see good concordance amongst the IgGs, confirming they all can be used. Numbers in the top-right panels show the SD of the log2-ratios between IgGs. Importantly, we do not see a tendency for one IgG to be offset from the others, suggesting there’s no between-slide bias in calculation of background.
 
 
-The second plot helps show the concordance of normalization factors. The factors are calculated on the IgG and HK targets and the area or nuclei count if provided. The upper panels are the concordance plots and the lower panels are the standard deviation of the log2-ratios between the normalization factors.
+The second plot helps show the concordance of normalization factors. The factors are calculated on the IgG and HK targets and the area or nuclei count if provided. The lower panels are the concordance plots and the upper panels are the standard deviation of the log2-ratios between the normalization factors.
 
-```{r norm concordance, fig.height=10, fig.width=10}
+```{r norm concordance, fig.height=8, fig.width=8}
 normfactors <- computeNormalizationFactors(object = proteinData,
                                            area = "AOI.Size.um2",
                                            nuclei = "Nuclei.Counts")
