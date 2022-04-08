@@ -28,10 +28,6 @@ igg.names <- iggNames(proteinData)
 
 protSegTypeFig <- plotConcordance(targetList = igg.names, object = proteinData, 
                                   plotFactor = "Segment_Type")
-protSegTypeFig()
-
-RNASegTypeFig <- plotConcordance(targetList = c("C1orf43", "GPI", "OAZ1"), 
-                                 object = RNAData,plotFactor = "Segment_Type")
-RNASegTypeFig()
+protSegTypeFig
 
 }

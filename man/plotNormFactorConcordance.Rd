@@ -27,6 +27,6 @@ proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_D
 "proteinData.rds", package = "GeomxTools"))
 
 normConcord <- plotNormFactorConcordance(object = proteinData, plotFactor = "Segment_Type")
-normConcord()
+normConcord
 
 }

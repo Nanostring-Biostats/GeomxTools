@@ -210,11 +210,7 @@ qcProteinSignalNames <- function(object, neg.names){
 #' 
 #' protSegTypeFig <- plotConcordance(targetList = igg.names, object = proteinData, 
 #'                                   plotFactor = "Segment_Type")
-#' protSegTypeFig()
-#' 
-#' RNASegTypeFig <- plotConcordance(targetList = c("C1orf43", "GPI", "OAZ1"), 
-#'                                  object = RNAData,plotFactor = "Segment_Type")
-#' RNASegTypeFig()
+#' protSegTypeFig
 #' 
 #' @export
 
@@ -272,7 +268,7 @@ plotConcordance <- function(targetList, object, plotFactor){
 #' "proteinData.rds", package = "GeomxTools"))
 #' 
 #' normConcord <- plotNormFactorConcordance(object = proteinData, plotFactor = "Segment_Type")
-#' normConcord()
+#' normConcord
 #' 
 #' @export
 
