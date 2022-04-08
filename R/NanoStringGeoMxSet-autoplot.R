@@ -14,34 +14,9 @@
 #' @importFrom wrap GGally
 #' 
 concordancePlot <- function(dat, plotFactor){
-    print.sd.log.ratio <- function(data, mapping) {
-        x <- gsub("\\n", "\n", 
-                  gsub("~", "", 
-                       gsub(pattern = "`", "", 
-                            rlang::expr_text(mapping$x))), 
-                  fixed = TRUE)
-        y <- gsub("\\n", "\n", 
-                  gsub("~", "", 
-                       gsub(pattern = "`", "", 
-                            rlang::expr_text(mapping$y))), 
-                  fixed = TRUE)
-        
-        x <- data[[x]]
-        y <- data[[y]]
-        
-        center <- function(x){(max(x) + min(x))/2}
-        
-        pairwise.stat <- sd(log2(pmax(x, 1)) - log2(pmax(y, 1)), na.rm = TRUE)
-        
-        return(ggplot2::ggplot(data) +
-                   ggplot2::geom_blank(mapping) +
-                   ggplot2::annotate(geom = "text", x = center(x), y = center(y),
-                                     label = paste("SD(log2(ratios)) =\n", 
-                                                   round(pairwise.stat, 3))))
-    }
-    
     n <- ncol(dat)
-    p <- GGally::ggpairs(dat, mapping = ggplot2::aes(colour=dat[[plotFactor]], alpha=0.1),
+    p <- GGally::ggpairs(dat, mapping = ggplot2::aes(colour=dat[[plotFactor]], 
+                                                     alpha=0.1),
                          columns=1:n, progress=FALSE,
                          lower = list(continuous = GGally::wrap("smooth",
                                                                 alpha = 0.3,
@@ -51,6 +26,41 @@ concordancePlot <- function(dat, plotFactor){
     
     
     return(p)
+}
+
+#' Prints the standard deviation of log2-ratios
+#' 
+#' @description 
+#' Similar calculation to correlation but is not affected by high differences 
+#' across values. 
+#' 
+#' @param data dataframe of XY values
+#' @param mapping ggplot mapping value
+#' 
+print.sd.log.ratio <- function(data, mapping) {
+  x <- gsub("\\n", "\n", 
+            gsub("~", "", 
+                 gsub(pattern = "`", "", 
+                      rlang::expr_text(mapping$x))), 
+            fixed = TRUE)
+  y <- gsub("\\n", "\n", 
+            gsub("~", "", 
+                 gsub(pattern = "`", "", 
+                      rlang::expr_text(mapping$y))), 
+            fixed = TRUE)
+  
+  x <- data[[x]]
+  y <- data[[y]]
+  
+  center <- function(x){(max(x) + min(x))/2}
+  
+  pairwise.stat <- sd(log2(pmax(x, 1)) - log2(pmax(y, 1)), na.rm = TRUE)
+  
+  return(ggplot2::ggplot(data) +
+           ggplot2::geom_blank(mapping) +
+           ggplot2::annotate(geom = "text", x = center(x), y = center(y),
+                             label = paste("SD(log2(ratios)) =\n", 
+                                           round(pairwise.stat, 3))))
 }
 
 #' Generate Protein QC signal boxplot figure
@@ -140,7 +150,8 @@ snrOrder <- function(object, neg.names){
     raw <- exprs(object)
     
     # estimate background:
-    negfactor <- apply(raw[neg.names, , drop = FALSE], 2, function(x){pmax(mean(x), 1)})
+    negfactor <- apply(raw[neg.names, , drop = FALSE], 2, 
+                       function(x){pmax(mean(x), 1)})
     
     # calc snr
     snr <- sweep(raw, 2, negfactor, "/")
@@ -233,7 +244,8 @@ plotConcordance <- function(targetList, object, plotFactor){
     tempmat <- t(pmax(exprs(object)[targetList, ], 1))
     colnames(tempmat) <- paste0(colnames(tempmat), " counts")
     
-    fig <- concordancePlot(dat = as.data.frame(cbind(tempmat, sData(object)[as.character({{plotFactor}})])),
+    fig <- concordancePlot(dat = as.data.frame(cbind(tempmat, 
+                                                     sData(object)[as.character({{plotFactor}})])),
                            plotFactor = plotFactor)
     
     return(fig)
@@ -294,7 +306,8 @@ plotNormFactorConcordance <- function(object, plotFactor, normfactors = NULL){
     colnames(tempmat)[colnames(tempmat) == "Nuclei"] <- "Nuclei\n(counts)"
     colnames(tempmat)[colnames(tempmat) == "Area"] <- "Area\n(microns squared)"
     
-    fig <- concordancePlot(dat = as.data.frame(cbind(tempmat, sData(object)[as.character({{plotFactor}})])),
+    fig <- concordancePlot(dat = as.data.frame(cbind(tempmat, 
+                                                     sData(object)[as.character({{plotFactor}})])),
                            plotFactor = plotFactor)
     
     return(fig)

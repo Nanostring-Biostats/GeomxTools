@@ -6,6 +6,10 @@ output:
     df_print: kable
   pdf_document: default
 date: 'Compiled: `r Sys.Date()`'
+vignette: >
+  %\VignetteIndexEntry{Coercion of GeoMxSet to Seurat and SpatialExperiment Objects}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 ```{r setup, include=FALSE}
