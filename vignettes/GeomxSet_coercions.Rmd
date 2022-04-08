@@ -97,7 +97,7 @@ It is recommended to normalize using a GeoMx specific model before coercing. The
 is now in the assayData slot called "q_norm".
 
 ```{r GeomxTools Normalization}
-norm_target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="quant",
+norm_target_demoData <- normalize(target_demoData, norm_method="quant",
                                   desiredQuantile = .75, toElt = "q_norm")
 
 names(norm_target_demoData@assayData)
@@ -168,6 +168,9 @@ Here is a work through of a more indepth DSP dataset. This is a non-small cell l
 
 ```{r GeoMx dataset with coordinates}
 data("nsclc", package = "SpatialDecon")
+
+#adding new slot to previous version data (do not run line outside of this vignette)
+nsclc@analyte <- "RNA"
 
 nsclc
 
