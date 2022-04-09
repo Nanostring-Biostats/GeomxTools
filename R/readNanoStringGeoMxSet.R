@@ -134,8 +134,13 @@ function(dccFiles,
                Sample_ID = x))
   probeAssay <- do.call(rbind, probeAssay)
   # check for missing probes in PKC that are in assay
-  if (length(setdiff(unique(probeAssay[["RTS_ID"]]), rownames(pkcData))) > 0L){
-    stop("Missing PKC files, not all probes are not in specified PKC files.")
+  missingProbes <- setdiff(unique(probeAssay[["RTS_ID"]]), rownames(pkcData))
+  if (length(missingProbes) > 0L){
+    warning("Not all probes are found within PKC probe metadata.",
+    " The following probes are ignored from analysis",
+    " and were most likely removed from metadata while",
+    " resolving multiple module PKC version conflicts.\n",
+    paste(missingProbes, sep=", "))
   }
   zeroProbes <- setdiff(rownames(pkcData), unique(probeAssay[["RTS_ID"]]))
   zeroProbeAssay <- data.frame(RTS_ID=pkcData[zeroProbes, "RTS_ID"],
