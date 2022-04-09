@@ -2,50 +2,92 @@ readPKCFile <-
 function(file, default_pkc_vers=NULL)
 {
   pkc_json_list <- lapply(file, function(pkc_file) {rjson::fromJSON(file = pkc_file)})
-  pkc_names <- 
-    unlist(lapply( file, 
-                   function(file) {
-                     base_pkc_name <- gsub(".pkc", "", trimws(basename(file)))
-                     return(base_pkc_name)
-                   }))
+  pkc_names <- extract_pkc_names(file)
   names(pkc_json_list) <- pkc_names
-  rtsid_lookup_df <- generate_pkc_lookup(pkc_json_list)
-  # create negative column 
-  rtsid_lookup_df$Negative <- grepl("Negative", rtsid_lookup_df$CodeClass)
-  rtsid_lookup_df$RTS_ID <- gsub("RNA", "RTS00", rtsid_lookup_df[["RTS_ID"]])
-  # Coerce output to DataFrame
-  rtsid_lookup_df <- S4Vectors::DataFrame(rtsid_lookup_df)
-  
+
   # Extract header
   header <- list(PKCFileName = sapply(pkc_json_list, function(list) list[["Name"]]),
+                 PKCModule = basename(unlist(lapply(pkc_names, sub, pattern="_[^_]+$", replacement=""))),
                  PKCFileVersion = sapply(pkc_json_list, function(list) list[["Version"]]),
                  PKCFileDate = sapply(pkc_json_list, function(list) list[["Date"]]),
                  AnalyteType = sapply(pkc_json_list, function(list) list[["AnalyteType"]]),
                  MinArea = sapply(pkc_json_list, function(list) list[["MinArea"]]),
                  MinNuclei = sapply(pkc_json_list, function(list) list[["MinNuclei"]])  
                  )
-  
-  S4Vectors::metadata(rtsid_lookup_df) <- header
-  
-  # Check for multiple versions of pkc
-  pkc_base_names <- apply(pkc_names, sub, pattern="_[^_]+$", replacement="")
-  multi_vers <- unique(pkc_base_names[duplicated(pkc_base_names)])
-  if (length(multi_vers) > 0) {
-    if (!is.null(default_pkc_vers)) {
-      default_names <- apply(default_pkc_vers, basename)
-      default_vers <- 
-        apply(default_pkc_vers, sub, pattern="_[^_]+$", replacement="")
-      if (sum(duplicated(default_names)) > 0) {
-        stop(paste0("Multiple PKC versions supplied as default version.", 
-                    "Only supply one version for each of these PKCs: ", 
-                    paste(default_names[duplicated(default_names)], sep=", ")))
-      } else {
-        colnames(default_vers) <- default_names
-      }
 
+  # Check for multiple versions of pkc
+  multi_idx <- duplicated(header[["PKCModule"]])
+  multi_mods <- unique(header[["PKCModule"]][multi_idx])
+  if (length(multi_mods) < 1) {
+    if (!is.null(default_pkc_vers)) {
+      warning("Only one version found per PKC module.\n",
+              "No PKCs need to be combined. ",
+              "Therefore, no default PKC versions will be used.")
     }
-    rtsid_lookup_df <- resolve_version_conflicts(multi_vers, rtsid_lookup_df)
+  } else {
+    use_pkc_names <- lapply(multi_mods, function(mod) {
+        mod_idx <- header[["PKCModule"]][header[["PKCModule"]] == mod]
+        max_vers <- as.numeric(as.character(max(as.numeric_version(
+          header[["PKCFileVersion"]][mod_idx]))))
+        max_name <- names(header[["PKCFileVersion"]][
+          header[["PKCFileVersion"]] == max_vers])
+        return(max_name)
+      })
+    if (!is.null(default_pkc_vers)) {
+      default_names <- extract_pkc_names(default_pkc_vers)
+      default_mods <- extract_pkc_modules(default_pkc_vers)
+      if (!all(default_names %in% names(header[["PKCFileName"]]))) {
+        removed_pkcs <- 
+          default_pkc_vers[!default_names %in% names(header[["PKCFileName"]])]
+        stop("Could not match all default PKC versions with a PKC file name.", 
+             "Check default file names match exactly to a PKC file name.",
+             paste0("Unmatched default PKC versions: ", removed_pkcs))
+        dup_defaults <- default_names[duplicated(default_mods)]
+      } else if (sum(dup_defaults) > 0) {
+        stop("There should only be one default PKC version per module.", 
+             "Ensure only one version per module in default PKCs list.",
+             "Multiple default PKC version conflicts: ", 
+             paste(dup_defaults, sep=", "))
+      } else {
+        use_pkc_names[default_mods] <- default_names
+      }
+    }
+
+  rtsid_lookup_df <- generate_pkc_lookup(pkc_json_list)
+  # create negative column 
+  rtsid_lookup_df$Negative <- grepl("Negative", rtsid_lookup_df$CodeClass)
+  rtsid_lookup_df$RTS_ID <- gsub("RNA", "RTS00", rtsid_lookup_df[["RTS_ID"]])
+  # Coerce output to DataFrame
+  rtsid_lookup_df <- S4Vectors::DataFrame(rtsid_lookup_df)
+
+  if (length(multi_mods) > 0) {
+    for (mod in names(use_pkc_names)) {
+      mod_vers <- names(header[["PKCModule"]])[header[["PKCModule"]] == mod]
+      mod_lookup <- rtsid_lookup_df[rtsid_lookup_df$Module %in% mod_vers]
+      mod_tab <- table(mod_lookup$RTS_ID)
+      remove_rts <- names(mod_tab[mod_tab != length(mod_vers)])
+      if (length(remove_rts) > 0) {
+        rtsid_lookup_df <- 
+          subset(rtsid_lookup_df, subset=!RTS_ID %in% remove_rts)
+        warning("The following probes were removed from analysis",
+                " as they were not found in all PKC module versions used.",
+                paste(capture.output(print(
+                  subset(rtsid_lookup_df, subset=RTS_ID %in% remove_rts))),
+                  collapse = "\n"))
+      }
+      remove_vers <- mod_vers[mod_vers != use_pkc_names[mod]]
+      rtsid_lookup_df <- 
+        subset(rtsid_lookup_df, subset=!Module %in% remove_vers)
+      warning("The following PKC versions were removed from analysis",
+        " as they were either not the latest version used or",
+        " were not selected to use as default version.",
+        paste(remove_vers, collapse = ", "))
+      header <- lapply(header, function(elem) {
+        elem[!names(elem) %in% remove_vers]})
+    }
   }
+
+  S4Vectors::metadata(rtsid_lookup_df) <- header
 
   return(rtsid_lookup_df)
 }
@@ -110,6 +152,23 @@ generate_pkc_targ_notes <- function(jsons_vec, lookup_tab) {
   return(notes_df)
 }
 
-resolve_version_conflicts <- function(probe_annot_df) {
-  
+extract_pkc_names <- function(pkc_files) {
+  pkc_names <- 
+    unlist(lapply(pkc_files, function(pkc_file) {
+      base_pkc_name <- gsub(".pkc", "", trimws(basename(pkc_file)))
+      return(base_pkc_name)
+    }))
+  return(pkc_names)
+}
+
+extract_pkc_versions <- function(pkc_files) {
+  pkc_files <- extract_pkc_names(pkc_files)
+  pkc_vers <- unlist(lapply(pkc_files, sub, pattern="^.*_v", replacement=""))
+  return(pkc_vers)
+}
+
+extract_pkc_modules <- function(pkc_files) {
+  pkc_files <- extract_pkc_names(pkc_files)
+  pkc_vers <- unlist(lapply(pkc_files, sub, pattern="_[^_]+$", replacement=""))
+  return(pkc_vers)
 }
