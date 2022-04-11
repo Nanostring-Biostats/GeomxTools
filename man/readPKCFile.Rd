@@ -8,12 +8,13 @@
 }
 
 \usage{
-readPKCFile(file, default_versions=NULL)
+readPKCFile(file, default_pkc_vers=NULL)
 }
 
 \arguments{
   \item{file}{A character string containing the path to the PKC file.}
-  \item{default_versions}{Optional list of pkc file names to use if more than one version of module pkcs provided.}
+  \item{default_pkc_vers}{Optional list of pkc file names to use as default if 
+    more than one pkc version of each module is provided.}
 }
 
 \value{

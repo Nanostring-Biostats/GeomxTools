@@ -118,7 +118,7 @@ function(dccFiles,
   if (is.null(pkcFiles)) {
     stop("Please specify an input for pkcFiles")
   } else if (!is.null(pkcFiles)) {
-    pkcData <- readPKCFile(pkcFiles, use_versions=defaultPKCVersions)
+    pkcData <- readPKCFile(pkcFiles, default_pkc_vers=defaultPKCVersions)
 
     pkcHeader <- S4Vectors::metadata(pkcData)
     pkcHeader[["PKCFileDate"]] <- as.character(pkcHeader[["PKCFileDate"]])

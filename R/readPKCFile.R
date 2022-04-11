@@ -4,10 +4,11 @@ function(file, default_pkc_vers=NULL)
   pkc_json_list <- lapply(file, function(pkc_file) {rjson::fromJSON(file = pkc_file)})
   pkc_names <- extract_pkc_names(file)
   names(pkc_json_list) <- pkc_names
-
+  pkc_modules <- basename(unlist(lapply(pkc_names, sub, pattern="_[^_]+$", replacement="")))
+  names(pkc_modules) <- pkc_names
   # Extract header
   header <- list(PKCFileName = sapply(pkc_json_list, function(list) list[["Name"]]),
-                 PKCModule = basename(unlist(lapply(pkc_names, sub, pattern="_[^_]+$", replacement=""))),
+                 PKCModule = pkc_modules,
                  PKCFileVersion = sapply(pkc_json_list, function(list) list[["Version"]]),
                  PKCFileDate = sapply(pkc_json_list, function(list) list[["Date"]]),
                  AnalyteType = sapply(pkc_json_list, function(list) list[["AnalyteType"]]),
@@ -20,38 +21,41 @@ function(file, default_pkc_vers=NULL)
   multi_mods <- unique(header[["PKCModule"]][multi_idx])
   if (length(multi_mods) < 1) {
     if (!is.null(default_pkc_vers)) {
-      warning("Only one version found per PKC module.\n",
+      warning("Only one version found per PKC module. ",
               "No PKCs need to be combined. ",
               "Therefore, no default PKC versions will be used.")
     }
   } else {
     use_pkc_names <- lapply(multi_mods, function(mod) {
-        mod_idx <- header[["PKCModule"]][header[["PKCModule"]] == mod]
+        mod_idx <- header[["PKCModule"]] == mod
         max_vers <- as.numeric(as.character(max(as.numeric_version(
           header[["PKCFileVersion"]][mod_idx]))))
         max_name <- names(header[["PKCFileVersion"]][
           header[["PKCFileVersion"]] == max_vers])
         return(max_name)
       })
+    names(use_pkc_names) <- multi_mods
     if (!is.null(default_pkc_vers)) {
       default_names <- extract_pkc_names(default_pkc_vers)
       default_mods <- extract_pkc_modules(default_pkc_vers)
+      dup_defaults <- default_names[duplicated(default_mods) | 
+        duplicated(default_mods, fromLast=TRUE)]
       if (!all(default_names %in% names(header[["PKCFileName"]]))) {
         removed_pkcs <- 
           default_pkc_vers[!default_names %in% names(header[["PKCFileName"]])]
-        stop("Could not match all default PKC versions with a PKC file name.", 
-             "Check default file names match exactly to a PKC file name.",
+        stop("Could not match all default PKC versions with a PKC file name. ", 
+             "Check default file names match exactly to a PKC file name.\n",
              paste0("Unmatched default PKC versions: ", removed_pkcs))
-        dup_defaults <- default_names[duplicated(default_mods)]
-      } else if (sum(dup_defaults) > 0) {
-        stop("There should only be one default PKC version per module.", 
-             "Ensure only one version per module in default PKCs list.",
+      } else if (length(dup_defaults) > 0) {
+        stop("There should only be one default PKC version per module. ", 
+             "Ensure only one version per module in default PKCs list.\n",
              "Multiple default PKC version conflicts: ", 
-             paste(dup_defaults, sep=", "))
+             paste(dup_defaults, collapse=", "))
       } else {
         use_pkc_names[default_mods] <- default_names
       }
     }
+  }
 
   rtsid_lookup_df <- generate_pkc_lookup(pkc_json_list)
   # create negative column 
@@ -63,24 +67,24 @@ function(file, default_pkc_vers=NULL)
   if (length(multi_mods) > 0) {
     for (mod in names(use_pkc_names)) {
       mod_vers <- names(header[["PKCModule"]])[header[["PKCModule"]] == mod]
-      mod_lookup <- rtsid_lookup_df[rtsid_lookup_df$Module %in% mod_vers]
+      mod_lookup <- rtsid_lookup_df[rtsid_lookup_df$Module %in% mod_vers, ]
       mod_tab <- table(mod_lookup$RTS_ID)
       remove_rts <- names(mod_tab[mod_tab != length(mod_vers)])
       if (length(remove_rts) > 0) {
-        rtsid_lookup_df <- 
-          subset(rtsid_lookup_df, subset=!RTS_ID %in% remove_rts)
-        warning("The following probes were removed from analysis",
-                " as they were not found in all PKC module versions used.",
+                warning("The following probes were removed from analysis",
+                " as they were not found in all PKC module versions used.\n",
                 paste(capture.output(print(
                   subset(rtsid_lookup_df, subset=RTS_ID %in% remove_rts))),
                   collapse = "\n"))
+        rtsid_lookup_df <- 
+          subset(rtsid_lookup_df, subset=!RTS_ID %in% remove_rts)
       }
       remove_vers <- mod_vers[mod_vers != use_pkc_names[mod]]
       rtsid_lookup_df <- 
         subset(rtsid_lookup_df, subset=!Module %in% remove_vers)
       warning("The following PKC versions were removed from analysis",
-        " as they were either not the latest version used or",
-        " were not selected to use as default version.",
+        " as they were overridden by a newer PKC version or",
+        " were overridden by a user-defined default PKC version.\n",
         paste(remove_vers, collapse = ", "))
       header <- lapply(header, function(elem) {
         elem[!names(elem) %in% remove_vers]})
@@ -98,9 +102,9 @@ generate_pkc_lookup <- function(jsons_vec) {
                           Target=character(), 
                           Module=character(), 
                           CodeClass=character(), 
-                          ProbeID=character(),
-                          GeneID=list(),
-                          SystematicName=list(),
+                          ProbeID=character(), 
+                          GeneID=character(), 
+                          SystematicName=character(), 
                           stringsAsFactors=FALSE)
   for (curr_idx in seq_len(length(jsons_vec))) {
     curr_module <- names(jsons_vec)[curr_idx]
@@ -111,8 +115,12 @@ generate_pkc_lookup <- function(jsons_vec) {
       for (prb in targ[["Probes"]]) {
         curr_RTS_ID <- prb$RTS_ID
         curr_probe_ID <- prb$ProbeID
-        curr_gene_ID <- prb$GeneID
-        curr_syst_name <- prb$SystematicName
+        curr_gene_ID <- 
+          paste(prb$GeneID, collapse = ", ")
+        if (length(prb$GeneID) < 1) {
+          curr_gene_ID <- NA
+        }
+        curr_syst_name <- paste(prb$SystematicName, collapse = ", ")
         lookup_df[nrow(lookup_df) + 1, ] <- 
           list(curr_RTS_ID, curr_targ, curr_module, curr_code_class, 
                curr_probe_ID, curr_gene_ID, curr_syst_name)

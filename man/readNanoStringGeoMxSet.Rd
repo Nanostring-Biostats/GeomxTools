@@ -31,7 +31,8 @@ readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile,
     featureData columns, and protocolData columns.}
   \item{protocolDataColNames}{Character list of column names from \code{phenoDataFile} containing data about the experimental protocol or sequencing data.}
   \item{experimentDataColNames}{Character list of column names from \code{phenoDataFile} containing data about the experiment's meta-data.}
-  \item{defaultPKCVersions}{Optional list of pkc file names to use if more than one version of module pkcs provided.}
+  \item{defaultPKCVersions}{Optional list of pkc file names to use as default if 
+    more than one pkc version of each module is provided.}
   \item{...}{Optional parameters to pass to \code{readxl::read_xlsx} function for annotation read in}
 }
 
