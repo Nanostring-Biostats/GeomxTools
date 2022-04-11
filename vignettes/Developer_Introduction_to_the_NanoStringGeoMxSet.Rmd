@@ -252,10 +252,10 @@ exprs(target_demoData)[1:5, 1:5]
 There is a preloaded GeoMx DSP-DA Normalization that comes with the NanoStringGeoMxSet class. This includes the options to normalize on quantile, housekeeping or negative normalization.
 
 ```{r normalizeObject,  eval = TRUE}
-target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="quant", 
+target_demoData <- normalize(target_demoData , norm_method="quant", 
                       desiredQuantile = .9, toElt = "q_norm")
-target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="neg", fromElt="exprs",  toElt="neg_norm")
-target_demoData <- normalize(target_demoData , data_type="RNA", norm_method="hk", fromElt="exprs", toElt="hk_norm")
+target_demoData <- normalize(target_demoData , norm_method="neg", fromElt="exprs",  toElt="neg_norm")
+target_demoData <- normalize(target_demoData , norm_method="hk", fromElt="exprs", toElt="hk_norm")
 assayDataElement( target_demoData , elt = "q_norm" )[1:3, 1:2]
 assayDataElement( target_demoData , elt = "hk_norm" )[1:3, 1:2]
 assayDataElement( target_demoData , elt = "neg_norm" )[1:3, 1:2]
@@ -263,7 +263,7 @@ assayDataElement( target_demoData , elt = "neg_norm" )[1:3, 1:2]
 
 ## Transforming NanoStringRCCSet Data to Data Frames
 
-The NanoStringGeoMxSet munge function generates a data frame obhect for downstream modeling and visualization. This combines available features and samples into a long format.
+The NanoStringGeoMxSet munge function generates a data frame object for downstream modeling and visualization. This combines available features and samples into a long format.
 
 ```{r mungeObject}
 neg_set <- negativeControlSubset(demoData)

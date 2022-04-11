@@ -51,6 +51,21 @@ setReplaceMethod("featureType", c("NanoStringGeoMxSet", "character"),
                    return(object)
                  })
 
+setGeneric("analyte", signature = "object",
+           function(object) standardGeneric("analyte"))
+setMethod("analyte", "NanoStringGeoMxSet", function(object) object@analyte)
+# setGeneric("analyte<-", signature = c("object", "value"),
+#            function(object, value) standardGeneric("analyte<-"))
+# setReplaceMethod("analyte", c("NanoStringGeoMxSet", "character"),
+#                  function(object, value) {
+#                    if (value %in% c("RNA", "Protein")) {
+#                      object@analyte <- value
+#                    } else {
+#                      stop("analyte must be 'RNA' or 'Protein'")
+#                    }
+#                    return(object)
+#                  })
+
 #' Accessor to check if "exprs" \code{assDataElement} was shifted by one
 #' 
 #' @param object name of the NanoStringGeoMxSet object

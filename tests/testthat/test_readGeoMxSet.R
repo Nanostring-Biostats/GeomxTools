@@ -50,7 +50,7 @@ testthat::test_that("test that the column names and the rownames of testData@phe
                             "pool_rep",
                             "slide_rep")
   experimentDataColNames <- c("panel")
-  pheno_tab <- openxlsx::read.xlsx(SampleAnnotationFile, sheet = 'CW005')
+  pheno_tab <- readxl::read_xlsx(SampleAnnotationFile, sheet = 'CW005')
   colnames(pheno_tab) <- str_replace_all(colnames(pheno_tab),'\\.',' ')
   expect_true(all(basename(DCCFiles) %in% rownames(testData@phenoData@data)))
   expect_true(all(colnames(pheno_tab) %in% c(names(testData@phenoData@data), # what is pheno_tab?
@@ -156,5 +156,66 @@ testthat::test_that("test that only valid ... gets translated to read_xlsx()", {
                                                          experimentDataColNames = c("panel"),
                                                          trim_ws = c(rep("text", 4), "numeric", rep("text", 2),
                                                                        "numeric", rep("text", 4)))))
+})
+
+proteinDatadir <- system.file("extdata", "DSP_Proteogenomics_Example_Data",
+                       package="GeomxTools")
+proteinPKCs <- unzip(zipfile = file.path(proteinDatadir,  "/pkcs.zip"))
+
+testthat::test_that("PKCs are removed if they aren't in the config", {
+  testDataWithExtraConfig <- 
+    suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                                            pkcFiles = c(PKCFiles, proteinPKCs[1]),
+                                            phenoDataFile = SampleAnnotationFile,
+                                            phenoDataSheet = "CW005",
+                                            phenoDataDccColName = "Sample_ID",
+                                            protocolDataColNames = c("aoi",
+                                                                     "cell_line",
+                                                                     "roi_rep",
+                                                                     "pool_rep",
+                                                                     "slide_rep"),
+                                            experimentDataColNames = c("panel"),
+                                            configFile = paste0(datadir, "/fakeTesting_config.ini")))
+  
+  expect_identical(testData@annotation, testDataWithExtraConfig@annotation)
+  expect_identical(rownames(testData), rownames(testDataWithExtraConfig))
+  expect_identical(fData(testData), fData(testDataWithExtraConfig))
+})
+
+DCCFiles <- unzip(zipfile = file.path(proteinDatadir,  "/DCCs.zip"))
+annots <- file.path(proteinDatadir, "Annotation.xlsx")
+
+RNAData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                                                   pkcFiles = proteinPKCs,
+                                                   phenoDataFile = annots,
+                                                   phenoDataSheet = "Annotations",
+                                                   phenoDataDccColName = "Sample_ID",
+                                                   protocolDataColNames = c("Tissue", 
+                                                                            "Segment_Type", 
+                                                                            "ROI.Size")))
+
+
+ProteinData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+                                                       pkcFiles = proteinPKCs,
+                                                       phenoDataFile = annots,
+                                                       phenoDataSheet = "Annotations",
+                                                       phenoDataDccColName = "Sample_ID",
+                                                       protocolDataColNames = c("Tissue", 
+                                                                                "Segment_Type", 
+                                                                                "ROI.Size"),
+                                                       analyte = "protein"))
+
+testthat::test_that("only a single analyte is read in to a GeoMxSet object",{
+  expect_false(dim(RNAData)["Features"] == dim(ProteinData)["Features"])
+  expect_true(dim(RNAData)["Samples"] == dim(ProteinData)["Samples"])
+  expect_false(analyte(RNAData) == analyte(ProteinData))
+  expect_true(analyte(RNAData) == "RNA")
+  expect_true(analyte(ProteinData) == "Protein")
+  expect_true(featureType(RNAData) == "Probe")
+  expect_true(featureType(ProteinData) == "Target")
+  expect_false(all(annotation(RNAData) == annotation(ProteinData)))
+  expect_false(any(rownames(RNAData) %in% rownames(ProteinData)))
+  expect_true(all(colnames(RNAData) %in% colnames(ProteinData)))
+  expect_true(all(sData(RNAData) == sData(ProteinData)))
 })
 

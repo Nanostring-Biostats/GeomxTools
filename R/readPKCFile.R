@@ -113,7 +113,11 @@ generate_pkc_lookup <- function(jsons_vec) {
       curr_targ <- targ[["DisplayName"]]
       curr_code_class <- gsub("\\d+$", "", targ[["CodeClass"]])
       for (prb in targ[["Probes"]]) {
-        curr_RTS_ID <- prb$RTS_ID
+        if(curr_json[["AnalyteType"]] == "Protein"){
+          curr_RTS_ID <- targ$RTS_ID
+        }else{
+          curr_RTS_ID <- prb$RTS_ID
+        }
         curr_probe_ID <- prb$ProbeID
         curr_gene_ID <- 
           paste(prb$GeneID, collapse = ", ")

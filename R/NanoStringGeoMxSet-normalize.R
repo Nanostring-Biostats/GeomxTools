@@ -6,12 +6,9 @@ HOUSEKEEPERS <- c(
 #' @description normalize GeoMxSet using different normalization methods
 #' @param object name of the object class to perform normalization on
 #' @param norm_method the normalization method to be applied on the object
-#' @param data_type the data type of the object. Values maybe RNA, protein.
 #' @param fromElt name of the assayDataElement to normalize
 #' @param toElt name of the assayDataElement to store normalized values
 #' @param housekeepers optional vector of housekeeper target names
-#' @param byPanel = TRUE, TRUE background subtraction done within panel, 
-#'        FALSE background aggregated from all negatives regardless of panel
 #' @param ... optional arguments
 #' @return a NanoStringGeoMxSet object with normalized counts and normalized factors
 #' @examples
@@ -25,32 +22,28 @@ HOUSEKEEPERS <- c(
 setMethod(
   "normalize", "NanoStringGeoMxSet",
   function(object, norm_method = c("quant", "neg", "hk", "subtractBackground"),
-           data_type = c("RNA", "protein"), fromElt = "exprs", toElt = "exprs_norm",
+           fromElt = "exprs", toElt = "exprs_norm",
            housekeepers = HOUSEKEEPERS, ...) {
     norm_method <- match.arg(norm_method)
     switch(norm_method,
       "quant" = {
         quantileNorm(object,
-          data_type = data_type,
           toElt = toElt, fromElt = fromElt, ...
         )
       },
       "neg" = {
         negNorm(object,
-          data_type = data_type,
           toElt = toElt, fromElt = fromElt, ...
         )
       },
       "hk" = {
         hkNorm(object,
-          data_type = data_type,
           toElt = toElt, fromElt = fromElt,
           housekeepers = housekeepers, ...
         )
       },
       "subtractBackground" = {
         subtractBackground(object,
-          data_type = data_type,
           toElt = toElt,
           fromElt = fromElt, ...
         )
@@ -59,7 +52,7 @@ setMethod(
   }
 )
 
-quantileNorm <- function(object, data_type, desiredQuantile = .75, toElt, fromElt) {
+quantileNorm <- function(object, desiredQuantile = .75, toElt, fromElt) {
   ## Get quantile of counts for each sample
   qs <- apply(exprs(object), 2, function(x) stats::quantile(x, desiredQuantile))
   ## Save the normfactors for desired quantile
@@ -72,7 +65,7 @@ quantileNorm <- function(object, data_type, desiredQuantile = .75, toElt, fromEl
   return(object)
 }
 
-negNorm <- function(object, data_type, toElt, fromElt) {
+negNorm <- function(object, toElt, fromElt) {
   if (!featureType(object) == "Target") {
     stop("Error: Negative Background normalization is for collapsed data set.
         Run function aggregateCounts() to collapse the probes to targets.\n")
@@ -81,37 +74,58 @@ negNorm <- function(object, data_type, toElt, fromElt) {
     stop("Error: Module is not specified in the object. Check your GeoMxSet object. \n")
   }
 
-  # check if single panel
-  pools <- as.list(unique(fData(object)[["Module"]]))
-  pool_neg_norm <- lapply(
-    pools,
-    function(pool) {
-      # Get pool and corresponding target counts
-      pool_neg <- fData(object)[which(fData(object)$CodeClass == "Negative" &
-                                            fData(object)$Module == pool), "TargetName"]
-      if (length(pool_neg) < 1) {
-        stop(paste0(
-          "Error: No negative could be located for probe pool ",
-          pool, "."
-        ))
-      }
-      if (length(pool_neg) > 1) {
-        stop(paste0(
-          "Error: More than one negative was located for probe pool ",
-          pool, "."
-        ))
-      }
-      pool_targets <- fData(object)[which(fData(object)$Module == pool), "TargetName"]
-      # Calculate normalization factor and normalized counts
-      pool_neg_factors <-
-        exprs(object[pool_neg,])/exp(mean(log(exprs(object[pool_neg,]))))
-      pool_counts <- as.matrix(exprs(object[pool_targets,])) %*%
+  if(analyte(object) == "Protein"){
+    neg.names <- iggNames(object)
+    
+    # estimate background:
+    negfactor <- apply(exprs(object[neg.names,, drop = FALSE]), 2, function(x){pmax(ngeoMean(x), 1)})
+    
+    pool_neg_factors <-
+      negfactor/exp(mean(log(negfactor)))
+    pool_counts <- as.matrix(exprs(object)) %*%
+      diag(1 / pool_neg_factors)
+    
+    # match format of RNA pool_neg_factors
+    pool_neg_factors <- t(as.matrix(pool_neg_factors))
+    rownames(pool_neg_factors) <- "IgGs"
+    
+    pool_neg_norm <- list()
+    pool_neg_norm[[1L]] <- list(normFactors = pool_neg_factors, norm_exprs = pool_counts)
+  }else{
+    # check if single panel
+    pools <- as.list(unique(fData(object)[["Module"]]))
+    pool_neg_norm <- lapply(
+      pools,
+      function(pool) {
+        # Get pool and corresponding target counts
+        pool_neg <- fData(object)[which(fData(object)$CodeClass == "Negative" &
+                                          fData(object)$Module == pool), "TargetName"]
+        if (length(pool_neg) < 1) {
+          stop(paste0(
+            "Error: No negative could be located for probe pool ",
+            pool, "."
+          ))
+        }
+        if (length(pool_neg) > 1) {
+          stop(paste0(
+            "Error: More than one negative was located for probe pool ",
+            pool, "."
+          ))
+        }
+        pool_targets <- fData(object)[which(fData(object)$Module == pool), "TargetName"]
+        # Calculate normalization factor and normalized counts
+        pool_neg_factors <-
+          exprs(object[pool_neg,])/exp(mean(log(exprs(object[pool_neg,]))))
+        pool_counts <- as.matrix(exprs(object[pool_targets,])) %*%
           diag(1 / pool_neg_factors[1:ncol(pool_neg_factors)])
-
-      norm_list <- list(normFactors = pool_neg_factors, norm_exprs = pool_counts)
-      return(norm_list)
-    }
-  )
+        
+        norm_list <- list(normFactors = pool_neg_factors, norm_exprs = pool_counts)
+        return(norm_list)
+      }
+    )
+  }
+  
+  
 
   ## Save the normfactors in desired pData element
   if (toElt != "exprs_norm") {
@@ -131,11 +145,14 @@ negNorm <- function(object, data_type, toElt, fromElt) {
   return(object)
 }
 
-hkNorm <- function(object, data_type, toElt, fromElt, housekeepers) {
+hkNorm <- function(object, toElt, fromElt, housekeepers) {
   if (!featureType(object) == "Target") {
     stop("Housekeeping normalization is for collapsed data set.
             Run function aggregateCounts() to collapse the probes to targets.\n")
   } else {
+    if(analyte(object) == "Protein" & all(housekeepers == HOUSEKEEPERS)){
+      housekeepers <- hkNames(object)
+    }
     hksubset <- subset(object, subset = TargetName %in% housekeepers)
     hks <- apply(exprs(hksubset), 2, function(x) ngeoMean(x))
     ## Save the normfactors in desired pData element
@@ -151,11 +168,14 @@ hkNorm <- function(object, data_type, toElt, fromElt, housekeepers) {
 
 
 # subtract background
-subtractBackground <- function(object, data_type, toElt, fromElt, byPanel=TRUE) {
+subtractBackground <- function(object, toElt, fromElt, byPanel=TRUE) {
     if (featureType(object) == "Target") {
-      if(!any(fData(object)$CodeClass == "Negative")){
-        stop("Error: No negative could be located for probe pool(s)")
-      }
+        if(!any(fData(object)$CodeClass == "Negative")){
+          stop("Error: No negative could be located for probe pool(s)")
+        }
+        if(analyte(object) == "Protein"){
+          byPanel <- FALSE
+        }
         negSet <- negativeControlSubset(object)
         if (byPanel) {
             correctedByPanel <- 
@@ -188,6 +208,83 @@ subtractBackground <- function(object, data_type, toElt, fromElt, byPanel=TRUE) 
                 "Aggregate counts prior to background subtraction.\n")
     }
     return(object)
+}
+
+
+#' Generate normalization factors 
+#' 
+#' @description 
+#' For use with protein data ONLY.
+#' 
+#' Generate normalization factors for protein data to determine the best normalization method
+#' 
+#' @param object name of the object class to subset
+#' \enumerate{
+#'     \item{NanoStringGeoMxSet, use the NanoStringGeoMxSet class}
+#' }
+#' @param igg.names names of IgGs, if NULL IgGs will be detected automatically
+#' @param hk.names names of HK, if NULL HK will be detected automatically
+#' @param area name of area column in annotation sheet, optional
+#' @param nuclei name of nuclei column in annotation sheet, optional
+#' 
+#' @examples
+#' proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+#' "proteinData.rds", package = "GeomxTools"))
+#' 
+#' normfactors <- computeNormalizationFactors(object = proteinData)
+#' 
+#' normfactors_withAreaNuclei <- computeNormalizationFactors(object = proteinData,
+#' area = "AOI.Size.um2", nuclei = "Nuclei.Counts")
+#' 
+#' @export
+
+computeNormalizationFactors <- function(object, igg.names = NULL, hk.names = NULL,
+                                          area = NULL, nuclei = NULL) {
+  
+  if(analyte(object) != "Protein"){
+    stop("This function is only for protein data.")
+  }
+  
+  if(is.null(igg.names)){
+    igg.names <- iggNames(object)
+  }
+  
+  if(is.null(hk.names)){
+    hk.names <- hkNames(object)
+  }
+  
+  segmentAnnotations = sData(object)
+  targetAnnotations = fData(object)
+  dataset = exprs(object)
+  
+  # igg and hk factors:
+  if (length(igg.names) > 1) {
+    igg.factor <- apply(dataset[igg.names, , drop = FALSE], 2, function(x){pmax(ngeoMean(x), 1)})
+  }
+  if (length(hk.names) > 1) {
+    hk.factor <- apply(dataset[hk.names, , drop = FALSE], 2, function(x){pmax(ngeoMean(x), 1)})
+  }
+  
+  # area and nuclei factors:
+  if (any(colnames(segmentAnnotations) == area)) {
+    area.factor <- as.numeric(segmentAnnotations[[area]])
+  }
+  if (any(colnames(segmentAnnotations) == nuclei)) {
+    nuclei.factor <- as.numeric(segmentAnnotations[[nuclei]])
+  }
+  
+  # matrix of all available factors:
+  factornames <- c("igg.factor", "hk.factor", "area.factor", "nuclei.factor")
+  names(factornames) <- c("Neg geomean", "HK geomean", "Area", "Nuclei")
+  factornames <- factornames[is.element(factornames, ls())]
+  
+  factors <- c()
+  for (fname in factornames) {
+    factors <- cbind(factors, get(fname))
+  }
+  colnames(factors) <- names(factornames)
+  
+  return(factors)
 }
 
 ############  NOT USED OR TESTED IN DEV  ############

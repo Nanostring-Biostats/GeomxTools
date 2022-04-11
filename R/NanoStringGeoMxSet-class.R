@@ -6,14 +6,16 @@ setClass("NanoStringGeoMxSet",
          slots = c(dimLabels = "character",
                    signatures = "SignatureSet",
                    design = "formulaOrNULL",
-                   featureType = "character"),
+                   featureType = "character",
+                   analyte = "character"),
          prototype = prototype(
              new("VersionedBiobase",
                  versions = c(classVersion("ExpressionSet"),
-                              NanoStringGeoMxSet = "2.0.0")),
+                              NanoStringGeoMxSet = "2.1.2")),
              signatures = SignatureSet(),
              design = NULL,
-             featureType = "Probe"))
+             featureType = "Probe",
+             analyte = "RNA"))
 
 # Show method
 setMethod("show", signature = "NanoStringGeoMxSet",
@@ -21,6 +23,9 @@ function(object) {
     methods::callNextMethod(object)
     cat("feature: ")
     cat(featureType(object))
+    cat("\n")
+    cat("analyte: ")
+    cat(analyte(object))
     cat("\n")
 })
 
@@ -36,6 +41,7 @@ function(assayData,
          signatures = SignatureSet(),
          design = NULL,
          featureType = "Probe",
+         analyte = "RNA",
          ...)
     standardGeneric("NanoStringGeoMxSet"),
 signature = "assayData")
@@ -51,6 +57,7 @@ function(assayData,
          signatures = SignatureSet(),
          design = NULL,
          featureType = "Probe",
+         analyte = "RNA",
          ...)
 {
   assayData <- assayDataNew(exprs = matrix(integer(), nrow = 0L, ncol = 0L))
@@ -58,7 +65,7 @@ function(assayData,
               featureData = featureData, experimentData = experimentData,
               annotation = annotation, protocolData = protocolData,
               dimLabels = dimLabels, signatures = signatures, design = design,
-              featureType = featureType,
+              featureType = featureType, analyte = analyte,
               ...)
 })
 
@@ -73,6 +80,7 @@ function(assayData,
          signatures = SignatureSet(),
          design = NULL,
          featureType = "Probe",
+         analyte = "RNA",
          ...)
 {
   new2("NanoStringGeoMxSet",
@@ -86,6 +94,7 @@ function(assayData,
        signatures = signatures,
        design = design,
        featureType = featureType,
+       analyte = analyte,
        ...)
 })
 
@@ -100,6 +109,7 @@ function(assayData,
          signatures = SignatureSet(),
          design = NULL,
          featureType = "Probe",
+         analyte = "RNA",
          ...)
 {
   assayData <- assayDataNew(exprs = assayData)
@@ -107,7 +117,7 @@ function(assayData,
               featureData = featureData, experimentData = experimentData,
               annotation = annotation, protocolData = protocolData,
               dimLabels = dimLabels, signatures = signatures, design = design,
-              featureType = featureType,
+              featureType = featureType, analyte = analyte,
               ...)
 })
 
@@ -122,6 +132,7 @@ function(assayData,
          signatures = SignatureSet(),
          design = NULL,
          featureType = "Probe",
+         analyte = "RNA",
          ...)
 {
   methods::callGeneric(assayData = copyEnv(assayData(assayData)),
@@ -134,6 +145,7 @@ function(assayData,
               signatures = signatures,
               design = design,
               featureType = featureType,
+              analyte = analyte, 
               ...)
 })
 
@@ -148,6 +160,7 @@ function(assayData,
          signatures = SignatureSet(),
          design = NULL,
          featureType = "Probe",
+         analyte = "RNA",
          ...)
 {
   methods::callGeneric(assayData = copyEnv(assayData(assayData)),
@@ -160,6 +173,7 @@ function(assayData,
               signatures = signatures(assayData),
               design = design(assayData),
               featureType = featureType,
+              analyte = analyte,
               ...)
 })
 

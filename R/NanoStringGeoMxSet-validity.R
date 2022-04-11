@@ -101,5 +101,10 @@ function(object)
       msg <- c(msg, "'featureType' must be either 'Probe' or 'Target'")
     }
   }
+  if (!is.null(analyte(object))) {
+    if (!analyte(object) %in% c("Protein", "RNA")) {
+      msg <- c(msg, "'analyte' must be either 'RNA' or 'Protein'")
+    }
+  }
   if (is.null(msg)) TRUE else msg
 })

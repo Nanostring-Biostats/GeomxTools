@@ -85,6 +85,11 @@ shiftCountsOne <- function(object, elt="exprs", useDALogic=FALSE) {
         stop("The exprs matrix has already been shifted by one. ",
              "This operation will not be repeated.")
     }
+  
+    if(analyte(object) == "Protein"){
+      stop("This shift is only meant for RNA data")
+    }
+    
     assayDataElement(object, "rawZero") <- 
         assayDataElement(object, elt=elt)
     experimentData(object)@other$shiftedByOne <- TRUE
@@ -102,6 +107,41 @@ shiftCountsOne <- function(object, elt="exprs", useDALogic=FALSE) {
     return(object)
 }
 
+
+
+#' Return the IgG negative controls for protein
+#' 
+#' @param object name of the NanoStringGeoMxSet object
+#' 
+#' @return names of IgGs
+#' 
+#' @export
+#' 
+iggNames <- function(object){
+  if(analyte(object) == "Protein"){
+    names <- featureData(object)$Target[featureData(object)$CodeClass == "Negative"]
+    return(names)
+  }else{
+    warning("No Protein data in object so no IgG probes to return")
+  }
+}
+
+#' Return the House Keeper positive controls for protein
+#' 
+#' @param object name of the NanoStringGeoMxSet object
+#' 
+#' @return names of HKs
+#' 
+#' @export
+#' 
+hkNames <- function(object){
+  if(analyte(object) == "Protein"){
+    names <- featureData(object)$Target[featureData(object)$CodeClass == "Control"]
+    return(names)
+  }else{
+    warning("No Protein data in object so no HK probes to return")
+  }
+}
 
 #### NOT TESTED OR USED ####
 collapseCounts <- function(object) {
