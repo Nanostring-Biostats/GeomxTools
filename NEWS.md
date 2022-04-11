@@ -1,3 +1,8 @@
+# GeomxTools 2.1.3
+
+## New features:
+* Allow protein NGS experiment data reading
+
 # GeomxTools 2.1.2
 
 ## Bug fixes:
