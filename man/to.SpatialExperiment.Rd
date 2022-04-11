@@ -27,14 +27,16 @@ SpatialExperiment containing GeoMx data
 Convert GeoMxSet Object to SpatialExperiment
 }
 \examples{
-datadir <- system.file("extdata", "DSP_NGS_Example_Data", package = "GeomxTools")
+datadir <- system.file("extdata", "DSP_NGS_Example_Data", 
+                       package = "GeomxTools")
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 
 target_demoData <- aggregateCounts(demoData)
 
 target_demoData <- normalize(target_demoData, "quant")
 
-seurat_demoData <- to.SpatialExperiment(object = target_demoData, normData = "exprs_norm", 
+seurat_demoData <- to.SpatialExperiment(object = target_demoData, 
+                                        normData = "exprs_norm", 
                                         forceRaw = FALSE)
 
 }

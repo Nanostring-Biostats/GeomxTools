@@ -154,8 +154,10 @@ setSaturationFlags <- function(object, cutoff=DEFAULTS[["percentSaturation"]]) {
 #' 
 setBackgroundQCFlags <- function(object, qcCutoffs=DEFAULTS) {
     qcCutoffs <- checkCutoffs(qcCutoffs)
-    object <- setLowNegFlags(object=object, 
-        cutoff=qcCutoffs[["minNegativeCount"]])
+    if(analyte(object) == "RNA"){
+      object <- setLowNegFlags(object=object, 
+                               cutoff=qcCutoffs[["minNegativeCount"]])
+    }
     object <- setHighNTCFlags(object=object, 
         cutoff=qcCutoffs[["maxNTCCount"]])
     return(object)
@@ -556,8 +558,10 @@ removeFlagProbes <- function(object, removeFlagCols=NULL) {
 
 #NEO make sure that when collapsed count occurs feature data QCFlags is removed
 setTargetFlags <- function(object, qcCutoffs=DEFAULTS) {
-    object <- 
+    if(analtye(object) == "RNA"){
+      object <- 
         setLOQFlags(object, cutoff=qcCutoffs[["loqCutoff"]])
+    }  
     object <- 
         setHighCountFlags(object=object, cutoff=qcCutoffs[["highCountCutoff"]])
     return(object)
@@ -592,3 +596,5 @@ setProbeCountFlags <- function(object, cutoff=DEFAULTS[["minProbeCount"]]) {
         object <- appendFeatureFlags(object, probeCountFlags)
         return(object)
 }
+
+

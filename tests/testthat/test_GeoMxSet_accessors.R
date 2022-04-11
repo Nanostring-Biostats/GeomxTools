@@ -62,3 +62,17 @@ testthat::test_that("test that the featureType method gives the correct results"
   expect_true(featureType(testData) == "Probe")
   expect_false(featureType(testData_agg) == featureType(testData))
 })
+
+proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
+                                         "proteinData.rds", package = "GeomxTools"))
+
+# req 6: test that the analyte method gives the correct results:------
+testthat::test_that("test that the analyte method gives the correct results", {
+  expect_true(analyte(testData_agg) == "RNA")
+  expect_true(analyte(testData) == "RNA")
+  expect_true(analyte(testData_agg) == analyte(testData))
+  
+  expect_true(analyte(proteinData) == "Protein")
+  expect_false(analyte(proteinData) == analyte(testData))
+})
+

@@ -11,14 +11,15 @@
 
 \usage{
 readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile, 
-                     phenoDataSheet, phenoDataDccColName = "Sample_ID",
-                     phenoDataColPrefix = "", protocolDataColNames = NULL,
-                     experimentDataColNames = NULL, ...)
+                       phenoDataSheet, phenoDataDccColName = "Sample_ID",
+                       phenoDataColPrefix = "", protocolDataColNames = NULL,
+                       experimentDataColNames = NULL,  
+                       configFile = NULL, analyte = "RNA", ...)
 }
 
 \arguments{
   \item{dccFiles}{A character vector containing the paths to the DCC files.}
-  \item{pkcFiles}{An optional character string representing the path to the
+  \item{pkcFiles}{A character vector representing the path to the
     corresponding PKC file.}
   \item{phenoDataFile}{An optional character string representing the path
     to the corresponding phenotypic excel data file.}
@@ -31,6 +32,8 @@ readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile,
     featureData columns, and protocolData columns.}
   \item{protocolDataColNames}{Character list of column names from \code{phenoDataFile} containing data about the experimental protocol or sequencing data.}
   \item{experimentDataColNames}{Character list of column names from \code{phenoDataFile} containing data about the experiment's meta-data.}
+  \item{configFile}{An optional character string representing the path to the corresponding config file. This is used to ensure the only the correct PKC files are added}
+  \item{analyte}{GeoMxSet objects can only hold one analyte at a time. For studies with multiple analytes, which one should be read in? Options: RNA (default) and Protein}
   \item{...}{Optional parameters to pass to \code{readxl::read_xlsx} function for annotation read in}
 }
 

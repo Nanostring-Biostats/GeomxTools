@@ -41,6 +41,8 @@
 \alias{design<-,NanoStringGeoMxSet,ANY-method}
 \alias{design<-,NanoStringGeoMxSet,NULL-method}
 \alias{design<-,NanoStringGeoMxSet,formula-method}
+\alias{analyte}
+\alias{analyte,NanoStringGeoMxSet-method}
 
 \title{Class to Contain NanoString Spatial Expression Level Assays}
 
@@ -61,6 +63,7 @@ NanoStringGeoMxSet(assayData,
                  signatures=SignatureSet(),
                  design=NULL,
                  featureType="Probe",
+                 analyte="RNA",
                  \ldots)
 }
 
@@ -87,6 +90,8 @@ NanoStringGeoMxSet(assayData,
     design based on columns from \code{\link[Biobase]{phenoData}}}
   \item{featureType}{A \code{character} string indicating if features are on
     \code{"Probe"} or \code{"Target"} level}
+  \item{analyte}{A \code{character} string indicating if features are
+    \code{"RNA"} or \code{"Protein"}}
   \item{\ldots}{Additional arguments for \code{\link{ExpressionSet}}.}
 }
 
@@ -147,7 +152,11 @@ NanoStringGeoMxSet(assayData,
     \item{}{
       \code{signatureGroups(object) <- value }: replaces the groups of
       \code{\link{SignatureSet}}.
-    }   
+    } 
+    \item{}{
+      \code{analyte(object)}: extracts the \code{analyte}
+      of the \code{object}.
+    }
     
   }
 }
@@ -188,6 +197,7 @@ dccSet <- readNanoStringGeoMxSet(dccFiles=dccFiles,
 head(sData(dccSet))
 svarLabels(dccSet)
 featureType(dccSet)
+analyte(dccSet)
 
 # Accessing number of samples and features
 dim(dccSet)

@@ -7,7 +7,6 @@
 \S4method{normalize}{NanoStringGeoMxSet}(
   object,
   norm_method = c("quant", "neg", "hk", "subtractBackground"),
-  data_type = c("RNA", "protein"),
   fromElt = "exprs",
   toElt = "exprs_norm",
   housekeepers = HOUSEKEEPERS,
@@ -19,8 +18,6 @@
 
 \item{norm_method}{the normalization method to be applied on the object}
 
-\item{data_type}{the data type of the object. Values maybe RNA, protein.}
-
 \item{fromElt}{name of the assayDataElement to normalize}
 
 \item{toElt}{name of the assayDataElement to store normalized values}
@@ -28,9 +25,6 @@
 \item{housekeepers}{optional vector of housekeeper target names}
 
 \item{...}{optional arguments}
-
-\item{byPanel}{= TRUE, TRUE background subtraction done within panel, 
-FALSE background aggregated from all negatives regardless of panel}
 }
 \value{
 a NanoStringGeoMxSet object with normalized counts and normalized factors

@@ -55,7 +55,7 @@ mixedOutmc <- mixedModelDE(target_demoData,
                            elt = "exprs_norm",
                            modelFormula = ~ pool_rep +  (1 | slide),
                            groupVar = "pool_rep",
-                           nCores = 12,
+                           nCores = 2,
                            multiCore = TRUE,
                            pAdjust = NULL
 )

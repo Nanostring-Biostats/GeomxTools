@@ -102,7 +102,7 @@ testthat::test_that("test error occurs when writing set after aggregating counts
 unlink(writeDir, recursive = TRUE, force = TRUE)
 
 #normalize
-demoData <- normalize(demoData , data_type="RNA", norm_method="quant",
+demoData <- normalize(demoData , norm_method="quant",
                       desiredQuantile = .9, toElt = "q_norm")
 
 # req 7: test error occurs when writing set after aggregating counts

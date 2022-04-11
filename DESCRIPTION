@@ -11,7 +11,8 @@ Authors@R: c(person("Nicole", "Ortogero", email = "nortogero@nanostring.com", ro
              person("David", "Henderson", email = "dhenderson@nanostring.com", role = c("aut")))
 Depends: R (>= 3.6), Biobase, NanoStringNCTools, S4Vectors
 Imports: BiocGenerics, rjson, readxl, EnvStats, reshape2, methods, 
-         utils, stats, data.table, outliers, lmerTest, dplyr
+         utils, stats, data.table, outliers, lmerTest, dplyr, stringr,
+         grDevices, graphics, GGally, rlang, ggplot2
 Suggests: 
     rmarkdown,
     knitr,
