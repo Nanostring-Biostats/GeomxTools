@@ -118,7 +118,7 @@ to.Seurat <- function(object, ident = NULL, normData = NULL, coordinates = NULL,
             }
    
             if(!ycoord %in% colnames(seuratConvert@meta.data)){
-                stop(paste0("ycoord \"", xcoord, 
+                stop(paste0("ycoord \"", ycoord, 
                             "\" not found in GeoMxSet Object"))
             }
         }
@@ -226,7 +226,7 @@ to.SpatialExperiment <- function(object, normData = NULL, coordinates = NULL,
             }
             
             if(!ycoord %in% colnames(sData(object))){
-                stop(paste0("ycoord \"", xcoord, 
+                stop(paste0("ycoord \"", ycoord, 
                             "\" not found in GeoMxSet Object"))
             }
         }

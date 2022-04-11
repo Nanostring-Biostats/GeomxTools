@@ -13,6 +13,8 @@
 #' @importFrom ggpairs GGally
 #' @importFrom wrap GGally
 #' 
+#' @noRd
+#' 
 concordancePlot <- function(dat, plotFactor){
     n <- ncol(dat)
     p <- GGally::ggpairs(dat, mapping = ggplot2::aes(colour=dat[[plotFactor]], 
@@ -37,6 +39,7 @@ concordancePlot <- function(dat, plotFactor){
 #' @param data dataframe of XY values
 #' @param mapping ggplot mapping value
 #' 
+#' @noRd
 print.sd.log.ratio <- function(data, mapping) {
   x <- gsub("\\n", "\n", 
             gsub("~", "", 
@@ -137,6 +140,7 @@ qcProteinSignal <- function(object, neg.names=NULL) {
 #' 
 #' @return SNR matrix in increasing order
 #' 
+#' @noRd
 
 snrOrder <- function(object, neg.names){
     if(analyte(object) != "Protein"){
