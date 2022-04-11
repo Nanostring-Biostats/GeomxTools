@@ -12,13 +12,13 @@ pkcFile <- readPKCFile(PKCFiles)
 lines <- suppressWarnings(c(readLines(file.path(PKCFiles[1])), readLines(file.path(PKCFiles[2]))))
 
 
-# req 1: test that the column names of PKC files are in correct format:------
+# Spec 1: test that the column names of PKC files are in correct format:------
 testthat::test_that("test that the column names of PKC files are in correct format", {
   expect_true(all(colnames(pkcFile) == c("RTS_ID", "Target", "Module", "CodeClass", "ProbeID", "Negative")))
 })
 
 
-# req 2: test that the names of metadata of PKC files are in correct format:------
+# Spec 2: test that the names of metadata of PKC files are in correct format:------
 testthat::test_that("test that the column names of PKC files are in correct format", {
   expect_true(all(names(metadata(pkcFile)) == c("PKCFileName", "PKCFileVersion", "PKCFileDate", "AnalyteType", "MinArea","MinNuclei")))
 })

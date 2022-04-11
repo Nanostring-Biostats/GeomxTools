@@ -16,13 +16,13 @@ target_demoData <- aggregateCounts(demoData)
 #############################
 
 ########### Quantile Normalization test
-#### req 1 check that normfactors are in pData of demoData
+#### Spec 1 check that normfactors are in pData of demoData
 test_that("check that normfactors are in pData of demoData", {
   expect_true(length(demoData@phenoData@data[["q_norm_qFactors"]]) == dim(demoData@assayData$exprs)[2])
   expect_true(length(demoData@phenoData@data[["normFactors"]]) == dim(demoData@assayData$exprs)[2])
 })
 
-#### req 2 verify calculation of q90 norm factors
+#### Spec 2 verify calculation of q90 norm factors
 # Compute normalization factors from demoData
 # compute 90% quantile count for samples and divide by geomean
 thresh <- assayDataApply(demoData, 2, quantile, probs = .9)
@@ -35,7 +35,7 @@ test_that("quantile norm factors are correct", {
   expect_equal(expectedOutputData, actualOutputData)
 })
 
-#### req 2b verify calculation of q75 norm factors
+#### Spec 2b verify calculation of q75 norm factors
 # compute 75% quantile norm factors for samples and divide by geomean
 thresh <- assayDataApply(demoData, 2, quantile, probs = .75)
 expectedOutputData <- thresh/ngeoMean(thresh)
@@ -48,7 +48,7 @@ test_that("quantile norm factors for 75% are correct", {
 })
 
 
-#### req 3 verify calculation of quantile norm values
+#### Spec 3 verify calculation of quantile norm values
 # compute normalize count for samples and divide by geomean
 thresh <- assayDataApply(demoData, 2, quantile, probs = .75)
 norm_quant <- function(x){
@@ -63,7 +63,7 @@ test_that("quantile norm values are correct", {
 })
 
 
-#### req 4 verify calculation of negative norm factors
+#### Spec 4 verify calculation of negative norm factors
 #subset dataset for single panel
 sub_target_demoData <- subset(target_demoData, subset = Module == "VnV_GeoMx_Hs_CTA_v1.2")
 #call negative normalization
@@ -81,7 +81,7 @@ test_that("negative norm values are correct for single panel", {
   expect_equal(expectedOutputData, actualOutputData)
 })
 
-#### req 4a verify calculation of negative norm factors for multipanel
+#### Spec 4a verify calculation of negative norm factors for multipanel
 # compute neg_norm factors for multipanel
 # call negative normalization
 target_demoData <- normalize(target_demoData ,  norm_method="neg",
@@ -136,7 +136,7 @@ test_that("Error is given if dataset is not collapsed", {
 })
 
 ########### Housekeeping Norm test
-#### req 5 verify calculation of housekeeping norm factors
+#### Spec 5 verify calculation of housekeeping norm factors
 #call hk normalization
 target_demoData <- normalize(target_demoData ,  norm_method="hk",
                              fromElt="exprs", toElt="hk_norm")
@@ -156,7 +156,7 @@ test_that("hk norm values are correct", {
 
 
 # ########### Subtract ground Norm test
-# #### req 6 verify calculation of subtract background norm factors
+# #### Spec 6 verify calculation of subtract background norm factors
 # #call subtract bg normalization
 test_that("background subtraction throws warning on probe level data", {
   expect_warning(normalize(demoData , 

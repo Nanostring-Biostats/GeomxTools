@@ -24,7 +24,7 @@ testData_agg <- aggregateCounts(testData)
 
 DCCFiles <- DCCFiles[!basename(DCCFiles) %in% unique(sData(testData)$NTC_ID)]
 
-# req 1: test that the rownames and column names in sData are correct:------
+# Spec 1: test that the rownames and column names in sData are correct:------
 testthat::test_that("test that the rownames and column names in sData are correct", {
   expect_true(all(basename(DCCFiles) %in% rownames(sData(testData))))
   expect_true(all(c(names(testData@phenoData@data),
@@ -32,7 +32,7 @@ testthat::test_that("test that the rownames and column names in sData are correc
 })
 
 
-# req 2: test that the svarLabels method gives the correct results:------
+# Spec 2: test that the svarLabels method gives the correct results:------
 testthat::test_that("test that the svarLabels method gives the correct results", {
   expect_true(all(svarLabels(testData) == colnames(sData(testData))))
 })
@@ -40,7 +40,7 @@ testthat::test_that("test that the svarLabels method gives the correct results",
 
 
 
-# req 3: test that the dimLabels method gives the correct results:------
+# Spec 3: test that the dimLabels method gives the correct results:------
 testthat::test_that("test that the dimLabels method gives the correct results", {
   expect_true(length(dimLabels(testData)) == 2)
   expect_true(all(paste0(sData(testData)[[dimLabels(testData)[2]]], ".dcc") == colnames(testData@assayData$exprs)))
@@ -49,24 +49,31 @@ testthat::test_that("test that the dimLabels method gives the correct results", 
 
 
 
-# req 4: test that the design method gives the correct results:------
+# Spec 4: test that the design method gives the correct results:------
 testthat::test_that("test that the design method gives the correct results", {
   expect_true(is.null(design(testData)))
 })
 
 
 
-# req 5: test that the featureType method gives the correct results:------
+# Spec 5: test that the featureType method gives the correct results:------
 testthat::test_that("test that the featureType method gives the correct results", {
   expect_true(featureType(testData_agg) == "Target")
   expect_true(featureType(testData) == "Probe")
   expect_false(featureType(testData_agg) == featureType(testData))
 })
 
+# Spec 6: test that the countsShiftedByOne method gives the correct results:------
+testthat::test_that("test that the countsShiftedByOne method gives the correct results", {
+  expect_false(countsShiftedByOne(testData_agg))
+  expect_false(countsShiftedByOne(testData))
+  expect_true(countsShiftedByOne(shiftCountsOne(testData)))
+})
+
 proteinData <- readRDS(file= system.file("extdata","DSP_Proteogenomics_Example_Data", 
                                          "proteinData.rds", package = "GeomxTools"))
 
-# req 6: test that the analyte method gives the correct results:------
+# Spec 7: test that the analyte method gives the correct results:------
 testthat::test_that("test that the analyte method gives the correct results", {
   expect_true(analyte(testData_agg) == "RNA")
   expect_true(analyte(testData) == "RNA")
