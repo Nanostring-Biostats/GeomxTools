@@ -61,8 +61,9 @@ testthat::test_that("check for warning when resolving multiple PKC versions", {
 
 firstVer <- readPKCFile(multiPKCFiles[1L])
 secondVer <- readPKCFile(multiPKCFiles[2L])
-combineVer <- readPKCFile(multiPKCFiles)
-combineReVer <- readPKCFile(multiPKCFiles, default_pkc_vers=multiPKCFiles[1L])
+combineVer <- suppressWarnings(readPKCFile(multiPKCFiles))
+combineReVer <- suppressWarnings(readPKCFile(multiPKCFiles, 
+  default_pkc_vers=multiPKCFiles[1L]))
 newProbesV1 <- setdiff(firstVer$RTS_ID, secondVer$RTS_ID)
 newProbesV2 <- setdiff(secondVer$RTS_ID, firstVer$RTS_ID)
 reassignedProbe <- which(combineVer$Target != combineReVer$Target)
