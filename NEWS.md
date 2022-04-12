@@ -1,3 +1,6 @@
+# GeomxTools 2.1.6
+* added updateObject capability 
+
 # GeomxTools 2.1.4
 * Add code for grubbs test from deprecated outliers package
 
