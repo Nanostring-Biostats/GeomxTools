@@ -33,7 +33,7 @@ testthat::test_that("test that the number of probes is correct", {
 })
 
 # Load a simulated second PKC version for the six gene module
-verTestPKCFile <- unzip(zipfile = file.path(datadir, "/unittest_pkc.zip"))
+verTestPKCFile <- unzip(zipfile = file.path(datadir, "/version_example_pkc.zip"))
 multiPKCFiles <- c(PKCFiles[grepl("Six", PKCFiles)], verTestPKCFile)
 
 # req4: check for warning if default PKC provided when no multiple versions:---
