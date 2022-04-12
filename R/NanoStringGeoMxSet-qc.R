@@ -335,6 +335,7 @@ setGrubbsFlags <- function(object,
     if (!"ProbeRatio" %in% fvarLabels(object)) {
         warning("Probe ratio QC has not yet been performed. ",
                 "Suggests running probe ratio QC then re-running Grubbs QC.")
+        multiObject <- object
     } else {
         multiObject <- 
             object[!fData(object)[["QCFlags"]][, "LowProbeRatio"], ]

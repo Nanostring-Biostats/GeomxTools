@@ -14,7 +14,8 @@ readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile,
                        phenoDataSheet, phenoDataDccColName = "Sample_ID",
                        phenoDataColPrefix = "", protocolDataColNames = NULL,
                        experimentDataColNames = NULL,  
-                       configFile = NULL, analyte = "RNA", ...)
+                       configFile = NULL, analyte = "RNA",
+                       defaultPKCVersions = NULL, ...)
 }
 
 \arguments{
