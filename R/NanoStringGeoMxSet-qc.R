@@ -369,10 +369,8 @@ setGrubbsFlags <- function(object,
                             return(NA)
                         }
                         grubbsTest <- 
-                            suppressWarnings(
-                                outliers::grubbs.test(z,  
-                                                      two.sided=TRUE, 
-                                                      type=10))
+                            suppressWarnings(grubbs.test(z, two.sided=TRUE, 
+                                                         type=10))
                         if(grubbsTest$p.value < alphaCutoff & 
                                !is.null(names(grubbsTest$p.value))) {
                             if (grepl("lowest", tolower(grubbsTest$alternative))) {
