@@ -1,10 +1,13 @@
-# GeomxTools 2.1.4
+# GeomxTools 2.1.5
 
 ## New features:
 * Handle multiple PKC file versions for a single module
     * Only common probes in all versions for each module will be used
     * Default behavior most recent PKC version for resolving probe assignments
     * User can override default with a specified version file name
+
+# GeomxTools 2.1.4
+* Add code for grubbs test from deprecated outliers package
 
 # GeomxTools 2.1.3
 
