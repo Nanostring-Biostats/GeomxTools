@@ -167,7 +167,13 @@ neg_set <- assayDataElement(neg_set, elt="preLocalRemoval")
 neg_set <- neg_set[, !apply(neg_set, 2, function(x) {max(x) < 10L})]
 neg_set <- logtBase(neg_set, base=10L)
 
-test_results <- apply(neg_set, 2, outliers::grubbs.test, two.sided=TRUE)
+# results from outliers::grubbs.test before deprecation
+test_results <- readRDS("testData/outliersGrubbsTest.RDS")
+
+test_that("copied grubbs test function works as expected",{
+    expect_identical(test_results, apply(neg_set, 2, grubbs.test, two.sided=TRUE))
+})
+
 test_list <- lapply(test_results, function(x) {x$p.value < 0.01})
 test_outliers <- test_list[test_list == TRUE]
 test_nonoutliers <- test_list[test_list == FALSE]
