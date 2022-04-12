@@ -2,7 +2,7 @@
 - The GeomxTools package shall be downloaded and installed from Bioconductor or from GitHub without GeomxTools-specific installation errors.
 - The package vignette shall knit without error.
 
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-geomxtools
 
 #### Reqs for readDccFile 
 - The function shall read in a Digital Count Conversion (DCC) file for one AOI 
@@ -12,7 +12,7 @@ Specifications:
   - NGS Processing Attributes - sequencing information
   - Code Summary - counts per RTS_ID 
       
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-readdccfile
     
 #### Reqs for readPkcFile 
 - The function shall read in one or more Probe Kit Configuration (PKC) files 
@@ -32,7 +32,7 @@ Specifications:
     - Minimum AOI Area Recommendation(s)
     - Minimum Nuclei Count Recommendation(s)
       
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-readpkcfile
     
 #### Reqs for readNanoStringGeoMxSet 
 - The function shall return a NanoStringGeoMxSet object with the following attributes:
@@ -42,7 +42,7 @@ Specifications:
   - Feature Data - read PKC output (probe annotations)
   - Experiment Data - lab, PI, publication data, PKC metadata, and any user-defined columns
   
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-readnanostringgeomxset
     
 #### Reqs for NanoStringGeoMxSet-class
 - There shall be functions to access parts of NanoStringGeoMxSet by users
@@ -57,22 +57,22 @@ Specifications:
   - design
   - featureType
   
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-nanostringgeomxset-class
     
 #### Reqs for aggregateCounts
 - The function shall collapse multi-probe targets using geometric mean by default or a user-specified aggregation function.
 
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-aggregatecounts
     
 #### Reqs for summarizeNegatives
 - The function shall add negative geometric mean, negative geometric standard deviation, and any additional negative aggregations specified by the user to sample annotations.
 
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-summarizenegatives
     
 #### Reqs for normalize
 - The method shall add normalized data as an assayDataElement matrix with quantile normalization, negative normalization, housekeeper normalization, or background subtraction.
 
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-normalize
     
 #### Reqs for Quality Control
 - GeomxTools shall provide the ability to perform Segment QC on the data by performing Technical Signal quality Control which assesses the quality sequencing of each segment.  
@@ -82,32 +82,32 @@ Specifications:
 - The setSegmentQCFlags method shall be equivalent to running all segment QC methods (setSeqQCFlags, setBackgroundQCFlags, setGeoMxQCFlags); QC results shall match segement Qualty Control in DSPDA performed with the same settings.
 - Biological probe QC shall be available in GeomxTools. This shall allow probes that appear to be outliers in the data to be flagged and results shall be similar to BioProbe Qualty Control in DSPDA performed with the same settings.
 
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-quality-control
     
 #### Reqs for mixedModelDE
 - The function shall perform linear mixed model different expression analysis on expression data.
 
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-mixedmodelde
     
 #### Reqs for shiftCountsOne
 - The function shall impute counts by adding one.
 
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-shiftcountsone
     
 #### Reqs for writeNanoStringGeoMxSet
 - The function shall save expression data from a GeoMxSet object as DCC file(s).
 
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-writenanostringgeomxset
     
 #### Reqs for utilty functions
 - The function ngeoMean shall perform geometric mean transformations.
 - The function ngeoSD shall perform geometric standard deviation transformations.
 - The function logtBase shall perform log transformations.
 
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-utilty-functions
 
 #### Reqs for coercions
 - The function to.Seurat shall copy neccesary data to a Seurat object.
 - The function to.SpatialExperiment shall copy neccesary data to a SpatialExperiment object.
 
-Specifications:
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-geomxset-coercions
