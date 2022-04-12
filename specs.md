@@ -111,15 +111,15 @@ test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138f
 7. The user shall be able to do background subtraction by panel. For each panel, negative background shall be calculated as the geometric mean of negatives for each AOI. Background subtracted counts shall be calculated as  counts - corresponding AOI background for the corresponding panel.      
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_normalization.R#L159
 8. The user shall be able to do background subtraction with all negatives regardless of panel. Negative background shall be calculated as the geometric mean of negatives for each AOI. Background subtracted counts shall be calculated as  counts - corresponding AOI background.     
-test: 
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/tests/testthat/test_normalization.R#L175
 9. An error shall be displayed if no negatives are available to calculate background when performing background subtraction.     
-test:
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/tests/testthat/test_normalization.R#L208
 10. An error shall be displayed if no negatives are available to calculate background when performing negative normalization.     
-test:
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/tests/testthat/test_normalization.R#L126
 11. An error shall be displayed if negative normalization is attempted on a probe-level object.     
-test:
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/tests/testthat/test_normalization.R#L133
 12. An error shall be displayed if background subtraction is attempted on a probe-level object.     
-test:
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/tests/testthat/test_normalization.R#L161
 13. All normalization methods work on protein data.
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_protein.R#L168
 
