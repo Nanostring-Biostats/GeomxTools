@@ -166,19 +166,8 @@ DimPlot(demoSeurat, reduction = "umap", label = TRUE, group.by = "cell_line")
 
 Here is a work through of a more indepth DSP dataset. This is a non-small cell lung cancer (nsclc) tissue sample that has an ROI strategy to simulate a visium dataset (55 um circles evenly spaced apart). It was segmented on tumor and non-tumor. 
 
-```{r GeoMx dataset with coordinates}
+```{r}
 data("nsclc", package = "SpatialDecon")
-
-#adding new slot to previous version data (do not run line outside of this vignette)
-nsclc@analyte <- "RNA"
-
-nsclc
-
-dim(nsclc)
-
-data.frame(nsclc@assayData$exprs[seq_len(5), seq_len(5)])
-
-head(pData(nsclc))
 ```
 
 ```{r rename columns, echo=FALSE}
@@ -197,6 +186,18 @@ colnames(protocolData(nsclc))[colnames(protocolData(nsclc)) == "StitchedReads"] 
 colnames(protocolData(nsclc))[colnames(protocolData(nsclc)) == "SequencingSaturation"] <- "Saturated (%)"
 
 protocolData(nsclc) <- protocolData(nsclc)[,-which(colnames(protocolData(nsclc)) %in% c("UID"))]
+
+nsclc@analyte <- "RNA"
+```
+
+```{r GeoMx dataset with coordinates}
+nsclc
+
+dim(nsclc)
+
+data.frame(nsclc@assayData$exprs[seq_len(5), seq_len(5)])
+
+head(pData(nsclc))
 ```
 
 When coercing, we can add the coordinate columns allowing for spatial graphing using Seurat. 
@@ -386,8 +387,8 @@ TME <- ggplot(figureData[figureData$AOI.name == "TME",], aes(x=x, y=y, color = A
 wrap_plots(tumor, TME)
 ```
 
-# Further Development
-We are actively working to get the tissue image attached to both objects so that figures are printing on top of the tissue image. In addition, we are working on a separate NanoString package to be able to plot the spatial data specific to GeoMx like segmentation and irregular shaped ROIs. 
+# Image Overlays
+The free-handed nature of Region of Interest (ROI) selection in a GeoMx experiment makes visualization on top of the image difficult in packages designed for different data. We created [SpatialOmicsOverlay](https://bioconductor.org/packages/release/bioc/html/SpatialOmicsOverlay.html) specifically to visualize and analyze these types of ROIs in a GeoMx experiment and the immunofluorescent-guided segmentation process.
 
 ```{r}
 sessionInfo()

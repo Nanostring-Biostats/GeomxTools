@@ -29,6 +29,15 @@ function(object) {
     cat("\n")
 })
 
+setMethod("updateObject", signature = "NanoStringGeoMxSet",
+    function(object){
+        if(!"analyte" %in% names(getObjectSlots(object))){
+          object@analyte <- "RNA"
+        }
+        
+        return(object)
+    })
+
 # Constructors
 setGeneric("NanoStringGeoMxSet",
 function(assayData,
