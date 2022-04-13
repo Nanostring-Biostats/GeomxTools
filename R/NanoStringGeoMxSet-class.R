@@ -11,7 +11,7 @@ setClass("NanoStringGeoMxSet",
          prototype = prototype(
              new("VersionedBiobase",
                  versions = c(classVersion("ExpressionSet"),
-                              NanoStringGeoMxSet = "2.1.5")),
+                              NanoStringGeoMxSet = "2.1.6")),
              signatures = SignatureSet(),
              design = NULL,
              featureType = "Probe",
@@ -28,6 +28,15 @@ function(object) {
     cat(analyte(object))
     cat("\n")
 })
+
+setMethod("updateObject", signature = "NanoStringGeoMxSet",
+    function(object){
+        if(!"analyte" %in% names(getObjectSlots(object))){
+          object@analyte <- "RNA"
+        }
+        
+        return(object)
+    })
 
 # Constructors
 setGeneric("NanoStringGeoMxSet",

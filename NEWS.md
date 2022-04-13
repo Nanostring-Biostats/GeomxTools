@@ -1,3 +1,7 @@
+
+# GeomxTools 2.1.6
+* added updateObject capability 
+
 # GeomxTools 2.1.5
 
 ## New features:
@@ -6,6 +10,7 @@
     * Default behavior most recent PKC version for resolving probe assignments
     * User can override default with a specified version file name
 * Added SystematicName and GeneID from PKC to feature metadata
+
 
 # GeomxTools 2.1.4
 * Add code for grubbs test from deprecated outliers package

@@ -34,6 +34,7 @@ importFrom(parallel, stopCluster)
 importFrom(stringr, str_split)
 importFrom(BiocGenerics, design)
 importFrom(BiocGenerics, "design<-")
+importFrom(BiocGenerics, updateObject)
 importFrom("grDevices", "col2rgb", "colors", "rgb")
 importFrom("graphics", "abline", "axis", "boxplot", "legend", "pairs",
            "par", "points")
