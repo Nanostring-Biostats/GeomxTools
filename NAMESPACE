@@ -62,7 +62,7 @@ export(NanoStringGeoMxSet, sData, svarLabels, dimLabels, "dimLabels<-",
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S4 methods
 
-exportMethods(NanoStringGeoMxSet, show,
+exportMethods(NanoStringGeoMxSet, show, 
               sData, svarLabels, dimLabels, "dimLabels<-",
               featureType, "featureType<-",
               signatures, "signatures<-", signatureScores,
@@ -98,6 +98,7 @@ export(qcProteinSignal)
 export(plotConcordance)
 export(plotNormFactorConcordance)
 export(qcProteinSignalNames)
+export(updateGeoMxSet)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export S3 methods

@@ -187,7 +187,7 @@ colnames(protocolData(nsclc))[colnames(protocolData(nsclc)) == "SequencingSatura
 
 protocolData(nsclc) <- protocolData(nsclc)[,-which(colnames(protocolData(nsclc)) %in% c("UID"))]
 
-nsclc@analyte <- "RNA"
+nsclc <- updateGeoMxSet(nsclc)
 ```
 
 ```{r GeoMx dataset with coordinates}

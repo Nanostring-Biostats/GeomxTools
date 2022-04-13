@@ -234,3 +234,20 @@ test_that("invalid coordinates give an error - SpatialExperiment", {
                                       coordinates = c("Ycoord")))
 })
 
+
+demoData <- readRDS(file= system.file("extdata","DSP_NGS_Example_Data", 
+                                      "demoData.rds", package = "GeomxTools"))
+demoData <- shiftCountsOne(demoData)
+
+v1Data <- readRDS("testData/GxTv1.0.RDS")
+updatedData <- updateGeoMxSet(v1Data)
+
+# Spec 5: The coercion of an older version of a GeoMxSet object to the current
+#           version is valid.:------
+test_that("version coercion works as expected", {
+  expect_error(analyte(v1Data))
+  expect_true(analyte(updatedData) == "RNA")
+  
+  expect_true(any(as.numeric(updatedData@.__classVersion__$NanoStringGeoMxSet) > 
+                    as.numeric(v1Data@.__classVersion__$NanoStringGeoMxSet)))
+})
