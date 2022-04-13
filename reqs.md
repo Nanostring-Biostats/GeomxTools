@@ -33,7 +33,7 @@ Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0
     - Minimum Nuclei Count Recommendation(s)
 - The function shall work with multiple PKC versions, only reading in overlapping genes and using the names from the default PKC 
       
-Specifications: 
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/155ed8b0ef9272544c1b3c74aa3be15b9a57b6dd/specs.md#specs-for-readpkcfile
     
 #### Reqs for readNanoStringGeoMxSet 
 - The function shall return a NanoStringGeoMxSet object with the following attributes:
@@ -112,4 +112,4 @@ Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0
 - The function to.SpatialExperiment shall copy neccesary data to a SpatialExperiment object.
 - There shall be functionality to coerce old class versions to current version. 
 
-Specifications: 
+Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/155ed8b0ef9272544c1b3c74aa3be15b9a57b6dd/specs.md#specs-for-geomxset-coercions
