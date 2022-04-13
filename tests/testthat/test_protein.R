@@ -112,9 +112,9 @@ test_that("Correct segment flags are added to protein data",{
 
 
 test_that("Warnings are given if protein data is run through setBioProbeQCFlags", {
-  expect_warning(expect_warning(expect_warning(setBioProbeQCFlags(proteinData, 
-                                    qcCutoffs=list(minProbeRatio=0.1,
-                                                   percentFailGrubbs=20)))))
+  expect_warning(expect_warning(expect_warning(expect_warning(
+    setBioProbeQCFlags(proteinData, qcCutoffs=list(minProbeRatio=0.1,
+                                                   percentFailGrubbs=20))))))
 })
 
 

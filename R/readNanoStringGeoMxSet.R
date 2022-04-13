@@ -9,6 +9,7 @@ function(dccFiles,
          experimentDataColNames = NULL,
          configFile = NULL,
          analyte = "RNA",
+         defaultPKCVersions = NULL,
          ...)
 {
   # check inputs
@@ -119,7 +120,7 @@ function(dccFiles,
   if (is.null(pkcFiles)) {
     stop("Please specify an input for pkcFiles")
   } else if (!is.null(pkcFiles)) {
-    pkcData <- readPKCFile(pkcFiles)
+    pkcData <- readPKCFile(pkcFiles, default_pkc_vers=defaultPKCVersions)
 
     pkcHeader <- S4Vectors::metadata(pkcData)
     # pkcHeader[["PKCFileDate"]] <- as.character(pkcHeader[["PKCFileDate"]])
@@ -135,8 +136,13 @@ function(dccFiles,
                Sample_ID = x))
   probeAssay <- do.call(rbind, probeAssay)
   # check for missing probes in PKC that are in assay
-  if (length(setdiff(unique(probeAssay[["RTS_ID"]]), rownames(pkcData))) > 0L){
-    stop("Missing PKC files, not all probes are not in specified PKC files.")
+  missingProbes <- setdiff(unique(probeAssay[["RTS_ID"]]), rownames(pkcData))
+  if (length(missingProbes) > 0L){
+    warning("Not all probes are found within PKC probe metadata.",
+    " The following probes are ignored from analysis",
+    " and were most likely removed from metadata while",
+    " resolving multiple module PKC version conflicts.\n",
+    paste(missingProbes, sep=", "))
   }
   
   if(!is.null(configFile)){

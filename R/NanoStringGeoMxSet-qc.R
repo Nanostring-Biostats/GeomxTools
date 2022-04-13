@@ -335,6 +335,7 @@ setGrubbsFlags <- function(object,
     if (!"ProbeRatio" %in% fvarLabels(object)) {
         warning("Probe ratio QC has not yet been performed. ",
                 "Suggests running probe ratio QC then re-running Grubbs QC.")
+        multiObject <- object
     } else {
         multiObject <- 
             object[!fData(object)[["QCFlags"]][, "LowProbeRatio"], ]
@@ -362,6 +363,7 @@ setGrubbsFlags <- function(object,
                 esBy(modObject, GROUP="TargetName", simplify=FALSE, FUN=function(y) {
                     currExprs <- assayDataElement(y, elt="log10")
                     currResult <- apply(currExprs, 2, function(z) { 
+                        z <- z[!is.na(z)]
                         if (max(z) < logtBase(minCount, base=10)) {
                             return(NA)
                         }

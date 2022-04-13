@@ -1,3 +1,12 @@
+# GeomxTools 2.1.5
+
+## New features:
+* Handle multiple PKC file versions for a single module
+    * Only common probes in all versions for each module will be used
+    * Default behavior most recent PKC version for resolving probe assignments
+    * User can override default with a specified version file name
+* Added SystematicName and GeneID from PKC to feature metadata
+
 # GeomxTools 2.1.4
 * Add code for grubbs test from deprecated outliers package
 
@@ -5,6 +14,7 @@
 
 ## New features:
 * Allow protein NGS experiment data reading
+    * New slot, analyte, added to refer to analyte type
 
 # GeomxTools 2.1.2
 

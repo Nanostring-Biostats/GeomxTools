@@ -176,10 +176,10 @@ test_that("experiment data are in the correct location - SpatialExperiment", {
 # feature metadata in correct spot
 test_that("feature data is in the correct location - Seurat", {
     expect_true(all(seurat_object@assays$GeoMx@meta.features == 
-                      fData(target_demoData)))
+                      fData(target_demoData), na.rm=TRUE))
 })
 test_that("feature data is in the correct location - SpatialExperiment", {
-    expect_true(all(all(rowData(spe_object) == fData(target_demoData))))
+    expect_true(all(all(rowData(spe_object) == fData(target_demoData), na.rm=TRUE)))
 })
 
 pData(target_demoData)$Xcoord <- runif(nrow(sData(target_demoData)), 0, 100)
