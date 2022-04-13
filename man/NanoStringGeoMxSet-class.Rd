@@ -18,6 +18,9 @@
 % show
 \alias{show,NanoStringGeoMxSet-method}
 
+% updateObject
+\alias{updateObject,NanoStringGeoMxSet-method}
+
 % accessing
 \alias{sData}
 \alias{sData,NanoStringGeoMxSet-method}
@@ -93,6 +96,10 @@ NanoStringGeoMxSet(assayData,
   \item{analyte}{A \code{character} string indicating if features are
     \code{"RNA"} or \code{"Protein"}}
   \item{\ldots}{Additional arguments for \code{\link{ExpressionSet}}.}
+}
+
+\section{Updating}{
+    Objects can be updated from v2.0 to v2.2 using \code{updateObject(object)}
 }
 
 \section{Accessing}{
