@@ -15,6 +15,7 @@ demoData <- setBioProbeQCFlags(demoData)
 target_demoData <- aggregateCounts(demoData)
 noQC <- aggregateCounts(noQC)
 
+# Spec 1: The coercion of a GeoMxSet object shall warn users when coercing non-normalized data but will coerce when forced.:------
 # advised to only work on normalized data
 test_that("GeomxSet object has been normalized - Seurat",{
     expect_error(to.Seurat(object = target_demoData, normData = "exprs"))
@@ -35,6 +36,7 @@ target_demoData <- normalize(target_demoData, norm_method="quant")
 noQC <- normalize(noQC, norm_method="quant")
 #############################
 
+# Spec 1: The coercion of a GeoMxSet object shall only occur on target level data.:------
 # only works on target level data
 test_that("coercion is only run on target level data - Seurat",{
     expect_error(to.Seurat(object = demoData, normData = "exprs_norm"))
@@ -43,6 +45,8 @@ test_that("coercion is only run on target level data - SpatialExperiment",{
     expect_error(to.SpatialExperiment(object = demoData, normData = "exprs_norm"))
 })
 
+# Spec 3: The coercion of a GeoMxSet object shall only occur when a valid norm 
+#           data count matrix is provided by the user. :------
 # needs normData
 test_that("normData is required - Seurat",{
     expect_error(to.Seurat(object = target_demoData))
@@ -70,6 +74,8 @@ spe_object <- to.SpatialExperiment(object = target_demoData, normData = "exprs_n
 noQC_spe_object <- to.SpatialExperiment(object = noQC, normData = "exprs_norm")
 
 
+# Spec 4: The coercion of a GeoMxSet object shall copy the wanted data from the 
+#           GeoMxSet object to the correct location in the coerced object. :------
 # ident is equal to column given 
 test_that("Seurat Ident is equal to given column",{
     expect_true(all(Seurat::Idents(seurat_object) == sData(target_demoData)$cell_line))
@@ -176,10 +182,10 @@ test_that("experiment data are in the correct location - SpatialExperiment", {
 # feature metadata in correct spot
 test_that("feature data is in the correct location - Seurat", {
     expect_true(all(seurat_object@assays$GeoMx@meta.features == 
-                      fData(target_demoData)))
+                      fData(target_demoData), na.rm=TRUE))
 })
 test_that("feature data is in the correct location - SpatialExperiment", {
-    expect_true(all(all(rowData(spe_object) == fData(target_demoData))))
+    expect_true(all(all(rowData(spe_object) == fData(target_demoData), na.rm=TRUE)))
 })
 
 pData(target_demoData)$Xcoord <- runif(nrow(sData(target_demoData)), 0, 100)
@@ -201,6 +207,9 @@ test_that("coordinates, when given, are in the correct location - SpatialExperim
     expect_true(all(all(spatialCoords(spe_object) == 
                           sData(target_demoData)[,c("Xcoord", "Ycoord")])))
 })
+
+# Spec 4: The coercion of a GeoMxSet object shall warn users when the coordinate 
+#           column names are not valid. :------
 
 # errors if coordinates columns are not valid
 test_that("invalid coordinates give an error - Seurat", {

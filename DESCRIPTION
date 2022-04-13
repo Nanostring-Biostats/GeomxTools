@@ -44,7 +44,7 @@ Collate: DccMetadata.R
 biocViews: GeneExpression, Transcription, CellBasedAssays, DataImport, 
            Transcriptomics, Proteomics, mRNAMicroarray, 
            ProprietaryPlatforms, RNASeq, Sequencing, ExperimentalDesign, 
-           Normalization
+           Normalization, Spatial
 VignetteEngine: knitr::rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 7.1.2

@@ -56,7 +56,7 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
 }
 
 
-# req 1: test that collapsed probe count is equal to the geomean of probes for each target:------
+# Spec 1: test that collapsed probe count is equal to the geomean of probes for each target:------
 testthat::test_that("test that collapsed probe count is equal to the geomean of probes for each target", {
   expect_true(sum(matches) == nrow(aggTestData@assayData$exprs)*numDCC)
 })
@@ -94,7 +94,7 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
 }
 
 
-# req 2: test that geomean and geosd of negatives is correct
+# Spec 2: test that geomean and geosd of negatives is correct
 testthat::test_that("test that the geomean and geosd of negatives is correct", {
   #geomean and geosd (2) for each DCC (numDCC) * number of modules
   expect_true(sum(matches) == length(unique(PKC$Module))*numDCC*2)
@@ -114,14 +114,14 @@ subData <-
 
 subAggd <- suppressWarnings(aggregateCounts(subData))
 
-# req 3: featureType is changed after aggregation
+# Spec 3: featureType is changed after aggregation
 testthat::test_that("Feature type changed after aggregation", {
     expect_true(featureType(subData) == "Probe")
     expect_true(featureType(subAggd) == "Target")
 
 })
 
-# req 4: Aggregated object has target dimension and annotations
+# Spec 4: Aggregated object has target dimension and annotations
 testthat::test_that("Aggregated object has target dimension and annotations", {
     expect_true(all(fData(subData)[["TargetName"]] %in% featureNames(subAggd)))
     expect_true(length(unique(fData(subData)[["TargetName"]])) == 
@@ -135,7 +135,7 @@ testthat::test_that("Aggregated object has target dimension and annotations", {
     expect_true(all(svarLabels(subData) %in% svarLabels(subAggd)))
 })
 
-# req 5: Target expression matrix contains aggregated counts
+# Spec 5: Target expression matrix contains aggregated counts
 testthat::test_that("Target expression matrix contains aggregated counts", {
     expect_true(all(colnames(exprs(subData)) == colnames(exprs(subAggd))))
     sameTargs <- intersect(fData(subData)[["TargetName"]],
@@ -152,7 +152,7 @@ testthat::test_that("Target expression matrix contains aggregated counts", {
     expect_true(all(unlist(subList)))
 })
 
-# req 6: Other aggregation functions work
+# Spec 6: Other aggregation functions work
 testthat::test_that("Other aggregation functions work", {
     subSum <- suppressWarnings(aggregateCounts(subData, FUN=sum))
     expect_true(all(colnames(exprs(subData)) == colnames(exprs(subSum))))
@@ -171,7 +171,7 @@ testthat::test_that("Other aggregation functions work", {
 })
 
 
-# req 7: Counts can't be aggregated twice
+# Spec 7: Counts can't be aggregated twice
 testthat::test_that("Counts can't be aggregated twice", {
   expect_error(aggregateCounts(aggTestData))
 })
@@ -180,18 +180,18 @@ oneProbe <- table(fData(testData)$TargetName)
 oneProbe <- names(oneProbe)[which(oneProbe == 1)]
 oneProbeIDs <- fData(testData)$RTS_ID[match(oneProbe,fData(testData)$TargetName)]
 
-# req 8: Single Probes are not aggregated
+# Spec 8: Single Probes are not aggregated
 testthat::test_that("Single Probes are not aggregated", {
   expect_true(all(aggTestData@assayData$exprs[oneProbe,] == testData@assayData$exprs[oneProbeIDs,]))
 })
 
 negs <- which(fData(testData)$CodeClass == "Negative")
-# req 9: Warning given when data doesn't have negatives
+# Spec 9: Warning given when data doesn't have negatives
 testthat::test_that("Warning given when data doesn't have negatives", {
   expect_warning(aggregateCounts(testData[-negs,]))
 })
 
-# req 10: Warning given when data doesn't have multi-probe targets
+# Spec 10: Warning given when data doesn't have multi-probe targets
 testthat::test_that("Warning given when data doesn't have multi-probe targets", {
   expect_warning(aggregateCounts(testData[!duplicated(fData(testData)$TargetName),]))
 })
@@ -199,8 +199,13 @@ testthat::test_that("Warning given when data doesn't have multi-probe targets", 
 negs <- summarizeNegatives(testData)
 negs2 <- summarizeNegatives(negs)
 
-# req 11: summarizeNegatives can be rerun
+# Spec 1: summarizeNegatives can be rerun
 testthat::test_that("summarizeNegatives can be rerun", {
     expect_identical(negs, negs2)
+})
+
+# Spec 2: negatives are summarized by panel
+testthat::test_that("Negatives should be summarized by panel",{
+  expect_true(length(grep("NegGeoSD|NegGeoMean", colnames(sData(negs)))) == 4)
 })
 

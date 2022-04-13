@@ -35,7 +35,7 @@ proteinData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
                                                        phenoDataColPrefix = "",
                                                        experimentDataColNames = NULL))
 
-
+# Spec 11: Only a single analyte is read in to a GeomMxSet object.:------
 testthat::test_that("Datasets can be subset by given analyte", {
   expect_true(analyte(proteinData) == "Protein")
   expect_true(analyte(proteinData) != "RNA")
@@ -100,6 +100,7 @@ RNAData <- setSegmentQCFlags(RNAData,
                                                 percentAligned=80, 
                                                 percentSaturation=50))
 
+# Spec 20: The appropriate segment QC flags shall be added to a protein dataset.:------
 test_that("Correct segment flags are added to protein data",{
   expect_false("LowNegatives" %in% colnames(protocolData(proteinData)$QCFlags))
   expect_false("LowNegatives" %in% colnames(protocolData(proteinData_seqQC)$QCFlags))
@@ -110,11 +111,11 @@ test_that("Correct segment flags are added to protein data",{
   expect_equal(ncol(protocolData(RNAData_background)$QCFlags), ncol(protocolData(RNAData)$QCFlags))
 })
 
-
+# Spec 21: A warning is given if protein data is run through setBioProbeQCFlags.:------
 test_that("Warnings are given if protein data is run through setBioProbeQCFlags", {
-  expect_warning(expect_warning(expect_warning(setBioProbeQCFlags(proteinData, 
-                                    qcCutoffs=list(minProbeRatio=0.1,
-                                                   percentFailGrubbs=20)))))
+  expect_warning(expect_warning(expect_warning(expect_warning(
+    setBioProbeQCFlags(proteinData, qcCutoffs=list(minProbeRatio=0.1,
+                                                   percentFailGrubbs=20))))))
 })
 
 
@@ -126,6 +127,7 @@ HOUSEKEEPERS <- c(
   "SDHA", "SNRPD3", "TBC1D10B", "TPM4", "TUBB", "UBB"
 )
 
+# Spec 1: igg.names shall return the expected target names.:------
 test_that("Expected IgGs are returned",{
   expect_true(all(grepl(pattern = "IgG", igg.names)))
   expect_equal(length(igg.names), length(grep(pattern = "IgG", fData(proteinData)$TargetName)))
@@ -134,11 +136,13 @@ test_that("Expected IgGs are returned",{
   expect_warning(iggNames(RNAData))
 })
 
+# Spec 2: hk.names shall return the expected target names.:------
 test_that("Expected HK are returned",{
   expect_true(all(hk.names == fData(proteinData)$TargetName[fData(proteinData)$CodeClass == "Control"]))
   
   expect_warning(hkNames(RNAData))
 })
+
 
 test_that("Concordance plots are plotted", {
   expect_error(plotConcordance(igg.names, proteinData, "Segment_Typ"))
@@ -161,6 +165,7 @@ proteinData <- normalize(proteinData, norm_method = "neg", toElt="neg_norm")
 proteinData <- normalize(proteinData, norm_method = "quant", toElt="q3_norm")
 proteinData <- normalize(proteinData, norm_method = "subtractBackground", toElt="bgSub_norm")
 
+# Spec 13: All normalization methods work on protein data.:------
 test_that("Protein data is normalized",{
   expect_true(all(proteinData@assayData$exprs != proteinData@assayData$hk_norm))
   expect_true(all(proteinData@assayData$exprs != proteinData@assayData$neg_norm))
@@ -183,6 +188,7 @@ normfactors_area_nuc <- computeNormalizationFactors(object = proteinData,
                                                       area = "AOI.Size.um2",
                                                       nuclei = "Nuclei.Counts")
 
+# Spec 3: computeNormalizationFactors and normalize calculations match.:------
 test_that("computeNormalizationFactors vs normalization",{
   expect_true(all(pData(proteinData)$hk_norm_hkFactors == 
                     as.data.frame(normfactors)$`HK geomean`/exp(mean(log(as.data.frame(normfactors)$`HK geomean`)))))

@@ -21,7 +21,7 @@ thresholdValues <- function(x, thresh=0.5) {
   return(x)
 }
 
-# req 1: test thresholding behaves as expected:------
+# Spec 0: test thresholding behaves as expected:------
 testthat::test_that("test thresholding behaves as expected", {
   expect_identical(fakeCounts, thresholdValues(fakeCounts))
   expect_identical(fakeCountsWith0+0.5, thresholdValues(fakeCountsWith0))
@@ -30,7 +30,7 @@ testthat::test_that("test thresholding behaves as expected", {
   expect_identical(0.5, thresholdValues(fakeCountwith0))
 })
 
-# req 2: test that ngeoMean is calculated as expected:------
+# Spec 1: test that ngeoMean is calculated as expected:------
 testthat::test_that("test that ngeoMean is calculated as expected", {
   expect_identical(ngeoMean(fakeCounts), EnvStats::geoMean(thresholdValues(fakeCounts), na.rm = TRUE))
   expect_identical(ngeoMean(fakeCountsWith0), EnvStats::geoMean(thresholdValues(fakeCountsWith0), na.rm = TRUE))
@@ -39,7 +39,7 @@ testthat::test_that("test that ngeoMean is calculated as expected", {
   expect_identical(ngeoMean(fakeCountwith0), EnvStats::geoMean(thresholdValues(fakeCountwith0), na.rm = TRUE))
 })
 
-# req 3: test that ngeoSD is calculated as expected:------
+# Spec 2: test that ngeoSD is calculated as expected:------
 testthat::test_that("test that ngeoSD is calculated as expected", {
   expect_identical(ngeoSD(fakeCounts), EnvStats::geoSD(thresholdValues(fakeCounts), na.rm = TRUE))
   expect_identical(ngeoSD(fakeCountsWith0), EnvStats::geoSD(thresholdValues(fakeCountsWith0), na.rm = TRUE))
@@ -49,7 +49,7 @@ testthat::test_that("test that ngeoSD is calculated as expected", {
 })
 
 
-# req 3: test that logtBase is calculated as expected:------
+# Spec 3: test that logtBase is calculated as expected:------
 testthat::test_that("test that logtBase is calculated as expected", {
   expect_identical(logtBase(fakeCounts), log(thresholdValues(fakeCounts), base = 2))
   expect_identical(logtBase(fakeCountsWith0), log(thresholdValues(fakeCountsWith0), base = 2))
