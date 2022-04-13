@@ -39,6 +39,7 @@ importFrom("grDevices", "col2rgb", "colors", "rgb")
 importFrom("graphics", "abline", "axis", "boxplot", "legend", "pairs",
            "par", "points")
 importFrom(stats, median)
+importFrom("stats", "pt", "qt", "uniroot")
 importFrom(rlang, expr_text)
 importFrom(GGally, ggpairs)
 importFrom(GGally, wrap)
