@@ -31,8 +31,9 @@ Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0
     - Analyte Type
     - Minimum AOI Area Recommendation(s)
     - Minimum Nuclei Count Recommendation(s)
+- The function shall work with multiple PKC versions, only reading in overlapping genes and using the names from the default PKC 
       
-Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-readpkcfile
+Specifications: 
     
 #### Reqs for readNanoStringGeoMxSet 
 - The function shall return a NanoStringGeoMxSet object with the following attributes:
@@ -109,5 +110,6 @@ Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0
 #### Reqs for coercions
 - The function to.Seurat shall copy neccesary data to a Seurat object.
 - The function to.SpatialExperiment shall copy neccesary data to a SpatialExperiment object.
+- There shall be functionality to coerce old class versions to current version. 
 
-Specifications: https://github.com/Nanostring-Biostats/GeomxTools/blob/0bbd08db0081eb9347e6a859c98d4e363e883ca4/specs.md#specs-for-geomxset-coercions
+Specifications: 

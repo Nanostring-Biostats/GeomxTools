@@ -19,6 +19,18 @@ test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138f
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_readPKC.R#L21
 3. The number of probes matches the number of probes found in the PKC file.     
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_readPKC.R#L26
+4. Warning if default PKC provided when no multiple versions.
+test:
+5. Error if default PKCs is not a valid pkc file.
+test:
+6. Error if multiple default PKCs for a module.
+test:
+7. Warning when resolving multiple PKC versions.
+test:
+8. Only probes in all versions kept.
+test:
+9. Default PKC target assignments are used for probes.
+test:
 
 #### Specs for readNanoStringGeoMxSet 
 1. NanoStringGeoMxSet@assayData$expr dimension labels shall match DCC files input.     
@@ -149,9 +161,9 @@ test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138f
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_QC.R#L156
 12. The LocalGrubbsOutlier QC shall flag probes that are Grubbs outliers in each AOI when compared to probes from the same target given specified alpha setting.     
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_QC.R#L163
-13. Targets with less than three probes shall have no Grubbs outlier flags.     
+13. The GlobalGrubbsOutlier QC shall flag probes with percent of LocalGrubbsOutlier flags greater than the percent cutoff across all AOI.  
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_QC.R#L196
-14. The GlobalGrubbsOutlier QC shall flag probes with percent of LocalGrubbsOutlier flags greater than the percent cutoff across all AOI.     
+14. Targets with less than three probes shall have no Grubbs outlier flags.           
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_QC.R#L205
 15. LowProbeRatio flags shall match between GeomxTools BioProbeQC and DSPDA BioProbe QC.     
 test:
@@ -214,6 +226,8 @@ test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138f
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_coercions.R#L77
 5. The coercion of a GeoMxSet object shall warn users when the coordinate column names are not valid.     
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_coercions.R#L211
+6. The coercion of an older version of a GeoMxSet object to the current version is valid.
+test: 
 
 #### Specs for Protein functions
 1. igg.names shall return the expected target names.    
