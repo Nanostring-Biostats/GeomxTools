@@ -30,16 +30,16 @@ function(object) {
 })
 
 # for when not inheriting from NCtools
-setMethod("updateObject", signature = "NanoStringGeoMxSet",
-    function(object){
-        if(!"analyte" %in% names(getObjectSlots(object))){
-          object@analyte <- "RNA"
-          
-          object@.__classVersion__$NanoStringGeoMxSet <- "2.1.6"
-        }
-
-        return(object)
-    })
+# setMethod("updateObject", signature = "NanoStringGeoMxSet",
+#     function(object){
+#         if(!"analyte" %in% names(getObjectSlots(object))){
+#           object@analyte <- "RNA"
+#           
+#           object@.__classVersion__$NanoStringGeoMxSet <- "2.1.6"
+#         }
+# 
+#         return(object)
+#     })
 
 # Constructors
 setGeneric("NanoStringGeoMxSet",

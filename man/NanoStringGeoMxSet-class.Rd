@@ -99,7 +99,7 @@ NanoStringGeoMxSet(assayData,
 }
 
 \section{Updating}{
-    Objects can be updated from v2.0 to v2.2 using \code{updateObject(object)}
+    Objects can be updated to current version using \code{updateGeoMxSet(object)}
 }
 
 \section{Accessing}{
