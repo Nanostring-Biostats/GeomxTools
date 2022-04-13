@@ -62,17 +62,16 @@ if (Sys.info()['sysname'] != "Windows") {
                                pAdjust = NULL
     )
 
-    # req 1: test that the outputs from mc and parallel methods is the same:------
-      expect_equal(mixedOutmc, mixedOutp)
-
-
-    # req 2: test that the outputs from mc and serial methods is the same:------
+    # Spec 1: test that the outputs from mc and serial methods is the same:------
       expect_equal(mixedOutmc, mixedOuts)
+    
+    # Spec 2: test that the outputs from mc and parallel methods is the same:------
+    expect_equal(mixedOutmc, mixedOutp)
     })
 
     test_that("mixed model function works for random slope and random intercept", {
 
-    # req 3. test that function works for model with random slope and random intercept
+    # Spec 3. test that function works for model with random slope and random intercept
     design(target_demoData) <- ~ pool_rep + (1 + slide| slide)
     # Run multiple cores
     mixedOutmc <- mixedModelDE(target_demoData,
@@ -98,7 +97,7 @@ if (Sys.info()['sysname'] != "Windows") {
     })
 
 
-    # req 4: test that function outputs an error when model terms are not in sData:------
+    # Spec 4: test that function outputs an error when model terms are not in sData:------
     # Run parallel
     test_that("test that error when model terms are not in sdata", {
       expect_error(
@@ -113,7 +112,7 @@ if (Sys.info()['sysname'] != "Windows") {
     })
 
 
-    # req 5: test that function outputs an error when groupVar is not in model formula:------
+    # Spec 5: test that function outputs an error when groupVar is not in model formula:------
     # Run parallel
     test_that("test that error when group var not in model", {
       expect_error(

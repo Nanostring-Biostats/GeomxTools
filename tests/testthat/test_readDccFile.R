@@ -8,7 +8,7 @@ dccFile <- suppressWarnings(readDccFile(file.path(datadir,  "DSP-1001250002642-E
 lines <- suppressWarnings(trimws(readLines(file.path(datadir,  "DSP-1001250002642-E12.dcc"))))
 
 
-# req 1: test that the names of DCC files have the right formats:------
+# Spec 1: test that the names of DCC files have the right formats:------
 testthat::test_that("test that the names of DCC files have the right formats", {
   expect_true(all(names(dccFile) == c("Header", "Scan_Attributes", 
                                          "NGS_Processing_Attributes", "Code_Summary")))
@@ -22,7 +22,7 @@ testthat::test_that("test that the names of DCC files have the right formats", {
 
 
 
-# req 2: test that the number of genes is correct:------
+# Spec 2: test that the number of genes is correct:------
 testthat::test_that("test that the number of genes is correct", {
   num_genes <- match("</Code_Summary>", lines) - match("<Code_Summary>", lines) - 1
   expect_true(dim(dccFile$Code_Summary)[1] == num_genes)
@@ -30,7 +30,7 @@ testthat::test_that("test that the number of genes is correct", {
 
 
 
-# req 3: test that counts are correct:------
+# Spec 3: test that counts are correct:------
 testthat::test_that("test that gene counts are correct", {
   cat_counts <- paste(dccFile$Code_Summary$RTS_ID, dccFile$Code_Summary$Count, sep=",")
   expect_true(all(cat_counts %in% lines))
