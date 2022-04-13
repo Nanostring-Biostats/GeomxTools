@@ -19,18 +19,18 @@ test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138f
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_readPKC.R#L21
 3. The number of probes matches the number of probes found in the PKC file.     
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_readPKC.R#L26
-4. Warning if default PKC provided when no multiple versions.
-test:
-5. Error if default PKCs is not a valid pkc file.
-test:
-6. Error if multiple default PKCs for a module.
-test:
-7. Warning when resolving multiple PKC versions.
-test:
-8. Only probes in all versions kept.
-test:
-9. Default PKC target assignments are used for probes.
-test:
+4. Warning if default PKC provided when no multiple versions.      
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/8c3c602ebfa54b6c515c3a9184341d56f933600c/tests/testthat/test_readPKC.R#L39
+5. Error if default PKCs is not a valid pkc file.      
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/8c3c602ebfa54b6c515c3a9184341d56f933600c/tests/testthat/test_readPKC.R#L45
+6. Error if multiple default PKCs for a module.      
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/8c3c602ebfa54b6c515c3a9184341d56f933600c/tests/testthat/test_readPKC.R#L50
+7. Warning when resolving multiple PKC versions.      
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/8c3c602ebfa54b6c515c3a9184341d56f933600c/tests/testthat/test_readPKC.R#L56
+8. Only probes in all versions kept.      
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/8c3c602ebfa54b6c515c3a9184341d56f933600c/tests/testthat/test_readPKC.R#L71
+9. Default PKC target assignments are used for probes.      
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/8c3c602ebfa54b6c515c3a9184341d56f933600c/tests/testthat/test_readPKC.R#L79
 
 #### Specs for readNanoStringGeoMxSet 
 1. NanoStringGeoMxSet@assayData$expr dimension labels shall match DCC files input.     
@@ -226,8 +226,8 @@ test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138f
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_coercions.R#L77
 5. The coercion of a GeoMxSet object shall warn users when the coordinate column names are not valid.     
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/062b3d94e4be924138ff5315441ad82360eabe67/tests/testthat/test_coercions.R#L211
-6. The coercion of an older version of a GeoMxSet object to the current version is valid.
-test: 
+6. The coercion of an older version of a GeoMxSet object to the current version is valid.      
+test: https://github.com/Nanostring-Biostats/GeomxTools/blob/8c3c602ebfa54b6c515c3a9184341d56f933600c/tests/testthat/test_coercions.R#L245
 
 #### Specs for Protein functions
 1. igg.names shall return the expected target names.    
