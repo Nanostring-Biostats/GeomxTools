@@ -29,7 +29,7 @@ test: https://github.com/Nanostring-Biostats/GeomxTools/blob/8c3c602ebfa54b6c515
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/8c3c602ebfa54b6c515c3a9184341d56f933600c/tests/testthat/test_readPKC.R#L56
 8. Only probes in all versions kept.      
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/8c3c602ebfa54b6c515c3a9184341d56f933600c/tests/testthat/test_readPKC.R#L71
-9. Default PKC target assignments are used for probes.      
+9. Default PKC target assignments are used for probes with most recent PKC being default unless re-specified by user.      
 test: https://github.com/Nanostring-Biostats/GeomxTools/blob/8c3c602ebfa54b6c515c3a9184341d56f933600c/tests/testthat/test_readPKC.R#L79
 
 #### Specs for readNanoStringGeoMxSet 

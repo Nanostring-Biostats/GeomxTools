@@ -248,6 +248,6 @@ test_that("version coercion works as expected", {
   expect_error(analyte(v1Data))
   expect_true(analyte(updatedData) == "RNA")
   
-  expect_true(any(as.numeric(updatedData@.__classVersion__$NanoStringGeoMxSet) > 
-                    as.numeric(v1Data@.__classVersion__$NanoStringGeoMxSet)))
+  expect_true(any(as.numeric(classVersion(updatedData)$NanoStringGeoMxSet) > 
+                    as.numeric(classVersion(v1Data)$NanoStringGeoMxSet)))
 })
