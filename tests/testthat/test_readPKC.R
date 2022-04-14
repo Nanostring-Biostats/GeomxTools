@@ -76,7 +76,8 @@ testthat::test_that("check module probes in all PKC versions", {
   expect_equal(nrow(combineVer), nrow(combineReVer))
 })
 
-# req9: check that default PKC target assignments are used for probes:----
+# req9: Default PKC target assignments are used for probes with most recent PKC 
+#           being default unless re-specified by user:----
 testthat::test_that("check module probes in all PKC versions", {
   expect_false(all(combineVer$Target == combineReVer$Target))
   expect_true(combineVer$RTS_ID[reassignedProbe] == 

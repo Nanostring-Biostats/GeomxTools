@@ -260,3 +260,26 @@ to.SpatialExperiment <- function(object, normData = NULL, coordinates = NULL,
     
     return(spe)
 }
+
+#' Update GeoMxSet object to current version
+#' 
+#' @param object GeoMxSet object to update 
+#' 
+#' @return updated GeoMxSet object
+#' 
+#' @importFrom BiocGenerics getObjectSlots
+#' 
+#' @export 
+#' 
+updateGeoMxSet <- function(object){
+  if(!"analyte" %in% names(getObjectSlots(object))){
+    object@analyte <- "RNA"
+    
+    object@.__classVersion__$NanoStringGeoMxSet <- "2.1.6"
+  }else{
+    warning("GeoMxSet object up to date, no update necessary")
+  }
+
+  return(object)
+}
+
