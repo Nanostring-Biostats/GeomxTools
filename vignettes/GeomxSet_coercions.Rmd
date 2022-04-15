@@ -116,18 +116,18 @@ The three errors that can occur when trying to coerce to Seurat are:
 3. normalized count matrix name must be valid 
 
 ```{r coercion to Seurat mistakes, error=TRUE}
-to.Seurat(demoData)
+as.Seurat(demoData)
 
-to.Seurat(target_demoData, normData = "exprs")
+as.Seurat(target_demoData, normData = "exprs")
 
-to.Seurat(norm_target_demoData, normData = "exprs_norm")
+as.Seurat(norm_target_demoData, normData = "exprs_norm")
 ```
 
 
 After coercing to a Seurat object all of the metadata is still accessible. 
 
 ```{r coercion to Seurat}
-demoSeurat <- to.Seurat(norm_target_demoData, normData = "q_norm")
+demoSeurat <- as.Seurat(norm_target_demoData, normData = "q_norm")
 
 demoSeurat # overall data object
 
@@ -144,7 +144,7 @@ All Seurat functionality is available after coercing. Outputs might differ if th
 ```{r simple VlnPlot}
 VlnPlot(demoSeurat, features = "nCount_GeoMx", pt.size = 0.1)
 
-demoSeurat <- to.Seurat(norm_target_demoData, normData = "q_norm", ident = "cell_line")
+demoSeurat <- as.Seurat(norm_target_demoData, normData = "q_norm", ident = "cell_line")
 VlnPlot(demoSeurat, features = "nCount_GeoMx", pt.size = 0.1)
 ```
 
@@ -203,7 +203,7 @@ head(pData(nsclc))
 When coercing, we can add the coordinate columns allowing for spatial graphing using Seurat. 
 
 ```{r coercion to Seurat with coordinates}
-nsclcSeurat <- to.Seurat(nsclc, normData = "exprs_norm", ident = "AOI.annotation", 
+nsclcSeurat <- as.Seurat(nsclc, normData = "exprs_norm", ident = "AOI.annotation", 
                          coordinates = c("x", "y"))
 
 nsclcSeurat
@@ -322,17 +322,17 @@ The three errors that can occur when trying to coerce to SpatialExperiment are:
 3. normalized count matrix name must be valid 
 
 ```{r coercion to SpatialExperiment mistakes, error=TRUE}
-to.SpatialExperiment(demoData)
+as.SpatialExperiment(demoData)
 
-to.SpatialExperiment(target_demoData, normData = "exprs")
+as.SpatialExperiment(target_demoData, normData = "exprs")
 
-to.SpatialExperiment(norm_target_demoData, normData = "exprs_norm")
+as.SpatialExperiment(norm_target_demoData, normData = "exprs_norm")
 ```
 
 After coercing to a SpatialExperiment object all of the metadata is still accessible. 
 
 ```{r coercion to SpatialExperiment}
-demoSPE <- to.SpatialExperiment(norm_target_demoData, normData = "q_norm")
+demoSPE <- as.SpatialExperiment(norm_target_demoData, normData = "q_norm")
 
 demoSPE # overall data object
 
@@ -349,7 +349,7 @@ When coercing, we can add the coordinate columns and they will be appended to th
 
 ```{r SpatialExperiment coercion}
 
-nsclcSPE <- to.SpatialExperiment(nsclc, normData = "exprs_norm", coordinates = c("x", "y"))
+nsclcSPE <- as.SpatialExperiment(nsclc, normData = "exprs_norm", coordinates = c("x", "y"))
 
 nsclcSPE
 

@@ -12,7 +12,7 @@ Authors@R: c(person("Nicole", "Ortogero", email = "nortogero@nanostring.com", ro
 Depends: R (>= 3.6), Biobase, NanoStringNCTools, S4Vectors
 Imports: BiocGenerics, rjson, readxl, EnvStats, reshape2, methods, 
          utils, stats, data.table, lmerTest, dplyr, stringr,
-         grDevices, graphics, GGally, rlang, ggplot2
+         grDevices, graphics, GGally, rlang, ggplot2, SeuratObject
 Suggests: 
     rmarkdown,
     knitr,

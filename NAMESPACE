@@ -34,6 +34,7 @@ importFrom(parallel, stopCluster)
 importFrom(stringr, str_split)
 importFrom(BiocGenerics, design)
 importFrom(BiocGenerics, "design<-")
+importFrom(BiocGenerics, getObjectSlots)
 importFrom(BiocGenerics, updateObject)
 importFrom("grDevices", "col2rgb", "colors", "rgb")
 importFrom("graphics", "abline", "axis", "boxplot", "legend", "pairs",
@@ -43,6 +44,7 @@ importFrom("stats", "pt", "qt", "uniroot")
 importFrom(rlang, expr_text)
 importFrom(GGally, ggpairs)
 importFrom(GGally, wrap)
+importFrom(SeuratObject,as.Seurat)
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -69,6 +71,11 @@ exportMethods(NanoStringGeoMxSet, show,
               design, "design<-", signatureGroups,
               checkQCFlags, normalize, analyte)
 
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Export S3 methods
+
+S3method(as.Seurat,NanoStringGeoMxSet)
+S3method(as.SpatialExperiment,NanoStringGeoMxSet)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Export non-generic functions
@@ -99,9 +106,6 @@ export(plotConcordance)
 export(plotNormFactorConcordance)
 export(qcProteinSignalNames)
 export(updateGeoMxSet)
+export(as.Seurat)
+export(as.SpatialExperiment)
 
-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### Export S3 methods
-
-export(to.Seurat)
-export(to.SpatialExperiment)
