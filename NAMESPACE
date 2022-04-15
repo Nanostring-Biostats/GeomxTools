@@ -2,7 +2,8 @@
 ### Imports
 import(S4Vectors)
 import(Biobase)
-import(NanoStringNCTools)
+import(NanoStringExperiment)
+#import(NanoStringNCTools)
 import(ggplot2)
 importClassesFrom(S4Vectors, DataFrame)
 importClassesFrom(NanoStringNCTools, SignatureSet)

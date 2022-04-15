@@ -2,18 +2,18 @@ setClassUnion("formulaOrNULL", c("formula", "NULL"))
 
 # Class definition
 setClass("NanoStringGeoMxSet",
-         contains = "NanoStringRccSet",
-         slots = c(dimLabels = "character",
-                   signatures = "SignatureSet",
-                   design = "formulaOrNULL",
-                   featureType = "character",
+         contains = "NanoStringExperiment",
+         slots = c(featureType = "character",
                    analyte = "character"),
          prototype = prototype(
-             new("VersionedBiobase",
-                 versions = c(classVersion("ExpressionSet"),
-                              NanoStringGeoMxSet = "2.1.6")),
-             signatures = SignatureSet(),
-             design = NULL,
+             new("NanoStringExperiment"),
+             .__classVersion__ = 
+                 c(NanoStringExperiment = 
+                     paste(packageVersion("NanoStringExperiment"), 
+                         collapse="."),
+                   GeomxTools = 
+                     paste(packageVersion("GeomxTools"), 
+                         collapse=".")),
              featureType = "Probe",
              analyte = "RNA"))
 
