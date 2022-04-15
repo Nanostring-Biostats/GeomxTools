@@ -218,3 +218,4 @@ testthat::test_that("genes with less than 3 probes get no grubbs flag", {
   testthat::expect_true(all(apply(probeQC[fewProbes,grubbsCols], 2, sum)) == 0)
 })
 
+
