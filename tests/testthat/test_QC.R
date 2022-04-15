@@ -7,7 +7,8 @@ library(EnvStats)
 library(ggiraph)
 
 
-testDataRaw <- readRDS(file= system.file("extdata","DSP_NGS_Example_Data", "demoData.rds", package = "GeomxTools"))
+testDataRaw <- readRDS(file= system.file("extdata","DSP_NGS_Example_Data", 
+                                         "demoData.rds", package = "GeomxTools"))
 
 #Shift counts to one to mimic how DSPDA handles zero counts
 testData <- shiftCountsOne(testDataRaw, elt="exprs", useDALogic=TRUE) 
@@ -169,7 +170,8 @@ neg_set <- logtBase(neg_set, base=10L)
 test_results <- readRDS("testData/outliersGrubbsTest.RDS")
 
 test_that("copied grubbs test function works as expected",{
-    expect_identical(test_results, apply(neg_set, 2, grubbs.test, two.sided=TRUE))
+    expect_equal(test_results, apply(neg_set, 2, grubbs.test, two.sided=TRUE), 
+                 tolerance = 1e-12)
 })
 
 test_list <- lapply(test_results, function(x) {x$p.value < 0.01})
