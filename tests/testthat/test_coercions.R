@@ -18,18 +18,18 @@ noQC <- aggregateCounts(noQC)
 # Spec 1: The coercion of a GeoMxSet object shall warn users when coercing non-normalized data but will coerce when forced.:------
 # advised to only work on normalized data
 test_that("GeomxSet object has been normalized - Seurat",{
-    expect_error(to.Seurat(object = target_demoData, normData = "exprs"))
+    expect_error(as.Seurat(target_demoData, normData = "exprs"))
 })
 test_that("GeomxSet object has been normalized - SpatialExperiment",{
-    expect_error(to.SpatialExperiment(object = target_demoData, normData = "exprs"))
+    expect_error(as.SpatialExperiment(target_demoData, normData = "exprs"))
 })
 
 # but will work on non-normalized data
 test_that("if GeomxSet object hasn't been normalized, it can be forced to convert - Seurat",{
-    expect_visible(to.Seurat(object = target_demoData, normData = "exprs", forceRaw = TRUE))
+    expect_visible(as.Seurat(target_demoData, normData = "exprs", forceRaw = TRUE))
 })
 test_that("if GeomxSet object hasn't been normalized, it can be forced to convert - SpatialExperiment",{
-    expect_visible(to.SpatialExperiment(object = target_demoData, normData = "exprs", forceRaw = TRUE))
+    expect_visible(as.SpatialExperiment(target_demoData, normData = "exprs", forceRaw = TRUE))
 })
 
 target_demoData <- normalize(target_demoData, norm_method="quant")
@@ -39,39 +39,39 @@ noQC <- normalize(noQC, norm_method="quant")
 # Spec 1: The coercion of a GeoMxSet object shall only occur on target level data.:------
 # only works on target level data
 test_that("coercion is only run on target level data - Seurat",{
-    expect_error(to.Seurat(object = demoData, normData = "exprs_norm"))
+    expect_error(as.Seurat(demoData, normData = "exprs_norm"))
 })
 test_that("coercion is only run on target level data - SpatialExperiment",{
-    expect_error(to.SpatialExperiment(object = demoData, normData = "exprs_norm"))
+    expect_error(as.SpatialExperiment(demoData, normData = "exprs_norm"))
 })
 
 # Spec 3: The coercion of a GeoMxSet object shall only occur when a valid norm 
 #           data count matrix is provided by the user. :------
 # needs normData
 test_that("normData is required - Seurat",{
-    expect_error(to.Seurat(object = target_demoData))
+    expect_error(as.Seurat(target_demoData))
 })
 test_that("normData is required - SpatialExperiment",{
-    expect_error(to.SpatialExperiment(object = target_demoData))
+    expect_error(as.SpatialExperiment(target_demoData))
 })
 
 
 # normData must be valid
 test_that("normData is a valid assayData name - Seurat",{
-    expect_error(to.Seurat(object = target_demoData, normData = "invalid"))
+    expect_error(as.Seurat(target_demoData, normData = "invalid"))
 })
 test_that("normData is a valid assayData name - SpatialExperiment",{
-    expect_error(to.SpatialExperiment(object = target_demoData, normData = "invalid"))
+    expect_error(as.SpatialExperiment(target_demoData, normData = "invalid"))
 })
 
 library(Seurat)
 library(SpatialExperiment)
 
-seurat_object <- to.Seurat(object = target_demoData, normData = "exprs_norm", ident = "cell_line")
-noQC_seurat_object <- to.Seurat(object = noQC, normData = "exprs_norm", ident = "cell_line")
+seurat_object <- as.Seurat(target_demoData, normData = "exprs_norm", ident = "cell_line")
+noQC_seurat_object <- as.Seurat(noQC, normData = "exprs_norm", ident = "cell_line")
 
-spe_object <- to.SpatialExperiment(object = target_demoData, normData = "exprs_norm")
-noQC_spe_object <- to.SpatialExperiment(object = noQC, normData = "exprs_norm")
+spe_object <- as.SpatialExperiment(target_demoData, normData = "exprs_norm")
+noQC_spe_object <- as.SpatialExperiment(noQC, normData = "exprs_norm")
 
 
 # Spec 4: The coercion of a GeoMxSet object shall copy the wanted data from the 
@@ -191,10 +191,10 @@ test_that("feature data is in the correct location - SpatialExperiment", {
 pData(target_demoData)$Xcoord <- runif(nrow(sData(target_demoData)), 0, 100)
 pData(target_demoData)$Ycoord <- runif(nrow(sData(target_demoData)), 0, 100)
 
-seurat_object <- to.Seurat(object = target_demoData, normData = "exprs_norm", 
+seurat_object <- as.Seurat(target_demoData, normData = "exprs_norm", 
                            ident = "cell_line", coordinates = c("Xcoord", 
                                                                 "Ycoord"))
-spe_object <- to.SpatialExperiment(object = target_demoData, 
+spe_object <- as.SpatialExperiment(target_demoData, 
                                    normData = "exprs_norm", 
                                    coordinates = c("Xcoord", "Ycoord"))
 
@@ -213,23 +213,23 @@ test_that("coordinates, when given, are in the correct location - SpatialExperim
 
 # errors if coordinates columns are not valid
 test_that("invalid coordinates give an error - Seurat", {
-    expect_error(to.Seurat(object = target_demoData, normData = "exprs_norm", 
+    expect_error(as.Seurat(target_demoData, normData = "exprs_norm", 
                            ident = "cell_line", coordinates = c("Invalid", 
                                                                 "Ycoord")))
-    expect_error(to.Seurat(object = target_demoData, normData = "exprs_norm", 
+    expect_error(as.Seurat(target_demoData, normData = "exprs_norm", 
                            ident = "cell_line", coordinates = c("Xcoord", 
                                                                 "Invalid")))
-    expect_error(to.Seurat(object = target_demoData, normData = "exprs_norm", 
+    expect_error(as.Seurat(target_demoData, normData = "exprs_norm", 
                            ident = "cell_line", coordinates = c("Ycoord")))
 })
 test_that("invalid coordinates give an error - SpatialExperiment", {
-    expect_error(to.SpatialExperiment(object = target_demoData, 
+    expect_error(as.SpatialExperiment(target_demoData, 
                                       normData = "exprs_norm", 
                                       coordinates = c("Invalid", "Ycoord")))
-    expect_error(to.SpatialExperiment(object = target_demoData, 
+    expect_error(as.SpatialExperiment(target_demoData, 
                                       normData = "exprs_norm", 
                                       coordinates = c("Xcoord", "Invalid")))
-    expect_error(to.SpatialExperiment(object = target_demoData, 
+    expect_error(as.SpatialExperiment(target_demoData, 
                                       normData = "exprs_norm", 
                                       coordinates = c("Ycoord")))
 })
