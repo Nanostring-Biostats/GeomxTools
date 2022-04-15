@@ -1,3 +1,5 @@
+#GeomxTools 2.1.7
+* coercions to Seurat and SpatialExperiment are S3 coercions 
 
 # GeomxTools 2.1.6
 * added updateObject capability 

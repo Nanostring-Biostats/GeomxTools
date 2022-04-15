@@ -298,7 +298,8 @@ updateGeoMxSet <- function(object){
   if(!"analyte" %in% names(getObjectSlots(object))){
     object@analyte <- "RNA"
     
-    object@.__classVersion__$NanoStringGeoMxSet <- "2.1.6"
+    object@.__classVersion__$NanoStringGeoMxSet <- 
+        paste(packageVersion("GeomxTools"), collapse=".")
   }else{
     warning("GeoMxSet object up to date, no update necessary")
   }
