@@ -1,3 +1,7 @@
+
+#' @name as.Seurat
+NULL
+
 #' Convert GeoMxSet Object to SeuratObject
 #' 
 #' @inheritParams SeuratObject::as.Seurat 
