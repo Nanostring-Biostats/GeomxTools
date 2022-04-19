@@ -39,7 +39,7 @@ datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package = "GeomxTools")
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 
-target_demoData <- aggregateCounts(demoData)
+target_demoData <- aggregateCounts(demoData[1:1000,1:10])
 
 target_demoData <- normalize(target_demoData, "quant")
 

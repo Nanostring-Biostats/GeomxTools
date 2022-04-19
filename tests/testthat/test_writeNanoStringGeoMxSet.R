@@ -11,6 +11,8 @@ SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 demoData <- readRDS(file= system.file("extdata", "DSP_NGS_Example_Data", 
                                       "demoData.rds", package = "GeomxTools"))
 
+demoData <- demoData[,1:10]
+DCCFiles <- DCCFiles[basename(DCCFiles) %in% colnames(demoData)]
 
 writeDir <-  "writeTest/"
 if(dir.exists(writeDir)){

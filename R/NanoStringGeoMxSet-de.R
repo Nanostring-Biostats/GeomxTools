@@ -19,10 +19,9 @@
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' target_demoData <- aggregateCounts(demoData)
 #' target_demoData <- normalize(target_demoData, norm_method="quant")
-#' target_demoData <- target_demoData[1:100, ]
-#' pData(target_demoData)[["slide"]] <- 
+#' pData(target_demoData)[["slide"]] <-
 #'     factor(pData(target_demoData)[["slide name"]])
-#' protocolData(target_demoData)[["pool_rep"]] <- 
+#' protocolData(target_demoData)[["pool_rep"]] <-
 #'     factor(protocolData(target_demoData)[["pool_rep"]])
 #' mixedOutmc <- mixedModelDE(target_demoData,
 #'                            elt = "exprs_norm",

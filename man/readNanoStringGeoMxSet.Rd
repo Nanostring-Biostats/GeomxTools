@@ -60,7 +60,7 @@ sampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
 dccFileColumn <- "Sample_ID"
 
-dccSet <- readNanoStringGeoMxSet(dccFiles=dccFiles,
+dccSet <- readNanoStringGeoMxSet(dccFiles=dccFiles[1:10],
                                pkcFiles=pkc,
                                phenoDataFile=sampleAnnotationFile,
                                phenoDataSheet="CW005",

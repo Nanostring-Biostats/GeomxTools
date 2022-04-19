@@ -25,7 +25,7 @@ Add segment QC flags to protocol data
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-setSegmentQCFlags(demoData, 
+setSegmentQCFlags(demoData[,1:10], 
                   qcCutoffs=list(minSegmentReads=1000, 
                                  percentAligned=80, 
                                  percentSaturation=50,

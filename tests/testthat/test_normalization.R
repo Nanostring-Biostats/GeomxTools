@@ -5,7 +5,7 @@ library(EnvStats)
 
 # load data
 demoData <- readRDS(file= system.file("extdata","DSP_NGS_Example_Data", "demoData.rds", package = "GeomxTools"))
-demoData <- shiftCountsOne(demoData)
+demoData <- shiftCountsOne(demoData[,1:10])
 demoData <- normalize(demoData ,  norm_method="quant",
                         desiredQuantile = .9, toElt = "q_norm")  ## test with user parameter
 demoData <- normalize(demoData, norm_method="quant") ## test defaults quantile = .75

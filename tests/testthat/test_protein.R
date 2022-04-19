@@ -9,7 +9,7 @@ PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
 SampleAnnotationFile <- file.path(datadir, "Annotation.xlsx")
 
 
-RNAData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+RNAData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles[1:10],
                                                    pkcFiles = PKCFiles,
                                                    phenoDataFile = SampleAnnotationFile,
                                                    phenoDataSheet = "Annotations",
@@ -22,7 +22,7 @@ RNAData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
                                                    phenoDataColPrefix = "",
                                                    experimentDataColNames = NULL))
 
-proteinData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
+proteinData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles[1:10],
                                                        pkcFiles = PKCFiles,
                                                        phenoDataFile = SampleAnnotationFile,
                                                        phenoDataSheet = "Annotations",

@@ -4,6 +4,8 @@ library(testthat)
 
 # load data
 demoData <- readRDS(file= system.file("extdata","DSP_NGS_Example_Data", "demoData.rds", package = "GeomxTools"))
+demoData <- demoData[,1:10]
+
 demoData <- shiftCountsOne(demoData)
 
 noQC <- demoData

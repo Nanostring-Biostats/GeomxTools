@@ -37,5 +37,5 @@ datadir <- system.file("extdata", "DSP_NGS_Example_Data",
   package = "GeomxTools"
 )
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-norm_object <- normalize(demoData)
+norm_object <- normalize(demoData[1:1000,1:10])
 }
