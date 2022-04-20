@@ -1,3 +1,6 @@
+#GeomxTools 2.1.9
+* documentation updates
+
 #GeomxTools 2.1.8
 * subset objects in tests & examples to decrease time
 
