@@ -1,3 +1,6 @@
+#GeomxTools 2.99.1
+* documentation updates
+
 #GeomxTools 2.1.9
 * documentation updates
 
