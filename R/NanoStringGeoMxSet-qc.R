@@ -19,7 +19,7 @@ DEFAULTS <- list(minSegmentReads=1000, percentTrimmed=80, percentStitched=80,
 #' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
 #'                        package="GeomxTools")
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-#' setSegmentQCFlags(demoData, 
+#' setSegmentQCFlags(demoData[,1:10], 
 #'                   qcCutoffs=list(minSegmentReads=1000, 
 #'                                  percentAligned=80, 
 #'                                  percentSaturation=50,
@@ -58,7 +58,7 @@ setSegmentQCFlags <- function(object, qcCutoffs=DEFAULTS) {
 #' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
 #'                        package="GeomxTools")
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-#' setSeqQCFlags(demoData, 
+#' setSeqQCFlags(demoData[,1:10], 
 #'                  qcCutoffs=list(minSegmentReads=1000, 
 #'                                 percentAligned=80, 
 #'                                 percentSaturation=50))
@@ -146,7 +146,7 @@ setSaturationFlags <- function(object, cutoff=DEFAULTS[["percentSaturation"]]) {
 #' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
 #'                        package="GeomxTools")
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-#' setBackgroundQCFlags(demoData, 
+#' setBackgroundQCFlags(demoData[,1:10], 
 #'                  qcCutoffs=list(minNegativeCount=10, 
 #'                                 maxNTCCount=60))
 #' 
@@ -202,7 +202,7 @@ setHighNTCFlags <- function(object, cutoff=DEFAULTS[["maxNTCCount"]]) {
 #' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
 #'                        package="GeomxTools")
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-#' setGeoMxQCFlags(demoData, 
+#' setGeoMxQCFlags(demoData[,1:10], 
 #'                  qcCutoffs=list(minNuclei=16000, 
 #'                                 minArea=20))
 #' 
@@ -259,7 +259,7 @@ setAreaFlags <- function(object, cutoff=DEFAULTS[["minArea"]]) {
 #'                        package="GeomxTools")
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' demoData <- shiftCountsOne(demoData, elt="exprs", useDALogic=TRUE)
-#' setBioProbeQCFlags(demoData, 
+#' setBioProbeQCFlags(demoData[,1:10], 
 #'                    qcCutoffs=list(minProbeRatio=0.1,
 #'                                   percentFailGrubbs=20),
 #'                    removeLocalOutliers=TRUE)
@@ -534,7 +534,7 @@ appendFeatureFlags <- function(object, currFlags) {
 #' datadir <- system.file("extdata", "DSP_NGS_Example_Data",
 #'                        package="GeomxTools")
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-#' setQCFlags(demoData)
+#' setQCFlags(demoData[,1:10])
 #' 
 #' @export
 setMethod("setQCFlags",

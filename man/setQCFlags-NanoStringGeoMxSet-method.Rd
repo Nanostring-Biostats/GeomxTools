@@ -26,6 +26,6 @@ Add QC flags to feature and protocol data simultaneously
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-setQCFlags(demoData)
+setQCFlags(demoData[,1:10])
 
 }

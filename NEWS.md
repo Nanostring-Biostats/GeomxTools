@@ -1,3 +1,11 @@
+#GeomxTools 2.1.9
+* documentation updates
+
+#GeomxTools 2.1.8
+* subset objects in tests & examples to decrease time
+
+#GeomxTools 2.1.7
+* coercions to Seurat and SpatialExperiment are S3 coercions 
 
 # GeomxTools 2.1.6
 * added updateObject capability 

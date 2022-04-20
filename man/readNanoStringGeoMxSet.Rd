@@ -23,7 +23,7 @@ readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile,
   \item{pkcFiles}{A character vector representing the path to the
     corresponding PKC file.}
   \item{phenoDataFile}{An optional character string representing the path
-    to the corresponding phenotypic excel data file.}
+    to the corresponding phenotypic excel data file. It is recommended to use the Lab Worksheet in the exact order samples are provided in.}
   \item{phenoDataSheet}{An optional character string representing the excel 
   sheet name containing the phenotypic data.}
   \item{phenoDataDccColName}{Character string identifying unique sample identifier 
@@ -60,7 +60,7 @@ sampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
 dccFileColumn <- "Sample_ID"
 
-dccSet <- readNanoStringGeoMxSet(dccFiles=dccFiles,
+dccSet <- readNanoStringGeoMxSet(dccFiles=dccFiles[1:10],
                                pkcFiles=pkc,
                                phenoDataFile=sampleAnnotationFile,
                                phenoDataSheet="CW005",

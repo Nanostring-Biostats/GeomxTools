@@ -21,6 +21,6 @@ Aggregate probe counts to target level for feature data
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-targetGeoMxSet <- aggregateCounts(demoData)
+targetGeoMxSet <- aggregateCounts(demoData[,1:10])
 
 }

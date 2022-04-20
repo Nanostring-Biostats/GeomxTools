@@ -35,7 +35,7 @@ datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 demoData <- shiftCountsOne(demoData, elt="exprs", useDALogic=TRUE)
-setBioProbeQCFlags(demoData, 
+setBioProbeQCFlags(demoData[,1:10], 
                    qcCutoffs=list(minProbeRatio=0.1,
                                   percentFailGrubbs=20),
                    removeLocalOutliers=TRUE)
