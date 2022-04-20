@@ -31,7 +31,7 @@ readDccFile(file)
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
 dccFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)
-dccData <- sapply(dccFiles, readDccFile, simplify = FALSE)
+dccData <- sapply(dccFiles[1:10], readDccFile, simplify = FALSE)
 }
 
 \keyword{file}

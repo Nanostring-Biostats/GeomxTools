@@ -28,7 +28,7 @@ Add GeoMx segment QC flags to NanoStringGeoMxSet object protocol data
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
 demoData <- readRDS(file.path(datadir, "/demoData.rds"))
-setGeoMxQCFlags(demoData, 
+setGeoMxQCFlags(demoData[,1:10], 
                  qcCutoffs=list(minNuclei=16000, 
                                 minArea=20))
 

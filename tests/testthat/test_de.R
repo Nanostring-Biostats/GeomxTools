@@ -47,7 +47,7 @@ if (Sys.info()['sysname'] != "Windows") {
                                elt = "exprs_norm",
                                modelFormula = ~ pool_rep +  (1 | slide),
                                groupVar = "pool_rep",
-                               nCores = 12,
+                               nCores = 2,
                                multiCore = TRUE,
                                pAdjust = NULL
     )
@@ -57,7 +57,7 @@ if (Sys.info()['sysname'] != "Windows") {
                                elt = "exprs_norm",
                                modelFormula = ~ pool_rep +  (1 | slide),
                                groupVar = "pool_rep",
-                               nCores = 12,
+                               nCores = 2,
                                multiCore = FALSE,
                                pAdjust = NULL
     )
@@ -78,7 +78,7 @@ if (Sys.info()['sysname'] != "Windows") {
                                elt = "exprs_norm",
                                modelFormula = NULL,
                                groupVar = "pool_rep",
-                               nCores = 12,
+                               nCores = 2,
                                multiCore = TRUE,
                                pAdjust = NULL
     )
@@ -88,7 +88,7 @@ if (Sys.info()['sysname'] != "Windows") {
                               elt = "exprs_norm",
                               modelFormula = NULL,
                               groupVar = "pool_rep",
-                              nCores = 12,
+                              nCores = 2,
                               multiCore = FALSE,
                               pAdjust = NULL
     )
@@ -105,7 +105,7 @@ if (Sys.info()['sysname'] != "Windows") {
                                   elt = "exprs_norm",
                                   modelFormula = ~ cell_line +  (1 | fakevar) ,
                                   groupVar = "cell_line",
-                                  nCores = 12,
+                                  nCores = 2,
                                   multiCore = FALSE,
                                   pAdjust = NULL)
       )
@@ -120,7 +120,7 @@ if (Sys.info()['sysname'] != "Windows") {
                                   elt = "exprs_norm",
                                   modelFormula = ~ cell_line +  (1 | slide) ,
                                   groupVar = "segment",
-                                  nCores = 12,
+                                  nCores = 2,
                                   multiCore = FALSE,
                                   pAdjust = NULL)
       )

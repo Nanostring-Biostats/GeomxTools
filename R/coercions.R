@@ -1,3 +1,7 @@
+
+#' @name as.Seurat
+NULL
+
 #' Convert GeoMxSet Object to SeuratObject
 #' 
 #' @inheritParams SeuratObject::as.Seurat 
@@ -13,11 +17,11 @@
 #' datadir <- system.file("extdata", "DSP_NGS_Example_Data", package = "GeomxTools")
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' 
-#' target_demoData <- aggregateCounts(demoData)
+#' target_demoData <- aggregateCounts(demoData[1:1000,1:10])
 #' 
 #' target_demoData <- normalize(target_demoData, "quant")
 #' 
-#' seurat_demoData <- as.Seurat(target_demoData, ident = "cell_line", 
+#' seurat_demoData <- as.Seurat(target_demoData, ident = "cell_line",
 #'                              normData = "exprs_norm", forceRaw = FALSE)
 #' 
 #' @importFrom Seurat CreateSeuratObject 
@@ -171,7 +175,7 @@ as.SpatialExperiment <- function(x, ...) {
 #'                        package = "GeomxTools")
 #' demoData <- readRDS(file.path(datadir, "/demoData.rds"))
 #' 
-#' target_demoData <- aggregateCounts(demoData)
+#' target_demoData <- aggregateCounts(demoData[1:1000,1:10])
 #' 
 #' target_demoData <- normalize(target_demoData, "quant")
 #' 

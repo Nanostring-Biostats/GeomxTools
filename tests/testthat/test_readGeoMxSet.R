@@ -10,7 +10,7 @@ library(stringr)
 
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
-DCCFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)
+DCCFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)[1:10]
 PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
 SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
@@ -115,7 +115,7 @@ testthat::test_that("test that the counts of testData@assayData$exprs match thos
   expect_true(correct)
 })
 
-n_aois <- 15
+n_aois <- 6
 
 testData <-
   suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
@@ -183,7 +183,7 @@ testthat::test_that("PKCs are removed if they aren't in the config", {
   expect_identical(fData(testData), fData(testDataWithExtraConfig))
 })
 
-DCCFiles <- unzip(zipfile = file.path(proteinDatadir,  "/DCCs.zip"))
+DCCFiles <- unzip(zipfile = file.path(proteinDatadir,  "/DCCs.zip"))[1:10]
 annots <- file.path(proteinDatadir, "Annotation.xlsx")
 
 RNAData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
