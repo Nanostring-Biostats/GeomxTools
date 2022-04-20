@@ -35,8 +35,9 @@ devtools::install_github("Nanostring-Biostats/GeomxTools",
 ```
 
 ## Documentation
-
-To learn how to start using GeoMxTools, view documentation for the
+To get started, it is recommended to begin with the example workflow:    
+[GeoMx Workflow](https://www.bioconductor.org/packages/release/workflows/vignettes/GeoMxWorkflows/inst/doc/GeomxTools_RNA-NGS_Analysis.html)
+To learn how to start developing with GeoMxTools, view documentation for the
 version of this package installed in your system, start R and enter:
 
 ``` r
