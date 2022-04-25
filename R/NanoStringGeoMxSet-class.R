@@ -1,21 +1,19 @@
-setClassUnion("formulaOrNULL", c("formula", "NULL"))
-
 # Class definition
-setClass("NanoStringGeoMxSet",
-         contains = "NanoStringExperiment",
-         slots = c(featureType = "character",
-                   analyte = "character"),
-         prototype = prototype(
-             new("NanoStringExperiment"),
-             .__classVersion__ = 
-                 c(NanoStringExperiment = 
-                     paste(packageVersion("NanoStringExperiment"), 
-                         collapse="."),
-                   GeomxTools = 
-                     paste(packageVersion("GeomxTools"), 
-                         collapse=".")),
-             featureType = "Probe",
-             analyte = "RNA"))
+.NanoStringGeoMxSet <- setClass("NanoStringGeoMxSet",
+    contains = "NanoStringExperiment",
+    slots = c(featureType = "character",
+        analyte = "character"),
+    prototype = prototype(
+        new("NanoStringExperiment"),
+            .__classVersion__ = 
+                c(NanoStringExperiment = 
+                    paste(packageVersion("NanoStringExperiment"), 
+                        collapse="."),
+                GeomxTools = 
+                    paste(packageVersion("GeomxTools"), 
+                        collapse=".")),
+            featureType = "Probe",
+            analyte = "RNA"))
 
 # Show method
 setMethod("show", signature = "NanoStringGeoMxSet",
@@ -29,17 +27,10 @@ function(object) {
     cat("\n")
 })
 
-# for when not inheriting from NCtools
-# setMethod("updateObject", signature = "NanoStringGeoMxSet",
-#     function(object){
-#         if(!"analyte" %in% names(getObjectSlots(object))){
-#           object@analyte <- "RNA"
-#           
-#           object@.__classVersion__$NanoStringGeoMxSet <- "2.1.6"
-#         }
-# 
-#         return(object)
-#     })
+setMethod("updateObject", signature = "NanoStringGeoMxSet",
+    function(object){
+        return(NanoStringGeoMxSet(object))
+    })
 
 # Constructors
 setGeneric("NanoStringGeoMxSet",
@@ -54,9 +45,38 @@ function(assayData,
          design = NULL,
          featureType = "Probe",
          analyte = "RNA",
-         ...)
-    standardGeneric("NanoStringGeoMxSet"),
+         ...){
+    standardGeneric("NanoStringGeoMxSet")},
 signature = "assayData")
+
+setMethod("NanoStringGeoMxSet", "matrix",
+function(assayData,
+         phenoData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
+         featureData = Biobase::annotatedDataFrameFrom(assayData, byrow = TRUE),
+         experimentData = Biobase::MIAME(),
+         annotation = character(),
+         protocolData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
+         dimLabels = c("TargetName", "SampleID"),
+         signatures = SignatureSet(),
+         design = NULL,
+         featureType = "Probe",
+         analyte = "RNA",
+         ...)
+{
+    nse <- NanoStringExperiment(
+        assayData = assayData,
+        phenoData = phenoData,
+        featureData = featureData,
+        experimentData = experimentData,
+        annotation = annotation,
+        protocolData = protocolData,
+        dimLabels = dimLabels,
+        signatures = signatures,
+        design = design, ...)
+    .NanoStringGeoMxSet(nse,
+        featureType = featureType,
+        analyte = analyte)
+})
 
 setMethod("NanoStringGeoMxSet", "missing",
 function(assayData,
@@ -72,13 +92,19 @@ function(assayData,
          analyte = "RNA",
          ...)
 {
-  assayData <- assayDataNew(exprs = matrix(integer(), nrow = 0L, ncol = 0L))
-  methods::callGeneric(assayData = assayData, phenoData = phenoData,
-              featureData = featureData, experimentData = experimentData,
-              annotation = annotation, protocolData = protocolData,
-              dimLabels = dimLabels, signatures = signatures, design = design,
-              featureType = featureType, analyte = analyte,
-              ...)
+    methods::callGeneric(
+        assayData = matrix(integer(), nrow = 0L, ncol = 0L), 
+        phenoData = phenoData,
+        featureData = featureData,
+        experimentData = experimentData,
+        annotation = annotation,
+        protocolData = protocolData,
+        dimLabels = dimLabels,
+        signatures = signatures,
+        design = design,
+        featureType = featureType,
+        analyte = analyte,
+        ...)
 })
 
 setMethod("NanoStringGeoMxSet", "environment",
@@ -95,51 +121,24 @@ function(assayData,
          analyte = "RNA",
          ...)
 {
-  new2("NanoStringGeoMxSet",
-       assayData = assayData,
-       phenoData = phenoData,
-       featureData = featureData,
-       experimentData = experimentData,
-       annotation = annotation,
-       protocolData = protocolData,
-       dimLabels = dimLabels,
-       signatures = signatures,
-       design = design,
-       featureType = featureType,
-       analyte = analyte,
-       ...)
-})
-
-setMethod("NanoStringGeoMxSet", "matrix",
-function(assayData,
-         phenoData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
-         featureData = Biobase::annotatedDataFrameFrom(assayData, byrow = TRUE),
-         experimentData = Biobase::MIAME(),
-         annotation = character(),
-         protocolData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
-         dimLabels = c("TargetName", "SampleID"),
-         signatures = SignatureSet(),
-         design = NULL,
-         featureType = "Probe",
-         analyte = "RNA",
-         ...)
-{
-  assayData <- assayDataNew(exprs = assayData)
-  methods::callGeneric(assayData = assayData, phenoData = phenoData,
-              featureData = featureData, experimentData = experimentData,
-              annotation = annotation, protocolData = protocolData,
-              dimLabels = dimLabels, signatures = signatures, design = design,
-              featureType = featureType, analyte = analyte,
-              ...)
+    nse <- NanoStringExperiment(
+        assayData = assayData,
+        phenoData = phenoData,
+        featureData = featureData,
+        experimentData = experimentData,
+        annotation = annotation,
+        protocolData = protocolData,
+        dimLabels = dimLabels,
+        signatures = signatures,
+        design = design,
+        ...)
+    .NanoStringGeoMxSet(nse,
+        featureType = featureType,
+        analyte = analyte)
 })
 
 setMethod("NanoStringGeoMxSet", "ExpressionSet",
 function(assayData,
-         phenoData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
-         featureData = Biobase::annotatedDataFrameFrom(assayData, byrow = TRUE),
-         experimentData = Biobase::MIAME(),
-         annotation = character(),
-         protocolData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
          dimLabels = c("TargetName", "SampleID"),
          signatures = SignatureSet(),
          design = NULL,
@@ -147,21 +146,30 @@ function(assayData,
          analyte = "RNA",
          ...)
 {
-  methods::callGeneric(assayData = copyEnv(assayData(assayData)),
-              phenoData = Biobase::phenoData(assayData),
-              featureData = Biobase::featureData(assayData),
-              experimentData = Biobase::experimentData(assayData),
-              annotation = Biobase::annotation(assayData),
-              protocolData = Biobase::protocolData(assayData),
-              dimLabels = dimLabels,
-              signatures = signatures,
-              design = design,
-              featureType = featureType,
-              analyte = analyte, 
-              ...)
+    se <- SummarizedExperiment::makeSummarizedExperimentFromExpressionSet(
+        assayData)
+    methods::callGeneric(
+        assayData = se,
+        dimLabels = dimLabels,
+        signatures = signatures,
+        design = design,
+        featureType = featureType,
+        analyte = analyte,
+        ...)
 })
 
-setMethod("NanoStringGeoMxSet", "NanoStringGeoMxSet",
+setMethod("NanoStringGeoMxSet", "NanoStringExperiment",
+function(assayData,
+         featureType = "Probe",
+         analyte = "RNA",
+         ...)
+{
+    .NanoStringGeoMxSet(assayData,
+        featureType = featureType,
+        analyte = analyte)
+})
+
+setMethod("NanoStringGeoMxSet", "SummarizedExperiment",
 function(assayData,
          phenoData = Biobase::annotatedDataFrameFrom(assayData, byrow = FALSE),
          featureData = Biobase::annotatedDataFrameFrom(assayData, byrow = TRUE),
@@ -175,20 +183,56 @@ function(assayData,
          analyte = "RNA",
          ...)
 {
-  methods::callGeneric(assayData = copyEnv(assayData(assayData)),
-              phenoData = Biobase::phenoData(assayData),
-              featureData = Biobase::featureData(assayData),
-              experimentData = Biobase::experimentData(assayData),
-              annotation = Biobase::annotation(assayData),
-              protocolData = Biobase::protocolData(assayData),
-              dimLabels = dimLabels(assayData),
-              signatures = signatures(assayData),
-              design = design(assayData),
-              featureType = featureType,
-              analyte = analyte,
-              ...)
+    nse <- NanoStringExperiment(
+        assayData = assayData,
+        phenoData = phenoData,
+        featureData = featureData,
+        experimentData = experimentData,
+        annotation = annotation,
+        protocolData = protocolData,
+        dimLabels = dimLabels,
+        signatures = signatures,
+        design = design,
+        ...)
+    .NanoStringGeoMxSet(nse,
+        featureType = featureType,
+        analyte = analyte)
 })
 
-# Coersion
+# Copy constructor
+setMethod("NanoStringGeoMxSet", "NanoStringGeoMxSet",
+function(assayData,
+         featureType = "Probe",
+         analyte = "RNA",
+         ...)
+{
+    if (featureType %in% slotNames(object)) {
+        featureType <- featureType(object)
+    }
+    if (analyte %in% slotNames(object)) {
+        analyte <- analyte(object)
+    }
+    methods::callGeneric(
+        assayData = assayData(assayData),
+        phenoData = Biobase::phenoData(assayData),
+        featureData = Biobase::featureData(assayData),
+        experimentData = Biobase::experimentData(assayData),
+        annotation = Biobase::annotation(assayData),
+        protocolData = Biobase::protocolData(assayData),
+        dimLabels = dimLabels(assayData),
+        signatures = signatures(assayData),
+        design = design(assayData),
+        featureType = featureType,
+        analyte = analyte,
+        ...)
+})
+
+# Coercion
 setAs("ExpressionSet", "NanoStringGeoMxSet",
-      function(from) NanoStringGeoMxSet(from))
+    function(from) NanoStringGeoMxSet(from))
+
+setAs("SummarizedExperiment", "NanoStringGeoMxSet",
+    function(from) NanoStringGeoMxSet(from))
+
+setAs("NanoStringExperiment", "NanoStringGeoMxSet",
+    function(from) NanoStringGeoMxSet(from))
