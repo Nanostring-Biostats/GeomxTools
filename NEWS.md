@@ -1,3 +1,10 @@
+# GeomxTools 3.0.1
+* Documentation correction on release (equivalent to 3.1.1 on devel)
+
+# GeomxTools 3.0.0
+* No changes from 2.99.2
+* Bioconductor release 3.15 version
+
 # GeomxTools 2.99.2
 * documentation updates
 
