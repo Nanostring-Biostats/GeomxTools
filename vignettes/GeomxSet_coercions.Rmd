@@ -388,7 +388,7 @@ wrap_plots(tumor, TME)
 ```
 
 # Image Overlays
-The free-handed nature of Region of Interest (ROI) selection in a GeoMx experiment makes visualization on top of the image difficult in packages designed for different data. We created [SpatialOmicsOverlay](https://bioconductor.org/packages/release/bioc/html/SpatialOmicsOverlay.html) specifically to visualize and analyze these types of ROIs in a GeoMx experiment and the immunofluorescent-guided segmentation process.
+The free-handed nature of Region of Interest (ROI) selection in a GeoMx experiment makes visualization on top of the image difficult in packages designed for different data. We created [SpatialOmicsOverlay](https://github.com/Nanostring-Biostats/SpatialOmicsOverlay) specifically to visualize and analyze these types of ROIs in a GeoMx experiment and the immunofluorescent-guided segmentation process.
 
 ```{r}
 sessionInfo()
