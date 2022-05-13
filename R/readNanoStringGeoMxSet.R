@@ -31,7 +31,7 @@ function(dccFiles,
   if (is.null(phenoDataFile)) {
     stop("Please specify an input for phenoDataFile.")
   } else {
-    pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet, ...)
+    pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet)
     pheno <- data.frame(pheno, stringsAsFactors = FALSE, check.names = FALSE)
     j <- colnames(pheno)[colnames(pheno) == phenoDataDccColName]
     if (length(j) == 0L){
@@ -112,6 +112,14 @@ function(dccFiles,
       colnames(pheno) <- paste0(phenoDataColPrefix, colnames(pheno))
       protocolDataColNames <- paste0(phenoDataColPrefix, protocolDataColNames)
     }
+    
+    if("area" %in% colnames(pheno)){
+        pheno[["area"]] <- as.numeric(pheno[["area"]])
+    }
+    if("nuclei" %in% colnames(pheno)){
+        pheno[["nuclei"]] <- as.numeric(pheno[["nuclei"]])
+    }
+    
     pheno <- Biobase::AnnotatedDataFrame(pheno,
                                 dimLabels = c("sampleNames", "sampleColumns"))
   }
@@ -184,6 +192,18 @@ function(dccFiles,
   probeAssay <- reshape2::dcast(probeAssay, RTS_ID + Module ~ Sample_ID,
       value.var="Count", fill=0)
   rownames(probeAssay) <- probeAssay[, "RTS_ID"]
+  
+  if(!all(names(data) %in% names(probeAssay))){
+    missingAnalyteDCC <- names(data)[which(!names(data) %in% names(probeAssay))]
+    warning("The following DCC files had no counts and will be excluded from the GeoMxSet object: ",
+            paste0(missingAnalyteDCC, sep=", "))
+    
+    data <- data[which(names(data) %in% names(probeAssay))]
+    
+    pheno <- pheno[which(names(data) %in% 
+                           sampleNames(pheno)),]
+  }
+  
   assay <- as.matrix(probeAssay[, names(data)])
 
   # Create featureData
