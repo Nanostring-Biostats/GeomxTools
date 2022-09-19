@@ -120,7 +120,8 @@ assayDataElement(object = target_demoData, elt = "log_q") <-
   assayDataApply(target_demoData, 2, FUN = log, base = 2, elt = "q_norm")
 ```
 
-```{r include=FALSE}
+### Heatmap Showing Unsupervised Hierarchical Clustering of Genes with High CVs
+```{r echo=FALSE}
 # run LMM:
 # formula follows conventions defined by the lme4 package
 results <- c()
@@ -344,24 +345,45 @@ source("MLFunctions.R")
 ### Available Model Types
 #### 1. Naive Bayes (nb)
 The Naive Bayes Classifier is a probabilistic classifier that assumes independence between features.
-Pros:
-Cons:
+Parameters: 
+1. Laplace Correction (laplace)
+2. Distribution Type (usekernel)
+3. Bandwidth Adjustment (adjust)
+
 #### 2. K-Nearest Neighbor (knn)
 The K-Nearest Neighbor Classification Model...
-Pros:
-Cons:
+Parameters: 
+1. Neighbors (k)
+
 #### 3. Extreme Gradient Boosting (XGBoost) (xgb)
 The XGBoost Classification Model...
-Pros:
-Cons:
+Parameters: 
+1. Boosting Iterations (nrounds)
+2. Max Tree Depth (max_depth)
+3. Shrinkage (eta)
+4. Minimum Loss Reduction (gamma)
+5. Subsample Percentage (subsample)
+6. Subsample Ratio of Columns (colsample_bytree)
+7. Fraction of Trees Dropped (rate_drop)
+8. Probability of Skipping Drop-out (skip-drop)
+9. Minimum Sum of Instance Weight (min_child_weight)
+
 #### 4. Random Forest (rf)
 The Random Forest Classification Model...
-Pros:
-Cons:
+Parameters: 
+1. Starting Value of Number of Predictors Randomly Sampled at Each Split (mtryStart)
+2. Number of Trees Used at The Tuning Step (ntreeTry)
+3. Number By Which mtry is Changed at Every Iteration (stepFactor)
+4. Required Improvement In OOB Error for Search to Continue (improve)
+5. Print Progress of Search (plot)
+6. Run Forest Using Optimal mtry Found (doBest)
+
 #### 5. Support Vector Machine (svm)
 The Support Vector Machine Classification Model...
-Pros:
-Cons:
+Parameters: 
+1. Cost (cost)
+2. Loss Function (Loss)
+3. Class Weight (weight)
 
 
 ## Naive Bayes
