@@ -6,7 +6,6 @@ output:
     theme: united
     df_print: kable
   pdf_document: default
-date: '`r Sys.Date()`'
 vignette: >
   %\VignetteIndexEntry{Machine Learning with GeoMx}
   %\VignetteEncoding{UTF-8}
@@ -34,12 +33,13 @@ library(NanoStringNCTools)
 library(GeomxTools)
 library(GeoMxWorkflows)
 library(data.table)
-library(plyr)
-library(dplyr)
 ```
 
+### Overview
+This vignette demonstrates the use of GeoMx gene expression data in machine learning models.
+
 ### Loading Data
-The dataset used in this guide is a GeoMx kidney dataset created with the WTA assay. The gene expression data from this dataset will be used in machine learning models to illustrate binary classification of diabetic kidney disease (DKD) and normal samples.
+The dataset used in this guide is a GeoMx kidney dataset created with the WTA assay. The gene expression data from this dataset will be used for supervised binary classification of diabetic kidney disease (DKD) and normal samples.
 ```{r}
 target_demoData <- readRDS("target_demoData.rds")
 ```
@@ -48,9 +48,15 @@ target_demoData <- readRDS("target_demoData.rds")
 library(knitr)
 include_graphics("sankey.png")
 ```
+
 ## **Data Pre-processing**
 
+```{r echo = FALSE, fig.cap = "The data has already undergone QC and Normalization."}
+include_graphics("Processing.png")
+```
+
 ### Subsetting target_demoData by region
+This dataset is subset by region to account for region-specific effects on gene expression. Going forward, the Glomerulus region subset will be utilized.
 ```{r}
 # subsetting target_demoData by region
 glomerulus_region_subset <- 
@@ -63,13 +69,14 @@ tubule_region_subset <-
 ```
 
 ### Count of DKD and normal samples in the Glomeruli
+The count of each class is similar, no imbalance.
 ```{r}
 table(glomerulus_region_subset$class)
 ```
 
 ### **Feature Selection**
 
-### Coefficient of Variation
+### Identifying Genes with High Coefficient of Variation
 ```{r}
 # create a log2 transform of the data for analysis
 assayDataElement(object = glomerulus_region_subset, elt = "log_q") <-
@@ -89,7 +96,7 @@ library(pheatmap)  # for pheatmap
 # Identify genes in the top 3rd of the CV values
 GOI <- names(CV_dat)[CV_dat > quantile(CV_dat, 0.8)]
 pheatmap(assayDataElement(glomerulus_region_subset[GOI, ], elt = "log_q"),
-         scale = "row", 
+         scale = "row",
          show_rownames = FALSE, show_colnames = FALSE,
          border_color = NA,
          clustering_method = "average",
@@ -97,7 +104,7 @@ pheatmap(assayDataElement(glomerulus_region_subset[GOI, ], elt = "log_q"),
          clustering_distance_cols = "correlation",
          breaks = seq(-3, 3, 0.05),
          color = colorRampPalette(c("purple3", "black", "yellow2"))(120),
-         annotation_col = 
+         annotation_col =
              pData(target_demoData)[, c("class", "segment", "region")])
 ```
 
@@ -111,7 +118,6 @@ pData(target_demoData)[["slide"]] <-
   factor(pData(target_demoData)[["slide name"]])
 assayDataElement(object = target_demoData, elt = "log_q") <-
   assayDataApply(target_demoData, 2, FUN = log, base = 2, elt = "q_norm")
-
 ```
 
 ```{r include=FALSE}
@@ -147,7 +153,7 @@ for(status in c("DKD", "normal")) {
 }
 ```
 
-### Differential Expression
+### Identifying Genes with Significant Differential Expression
 ```{r}
 # convert test variables to factors
 pData(target_demoData)$testClass <-
@@ -167,28 +173,27 @@ for(region in c("glomerulus", "tubule")) {
                  groupVar = "testClass",
                  nCores = parallel::detectCores(),
                  multiCore = FALSE)
-  
+
   # format results as data.frame
   r_test <- do.call(rbind, mixedOutmc["lsmeans", ])
   tests <- rownames(r_test)
   r_test <- as.data.frame(r_test)
   r_test$Contrast <- tests
-  
+
   # use lapply in case you have multiple levels of your test factor to
   # correctly associate gene name with it's row in the results table
-  r_test$Gene <- 
+  r_test$Gene <-
     unlist(lapply(colnames(mixedOutmc),
                   rep, nrow(mixedOutmc["lsmeans", ][[1]])))
   r_test$Subset <- region
   r_test$FDR <- p.adjust(r_test$`Pr(>|t|)`, method = "fdr")
-  r_test <- r_test[, c("Gene", "Subset", "Contrast", "Estimate", 
+  r_test <- r_test[, c("Gene", "Subset", "Contrast", "Estimate",
                        "Pr(>|t|)", "FDR")]
   results2 <- rbind(results2, r_test)
 }
 ```
 
 ```{r}
-
 results2_sorted <- results2[order(-abs(results2$Estimate)),]
 results2_filtered <- results2_sorted[results2_sorted$FDR <= .05,]
 results2_filtered <- results2_filtered[results2_filtered$Subset == "glomerulus",]
@@ -196,16 +201,69 @@ results2_filtered <- results2_filtered[results2_filtered$Subset == "glomerulus",
 kable(results2_filtered[1:20,], digits = 10,
       caption = "DE results",
       align = "lc", row.names = FALSE)
-
 ```
 
-### Subsetting GeoMxSet Object by genes of interest, as determined by DE
+### Volcano Plot of Differential Expression Results
+```{r echo=FALSE}
+library(ggrepel)
+# Categorize Results based on P-value & FDR for plotting
+results2$Color <- "NS or FC < 0.5"
+results2$Color[results2$`Pr(>|t|)` < 0.05] <- "P < 0.05"
+results2$Color[results2$FDR < 0.05] <- "FDR < 0.05"
+results2$Color[results2$FDR < 0.001] <- "FDR < 0.001"
+results2$Color[abs(results2$Estimate) < 0.5] <- "NS or FC < 0.5"
+results2$Color <- factor(results2$Color,
+                        levels = c("NS or FC < 0.5", "P < 0.05",
+                                   "FDR < 0.05", "FDR < 0.001"))
+
+# pick top genes for either side of volcano to label
+# order genes for convenience:
+results2$invert_P <- (-log10(results2$`Pr(>|t|)`)) * sign(results2$Estimate)
+top_g <- c()
+for(cond in c("glomerulus", "tubule")) {
+    ind <- results2$Subset == cond
+    top_g <- c(top_g,
+               results2[ind, 'Gene'][
+                   order(results2[ind, 'invert_P'], decreasing = TRUE)[1:15]],
+               results2[ind, 'Gene'][
+                   order(results2[ind, 'invert_P'], decreasing = FALSE)[1:15]])
+}
+top_g <- unique(top_g)
+results2 <- results2[, -1*ncol(results2)] # remove invert_P from matrix
+
+# Graph results
+ggplot(results2,
+       aes(x = Estimate, y = -log10(`Pr(>|t|)`),
+           color = Color, label = Gene)) +
+    geom_vline(xintercept = c(0.5, -0.5), lty = "dashed") +
+    geom_hline(yintercept = -log10(0.05), lty = "dashed") +
+    geom_point() +
+    labs(x = "Enriched in DKD <- log2(FC) -> Enriched in Normal",
+         y = "Significance, -log10(P)",
+         color = "Significance") +
+    scale_color_manual(values = c(`FDR < 0.001` = "dodgerblue",
+                                  `FDR < 0.05` = "lightblue",
+                                  `P < 0.05` = "orange2",
+                                  `NS or FC < 0.5` = "gray"),
+                       guide = guide_legend(override.aes = list(size = 4))) +
+    scale_y_continuous(expand = expansion(mult = c(0,0.05))) +
+    geom_text_repel(data = subset(results2, Gene %in% top_g & FDR < 0.001),
+                    size = 4, point.padding = 0.15, color = "black",
+                    min.segment.length = .1, box.padding = .2, lwd = 2,
+                    max.overlaps = 50) +
+    theme_bw(base_size = 16) +
+    theme(legend.position = "bottom") +
+    facet_wrap(~Subset, scales = "free_y")
+```
+
+
+### Subsetting GeoMxSet Object by 20 genes of interest, as determined by DE
 ```{r}
 DE_genes <- results2_filtered$Gene[1:20]
 DE_subset <- subset(glomerulus_region_subset, TargetName %in% DE_genes)
 ```
 
-### Subsetting GeoMxSet Object by genes of interest, as determined by CV
+### Subsetting GeoMxSet Object by 20 genes of interest, as determined by CV
 ```{r}
 CV_genes <- names(CV_dat_ordered)
 CV_subset <- subset(glomerulus_region_subset, TargetName %in% CV_genes)
@@ -241,7 +299,7 @@ dim(test_split)
 ```
 
 ### Dataset Builder Function
-The datasetBuilder function takes the output split objects from the splitgeomx function and creates training and testing data frames. The function combines transposed expression data with the class used for classification. It also converts the feature type in the classification column into factors. The expression data consists of samples as rows and gene expression counts as columns.
+The datasetBuilder function takes the output split objects from the splitgeomx function and creates training and testing data frames. The function combines transposed expression data with the class used for classification. The expression data consists of samples as rows and gene expression counts as columns.
 
 ```{r}
 source("DatasetBuilder.R")
@@ -276,17 +334,34 @@ source("MLFunctions.R")
 
 ## **Building Machine Learning Models**
 
-### Mandatory Parameters for ML Function
+### Input Parameters for ML Function
 #### 1. NanoStringGeoMxSet Object
-#### 2. Classification Class Name
+#### 2. Classification Class
 #### 3. Model Type
+#### 4. Split Ratio (optional)
+#### 5. Model Specific Parameters (optional)
 
 ### Available Model Types
-#### 1. Naive Bayes ("nb")
-#### 2. K-Nearest Neighbor ("knn")
-#### 3. Extreme Gradient Boosting (XGBoost) ("xgb")
-#### 4. Random Forest ("rf")
-#### 5. Support Vector Machine ("svm")
+#### 1. Naive Bayes (nb)
+The Naive Bayes Classifier is a probabilistic classifier that assumes independence between features.
+Pros:
+Cons:
+#### 2. K-Nearest Neighbor (knn)
+The K-Nearest Neighbor Classification Model...
+Pros:
+Cons:
+#### 3. Extreme Gradient Boosting (XGBoost) (xgb)
+The XGBoost Classification Model...
+Pros:
+Cons:
+#### 4. Random Forest (rf)
+The Random Forest Classification Model...
+Pros:
+Cons:
+#### 5. Support Vector Machine (svm)
+The Support Vector Machine Classification Model...
+Pros:
+Cons:
 
 
 ## Naive Bayes
@@ -299,6 +374,16 @@ ml_function(glomerulus_region_subset,"class", "nb")
 ml_function(glomerulus_region_subset,"class", "knn")
 ```
 
+## K-Nearest Neighbor with CV gene subset
+```{r}
+ml_function(CV_subset,"class", "knn")
+```
+
+## K-Nearest Neighbor with DE gene subset
+```{r}
+ml_function(DE_subset,"class", "knn")
+```
+
 ## XGBoost
 ```{r warning=FALSE}
 ml_function(glomerulus_region_subset,"class", "xgb")
@@ -309,16 +394,26 @@ ml_function(glomerulus_region_subset,"class", "xgb")
 ml_function(glomerulus_region_subset, "class", "rf")
 ```
 
+## Random Forest with CV gene subset
+```{r}
+ml_function(CV_subset,"class", "rf")
+```
+
+## Random Forest with DE gene subset
+```{r}
+ml_function(DE_subset,"class", "rf")
+```
+
 ## Support Vector Machine
 ```{r}
 ml_function(glomerulus_region_subset,"class", "svm")
 ```
 
+### Future Work
 
-## Session Information
+Implement parameter checking in mlfunction, error handling (prioritize checking for incorrect/unused parameters). Implement Cross Validation Function over entire dataset (don't split into train and test). More models, more complex models, more control over model parameters. More testing with different datasets.
+
+### Session Information
 ```{r}
 sessionInfo()
 ```
-
-## Future Work
-
