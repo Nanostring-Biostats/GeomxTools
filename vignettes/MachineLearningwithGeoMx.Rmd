@@ -91,7 +91,8 @@ CV_dat_ordered <- sort(CV_dat, decreasing = TRUE)[1:20]
 CV_dat_ordered
 ```
 
-```{r include = FALSE}
+### Heatmap Showing Unsupervised Hierarchical Clustering of Genes with High CVs
+```{r echo = FALSE}
 library(pheatmap)  # for pheatmap
 # Identify genes in the top 3rd of the CV values
 GOI <- names(CV_dat)[CV_dat > quantile(CV_dat, 0.8)]
@@ -120,8 +121,7 @@ assayDataElement(object = target_demoData, elt = "log_q") <-
   assayDataApply(target_demoData, 2, FUN = log, base = 2, elt = "q_norm")
 ```
 
-### Heatmap Showing Unsupervised Hierarchical Clustering of Genes with High CVs
-```{r echo=FALSE}
+```{r include=FALSE}
 # run LMM:
 # formula follows conventions defined by the lme4 package
 results <- c()
@@ -329,62 +329,89 @@ dim(test_data)
 test_data[1:5,10123:10132]
 ```
 
-```{r}
-source("MLFunctions.R")
-```
-
 ## **Building Machine Learning Models**
 
-### Input Parameters for ML Function
+### Input Parameters for ML Functions
 #### 1. NanoStringGeoMxSet Object
 #### 2. Classification Class
 #### 3. Model Type
 #### 4. Split Ratio (optional)
 #### 5. Model Specific Parameters (optional)
+##### a. Resampling Method (tuneLenght, trainControl, tuneGrid)
+##### b. Seed
+
+### Outputs for ML Functions
+#### 1. Results of Parameter Tuning
+#### 2. Most Important Variables
+#### 3. Results of Testing Model
 
 ### Available Model Types
-#### 1. Naive Bayes (nb)
-The Naive Bayes Classifier is a probabilistic classifier that assumes independence between features.
-Parameters: 
-1. Laplace Correction (laplace)
-2. Distribution Type (usekernel)
-3. Bandwidth Adjustment (adjust)
+#### **1. Naive Bayes (nb)**
+##### Naive Bayes Classifier is a probabilistic classifier that assumes conditional independence between features. This model assumes a Gaussian distribution of data.
+##### Parameters: 
+##### a. Laplace Correction (laplace)
+##### b. Distribution Type (usekernel)
+##### c. Bandwidth Adjustment (adjust)
 
-#### 2. K-Nearest Neighbor (knn)
-The K-Nearest Neighbor Classification Model...
-Parameters: 
-1. Neighbors (k)
+```{r echo = FALSE, fig.cap = "Naive Bayes"}
+library(knitr)
+include_graphics("naivebayes.png")
+```
 
-#### 3. Extreme Gradient Boosting (XGBoost) (xgb)
-The XGBoost Classification Model...
-Parameters: 
-1. Boosting Iterations (nrounds)
-2. Max Tree Depth (max_depth)
-3. Shrinkage (eta)
-4. Minimum Loss Reduction (gamma)
-5. Subsample Percentage (subsample)
-6. Subsample Ratio of Columns (colsample_bytree)
-7. Fraction of Trees Dropped (rate_drop)
-8. Probability of Skipping Drop-out (skip-drop)
-9. Minimum Sum of Instance Weight (min_child_weight)
+#### **2. K-Nearest Neighbor (knn)**
+##### K-Nearest Neighbor Classifier is a non-parametric model that determines class membership (label) based on the most common label amongst k nearest neighbors.
+##### Parameters: 
+##### a. Neighbors (k)
 
-#### 4. Random Forest (rf)
-The Random Forest Classification Model...
-Parameters: 
-1. Starting Value of Number of Predictors Randomly Sampled at Each Split (mtryStart)
-2. Number of Trees Used at The Tuning Step (ntreeTry)
-3. Number By Which mtry is Changed at Every Iteration (stepFactor)
-4. Required Improvement In OOB Error for Search to Continue (improve)
-5. Print Progress of Search (plot)
-6. Run Forest Using Optimal mtry Found (doBest)
+```{r echo = FALSE, fig.cap = "K-Nearest Neighbor"}
+include_graphics("knn2.png")
+```
 
-#### 5. Support Vector Machine (svm)
-The Support Vector Machine Classification Model...
-Parameters: 
-1. Cost (cost)
-2. Loss Function (Loss)
-3. Class Weight (weight)
+#### **3. Extreme Gradient Boosting (XGBoost) (xgb)**
+##### XGBoost Classifier is an optimized distributed gradient boosting model. The model uses additive training and boosted trees for optimization.
+##### Parameters: 
+##### a. Boosting Iterations (nrounds)
+##### b. Max Tree Depth (max_depth)
+##### c. Shrinkage (eta)
+##### d. Minimum Loss Reduction (gamma)
+##### e. Subsample Percentage (subsample)
+##### f. Subsample Ratio of Columns (colsample_bytree)
+##### g. Fraction of Trees Dropped (rate_drop)
+##### h. Probability of Skipping Drop-out (skip-drop)
+##### i. Minimum Sum of Instance Weight (min_child_weight)
 
+```{r echo = FALSE, fig.cap = "XGBoost"}
+include_graphics("xgb.png")
+```
+
+#### **4. Random Forest (rf)**
+##### Random Forest Classifier is an ensemble learning method. The outputs of many decision trees, which are trained on a random sampling of data, are aggregated to a single final decision.
+##### Parameters: 
+##### a. Starting Value of Number of Predictors Randomly Sampled at Each Split (mtryStart)
+##### b. Number of Trees Used at The Tuning Step (ntreeTry)
+##### c. Number By Which mtry is Changed at Every Iteration (stepFactor)
+##### d. Required Improvement In OOB Error for Search to Continue (improve)
+##### e. Print Progress of Search (plot)
+##### f. Run Forest Using Optimal mtry Found (doBest)
+
+```{r echo = FALSE, fig.cap = "Random Forest"}
+include_graphics("randomforest2.png")
+```
+
+#### **5. Support Vector Machine (svm)**
+##### Support Vector Machine Classifier is a non-probabilistic binary linear model. SVM aims to classify data based on the position in relation to a border or hyperplance between the positive and negative class. The border is determined to maximize the distance between the classes.
+##### Parameters: 
+##### a. Cost (cost)
+##### b. Loss Function (Loss)
+##### c. Class Weight (weight)
+
+```{r echo = FALSE, fig.cap = "Support Vector Machine"}
+include_graphics("svm3.png")
+```
+
+```{r}
+source("MLFunctions.R")
+```
 
 ## Naive Bayes
 ```{r}
@@ -432,8 +459,12 @@ ml_function(glomerulus_region_subset,"class", "svm")
 ```
 
 ### Future Work
-
-Implement parameter checking in mlfunction, error handling (prioritize checking for incorrect/unused parameters). Implement Cross Validation Function over entire dataset (don't split into train and test). More models, more complex models, more control over model parameters. More testing with different datasets.
+#### 1. Implement error handling and parameter checking in mlfunction.
+#### 2. Implement cross validation function over entire dataset, without any splitting.
+#### 3. Implement additional models, ex. logisitic regression.
+#### 4. Perform user testing.
+#### 5. Additional testing with more datasets.
+#### 6. Explore machine learning applications of spatial data.
 
 ### Session Information
 ```{r}

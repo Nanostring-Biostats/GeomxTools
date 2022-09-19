@@ -26,19 +26,22 @@ ml_function <- function(geomx_set_object, classifier_column, model_type, split_r
          "svm" = custom_svm(train_split, test_split, classifier_column, ...))
 }
 
-custom_nb <- function(train_split, test_split, classifier_column, seed=120, ...) {
+custom_nb <- function(train_split, test_split, classifier_column, seed=50, tuneLength=2, trControl=trainControl(method="repeatedcv", repeats=3), tuneGrid=NULL, ...) {
 
   library(naivebayes)
+  
+  set.seed(seed)
   
   nb_model <- train(t(exprs(train_split)),
                     as.factor(pData(train_split)[[classifier_column]]),
                     method = "naive_bayes",
-                    tuneLength = 2,
-                    trControl=trainControl(method="repeatedcv", repeats = 3))
+                    tuneLength=tuneLength,
+                    trControl=trControl,
+                    tuneGrid=tuneGrid)
   
   print(nb_model)
   
-  imp_nb <- caret::varImp(nb_model, useModel = FALSE, nonpara = FALSE, scale = FALSE)
+  imp_nb <- caret::varImp(nb_model, useModel=FALSE, nonpara=FALSE, scale=FALSE)
   print(imp_nb)
   
   nb_predict <- predict(nb_model, newdata = t(exprs(test_split)))
@@ -58,20 +61,23 @@ custom_nb <- function(train_split, test_split, classifier_column, seed=120, ...)
   print(auc)
 }
 
-custom_knn <- function(train_split, test_split, classifier_column, ...) {
+custom_knn <- function(train_split, test_split, classifier_column, seed=50, tuneLength=NULL, trControl=trainControl(method="repeatedcv", repeats=3), tuneGrid=expand.grid(k=3:10), ...) {
   
   library(caret)
+  
+  set.seed(seed)
   
   knn_model <- train(t(exprs(train_split)), 
                      as.factor(pData(train_split)[[classifier_column]]), 
                      method = "knn",
-                     trControl=trainControl(method="repeatedcv", repeats = 3), 
-                     tuneGrid=expand.grid(k = 3:10))
+                     tuneLength=tuneLength,
+                     trControl=trControl, 
+                     tuneGrid=tuneGrid)
   
   print(knn_model)
   plot(knn_model)
   
-  imp_knn <- caret::varImp(knn_model, useModel = FALSE, nonpara = FALSE, scale = FALSE)
+  imp_knn <- caret::varImp(knn_model, useModel=FALSE, nonpara=FALSE, scale=FALSE)
   print(imp_knn)
   
   knn_predict <- predict(knn_model, newdata = t(exprs(test_split)))
@@ -89,31 +95,24 @@ custom_knn <- function(train_split, test_split, classifier_column, ...) {
   auc <- auc@y.values[[1]]
   print("AUC")
   print(auc)
-  
 }
 
-custom_xgb <- function(train_split, test_split, classifier_column, ...) {
+custom_xgb <- function(train_split, test_split, classifier_column, seed=50, tuneLength=1, trControl=trainControl(method="none"), tuneGrid=expand.grid(nrounds=100, max_depth=6, eta=0.3, gamma=0, subsample=1, colsample_bytree=1, rate_drop=0, skip_drop=0, min_child_weight=1), ...) {
   
   library(xgboost)
+  
+  set.seed(seed)
   
   xgb_model <- train(t(exprs(train_split)), 
                      as.factor(pData(train_split)[[classifier_column]]), 
                      method = "xgbDART", 
-                     tuneLength = 1,
-                     trControl=trainControl(method='none'),
-                     tuneGrid=expand.grid(nrounds = 100,
-                                          max_depth = 6,
-                                          eta = 0.3,
-                                          gamma = 0,
-                                          subsample = 1,
-                                          colsample_bytree = 1,
-                                          rate_drop = 0,
-                                          skip_drop = 0,
-                                          min_child_weight = 1))
+                     tuneLength=tuneLength,
+                     trControl=trControl,
+                     tuneGrid=tuneGrid)
   
   print(xgb_model)
   
-  imp_xgb <- caret::varImp(xgb_model, useModel = FALSE, nonpara = FALSE, scale = FALSE)
+  imp_xgb <- caret::varImp(xgb_model, useModel=FALSE, nonpara=FALSE, scale=FALSE)
   print(imp_xgb)
   
   xgb_predict <- predict(xgb_model, newdata = t(exprs(test_split)))
@@ -133,11 +132,13 @@ custom_xgb <- function(train_split, test_split, classifier_column, ...) {
   print(auc)
 }
 
-custom_rf <- function(train_split, test_split, classifier_column, ...) {
+custom_rf <- function(train_split, test_split, classifier_column, seed=50, ntreeTry=100, stepFactor=5, improve=0.05, trace=FALSE, plot=TRUE, doBest=TRUE, ...) {
   
   library(randomForest)
   
-  random_forest_model <- tuneRF(t(exprs(train_split)), as.factor(pData(train_split)[[classifier_column]]), ntreeTry = 100, stepFactor = 5, improve = 0.05, trace = FALSE, plot = TRUE, doBest=TRUE, ...)
+  set.seed(seed)
+  
+  random_forest_model <- tuneRF(t(exprs(train_split)), as.factor(pData(train_split)[[classifier_column]]), ntreeTry=ntreeTry, stepFactor=stepFactor, improve=improve, trace=trace, plot=plot, doBest=doBest, ...)
   
   plot(random_forest_model)
   
@@ -163,21 +164,24 @@ custom_rf <- function(train_split, test_split, classifier_column, ...) {
   print(auc)
 }
 
-custom_svm <- function(train_split, test_split, classifier_column, ...) {
+custom_svm <- function(train_split, test_split, classifier_column, seed=100, tuneLength=3, trControl=trainControl(method="repeatedcv", repeats=3), tuneGrid=NULL, ...) {
   
   library(LiblineaR)
+  
+  set.seed(seed)
   
   svm_model <- train(t(exprs(train_split)),
                      as.factor(pData(train_split)[[classifier_column]]),
                      method = "svmLinearWeights2",
-                     tuneLength = 3,
-                     trControl=trainControl(method = "repeatedcv", repeats = 3))
+                     tuneLength=tuneLength,
+                     trControl=trControl,
+                     tuneGrid=tuneGrid)
   
   print(svm_model)
   
   plot(svm_model)
   
-  imp_svm <- caret::varImp(svm_model, useModel = FALSE, nonpara = FALSE, scale = FALSE)
+  imp_svm <- caret::varImp(svm_model, useModel=FALSE, nonpara=FALSE, scale=FALSE)
   print(imp_svm)
   
   svm_predict <- predict(svm_model, newdata = t(exprs(test_split)))
