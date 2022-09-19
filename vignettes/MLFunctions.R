@@ -26,6 +26,10 @@ ml_function <- function(geomx_set_object, classifier_column, model_type, split_r
          "svm" = custom_svm(train_split, test_split, classifier_column, ...))
 }
 
+# Naive Bayes Input Parameters:
+# tuneLength: amount of granularity in the tuning parameter grid
+# trControl: specifices training resampling method
+# tuneGrid: data frame with tuning values
 custom_nb <- function(train_split, test_split, classifier_column, seed=50, tuneLength=2, trControl=trainControl(method="repeatedcv", repeats=3), tuneGrid=NULL, ...) {
 
   library(naivebayes)
@@ -61,7 +65,12 @@ custom_nb <- function(train_split, test_split, classifier_column, seed=50, tuneL
   print(auc)
 }
 
-custom_knn <- function(train_split, test_split, classifier_column, seed=50, tuneLength=NULL, trControl=trainControl(method="repeatedcv", repeats=3), tuneGrid=expand.grid(k=3:10), ...) {
+# KNN Input Parameters:
+# tuneLength: amount of granularity in the tuning parameter grid
+# trControl: specifices training resampling method
+# tuneGrid: data frame with tuning values
+          # k: number of neighbors
+custom_knn <- function(train_split, test_split, classifier_column, seed=125, tuneLength=NULL, trControl=trainControl(method="repeatedcv", repeats=3), tuneGrid=expand.grid(k=3:10), ...) {
   
   library(caret)
   
@@ -97,7 +106,20 @@ custom_knn <- function(train_split, test_split, classifier_column, seed=50, tune
   print(auc)
 }
 
-custom_xgb <- function(train_split, test_split, classifier_column, seed=50, tuneLength=1, trControl=trainControl(method="none"), tuneGrid=expand.grid(nrounds=100, max_depth=6, eta=0.3, gamma=0, subsample=1, colsample_bytree=1, rate_drop=0, skip_drop=0, min_child_weight=1), ...) {
+# XGBoost Input Parameters:
+# tuneLength: amount of granularity in the tuning parameter grid
+# trControl: specifices training resampling method
+# tuneGrid: data frame with tuning values
+          # nrounds: Boosting Iterations
+          # max_depth: Max Tree Depth
+          # eta: Shrinkage
+          # gamma: Minimum Loss Reduction
+          # subsample: Subsample Percentage
+          # colsample_bytree: Subsample Ratio of Columns
+          # rate_drop: Fraction of Trees Dropped
+          # skip_drop: Probability of Skipping Drop-out
+          # min_child_weight: Minimum Sum of Instance Weight (min_child_weight)
+custom_xgb <- function(train_split, test_split, classifier_column, seed=100, tuneLength=1, trControl=trainControl(method="none"), tuneGrid=expand.grid(nrounds=100, max_depth=6, eta=0.3, gamma=0, subsample=1, colsample_bytree=1, rate_drop=0, skip_drop=0, min_child_weight=1), ...) {
   
   library(xgboost)
   
@@ -132,6 +154,13 @@ custom_xgb <- function(train_split, test_split, classifier_column, seed=50, tune
   print(auc)
 }
 
+# Random Forest Input Parameters:
+# mtryStart: Starting Value of Number of Predictors Randomly Sampled at Each Split
+# ntreeTry: Number of Trees Used at The Tuning Step
+# Number By Which mtry is Changed at Every Iteration (stepFactor)
+# Required Improvement In OOB Error for Search to Continue (improve)
+# Print Progress of Search (plot)
+# Run Forest Using Optimal mtry Found (doBest)
 custom_rf <- function(train_split, test_split, classifier_column, seed=50, ntreeTry=100, stepFactor=5, improve=0.05, trace=FALSE, plot=TRUE, doBest=TRUE, ...) {
   
   library(randomForest)
@@ -164,7 +193,11 @@ custom_rf <- function(train_split, test_split, classifier_column, seed=50, ntree
   print(auc)
 }
 
-custom_svm <- function(train_split, test_split, classifier_column, seed=100, tuneLength=3, trControl=trainControl(method="repeatedcv", repeats=3), tuneGrid=NULL, ...) {
+# SVM Input Parameters:
+# tuneLength: amount of granularity in the tuning parameter grid
+# trControl: specifices training resampling method
+# tuneGrid: data frame with tuning values
+custom_svm <- function(train_split, test_split, classifier_column, seed=125, tuneLength=3, trControl=trainControl(method="repeatedcv", repeats=3), tuneGrid=NULL, ...) {
   
   library(LiblineaR)
   

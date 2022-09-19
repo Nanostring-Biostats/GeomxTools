@@ -23,6 +23,9 @@ knitr::opts_chunk$set(
 
 
 ```{r include=FALSE}
+# getwd() to get working directory
+# setwd(dir)
+
 # Setting Working Directory
 setwd("~/hades/nyeshlur")
 ```
@@ -69,7 +72,6 @@ tubule_region_subset <-
 ```
 
 ### Count of DKD and normal samples in the Glomeruli
-The count of each class is similar, no imbalance.
 ```{r}
 table(glomerulus_region_subset$class)
 ```
@@ -77,7 +79,7 @@ table(glomerulus_region_subset$class)
 ### **Feature Selection**
 
 ### Identifying Genes with High Coefficient of Variation
-```{r}
+```{r cache=TRUE}
 # create a log2 transform of the data for analysis
 assayDataElement(object = glomerulus_region_subset, elt = "log_q") <-
   assayDataApply(glomerulus_region_subset, 2, FUN = log, base = 2, elt = "q_norm")
@@ -92,7 +94,7 @@ CV_dat_ordered
 ```
 
 ### Heatmap Showing Unsupervised Hierarchical Clustering of Genes with High CVs
-```{r echo = FALSE}
+```{r echo = FALSE, cache=TRUE}
 library(pheatmap)  # for pheatmap
 # Identify genes in the top 3rd of the CV values
 GOI <- names(CV_dat)[CV_dat > quantile(CV_dat, 0.8)]
@@ -109,7 +111,7 @@ pheatmap(assayDataElement(glomerulus_region_subset[GOI, ], elt = "log_q"),
              pData(target_demoData)[, c("class", "segment", "region")])
 ```
 
-```{r include=FALSE}
+```{r include=FALSE, cache=TRUE}
 library(knitr)
 
 # convert test variables to factors
@@ -121,7 +123,7 @@ assayDataElement(object = target_demoData, elt = "log_q") <-
   assayDataApply(target_demoData, 2, FUN = log, base = 2, elt = "q_norm")
 ```
 
-```{r include=FALSE}
+```{r include=FALSE, cache=TRUE}
 # run LMM:
 # formula follows conventions defined by the lme4 package
 results <- c()
@@ -155,13 +157,13 @@ for(status in c("DKD", "normal")) {
 ```
 
 ### Identifying Genes with Significant Differential Expression
-```{r}
+```{r cache=TRUE}
 # convert test variables to factors
 pData(target_demoData)$testClass <-
   factor(pData(target_demoData)$class, c("normal", "DKD"))
 ```
 
-```{r}
+```{r cache=TRUE}
 # run LMM:
 # formula follows conventions defined by the lme4 package
 results2 <- c()
@@ -194,7 +196,7 @@ for(region in c("glomerulus", "tubule")) {
 }
 ```
 
-```{r}
+```{r cache=TRUE}
 results2_sorted <- results2[order(-abs(results2$Estimate)),]
 results2_filtered <- results2_sorted[results2_sorted$FDR <= .05,]
 results2_filtered <- results2_filtered[results2_filtered$Subset == "glomerulus",]
@@ -205,7 +207,7 @@ kable(results2_filtered[1:20,], digits = 10,
 ```
 
 ### Volcano Plot of Differential Expression Results
-```{r echo=FALSE}
+```{r echo=FALSE, cache=TRUE}
 library(ggrepel)
 # Categorize Results based on P-value & FDR for plotting
 results2$Color <- "NS or FC < 0.5"
@@ -278,7 +280,9 @@ The splitgeomx function splits the GeoMxSet Object into two objects, one to be u
 ```{r}
 source("GeoMxSetSplit.R")
 
+# It is common for the training and testing dataset split ratio to be 70/30 or 80/20.
 split_ratio <- 0.7
+
 train_test_list <- splitgeomx(glomerulus_region_subset,split_ratio)
 train_split <- train_test_list[[1]]
 test_split <- train_test_list[[2]]
@@ -345,7 +349,7 @@ test_data[1:5,10123:10132]
 #### 2. Most Important Variables
 #### 3. Results of Testing Model
 
-### Available Model Types
+### Available Models
 #### **1. Naive Bayes (nb)**
 ##### Naive Bayes Classifier is a probabilistic classifier that assumes conditional independence between features. This model assumes a Gaussian distribution of data.
 ##### Parameters: 
@@ -353,7 +357,7 @@ test_data[1:5,10123:10132]
 ##### b. Distribution Type (usekernel)
 ##### c. Bandwidth Adjustment (adjust)
 
-```{r echo = FALSE, fig.cap = "Naive Bayes"}
+```{r echo = FALSE}
 library(knitr)
 include_graphics("naivebayes.png")
 ```
@@ -363,7 +367,7 @@ include_graphics("naivebayes.png")
 ##### Parameters: 
 ##### a. Neighbors (k)
 
-```{r echo = FALSE, fig.cap = "K-Nearest Neighbor"}
+```{r echo = FALSE}
 include_graphics("knn2.png")
 ```
 
@@ -377,10 +381,10 @@ include_graphics("knn2.png")
 ##### e. Subsample Percentage (subsample)
 ##### f. Subsample Ratio of Columns (colsample_bytree)
 ##### g. Fraction of Trees Dropped (rate_drop)
-##### h. Probability of Skipping Drop-out (skip-drop)
+##### h. Probability of Skipping Drop-out (skip_drop)
 ##### i. Minimum Sum of Instance Weight (min_child_weight)
 
-```{r echo = FALSE, fig.cap = "XGBoost"}
+```{r echo = FALSE}
 include_graphics("xgb.png")
 ```
 
@@ -394,7 +398,7 @@ include_graphics("xgb.png")
 ##### e. Print Progress of Search (plot)
 ##### f. Run Forest Using Optimal mtry Found (doBest)
 
-```{r echo = FALSE, fig.cap = "Random Forest"}
+```{r echo = FALSE}
 include_graphics("randomforest2.png")
 ```
 
@@ -405,7 +409,7 @@ include_graphics("randomforest2.png")
 ##### b. Loss Function (Loss)
 ##### c. Class Weight (weight)
 
-```{r echo = FALSE, fig.cap = "Support Vector Machine"}
+```{r echo = FALSE}
 include_graphics("svm3.png")
 ```
 
@@ -465,6 +469,7 @@ ml_function(glomerulus_region_subset,"class", "svm")
 #### 4. Perform user testing.
 #### 5. Additional testing with more datasets.
 #### 6. Explore machine learning applications of spatial data.
+#### 7. Coercion to Python
 
 ### Session Information
 ```{r}
