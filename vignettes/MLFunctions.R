@@ -4,16 +4,17 @@ library(GeomxTools)
 library(GeoMxWorkflows)
 library(data.table)
 library(ModelMetrics)
+library(caret)
 
 ml_function <- function(geomx_set_object, classifier_column, model_type, split_ratio=0.7, ...) {
   
-  source("~/hades/nyeshlur/GeoMxSetSplit.R")
+  source("~/Downloads/GeomxTools-nayana_machine_learning/vignettes/GeoMxSetSplit.R")
   
   train_test_list <- splitgeomx(geomx_set_object, split_ratio)
   train_split <- train_test_list[[1]]
   test_split <- train_test_list[[2]]
   
-  source("~/hades/nyeshlur/DatasetBuilder.R")
+  source("~/Downloads/GeomxTools-nayana_machine_learning/vignettes/DatasetBuilder.R")
   
   train_data <- datasetBuilder(exprs(train_split), pData(train_split)[[classifier_column]])
   test_data <- datasetBuilder(exprs(test_split), pData(test_split)[[classifier_column]])
@@ -21,27 +22,24 @@ ml_function <- function(geomx_set_object, classifier_column, model_type, split_r
   switch(model_type,
          "nb" = custom_nb(train_split, test_split, classifier_column, ...),
          "knn" = custom_knn(train_split, test_split, classifier_column, ...),
-         "xgb" = custom_xgb(train_split, test_split, classifier_column, ...),
          "rf" = custom_rf(train_split, test_split, classifier_column, ...),
          "svm" = custom_svm(train_split, test_split, classifier_column, ...))
 }
 
 # Naive Bayes Input Parameters:
 # tuneLength: amount of granularity in the tuning parameter grid
-# trControl: specifices training resampling method
+# trControl: specifies training resampling method
 # tuneGrid: data frame with tuning values
-custom_nb <- function(train_split, test_split, classifier_column, seed=50, tuneLength=2, trControl=trainControl(method="repeatedcv", repeats=3), tuneGrid=NULL, ...) {
+custom_nb <- function(train_split, test_split, classifier_column, tuneLength=2, trControl=caret::trainControl(method="cv"), tuneGrid=NULL, ...) {
 
   library(naivebayes)
   
-  set.seed(seed)
-  
-  nb_model <- train(t(exprs(train_split)),
+  nb_model <- caret::train(t(exprs(train_split)),
                     as.factor(pData(train_split)[[classifier_column]]),
                     method = "naive_bayes",
                     tuneLength=tuneLength,
                     trControl=trControl,
-                    tuneGrid=tuneGrid)
+                    tuneGrid=tuneGrid, ...)
   
   print(nb_model)
   
@@ -67,24 +65,21 @@ custom_nb <- function(train_split, test_split, classifier_column, seed=50, tuneL
 
 # KNN Input Parameters:
 # tuneLength: amount of granularity in the tuning parameter grid
-# trControl: specifices training resampling method
+# trControl: specifies training resampling method
 # tuneGrid: data frame with tuning values
           # k: number of neighbors
-custom_knn <- function(train_split, test_split, classifier_column, seed=125, tuneLength=NULL, trControl=trainControl(method="repeatedcv", repeats=3), tuneGrid=expand.grid(k=3:10), ...) {
+custom_knn <- function(train_split, test_split, classifier_column, tuneLength=8, trControl=caret::trainControl(method="cv"), tuneGrid=expand.grid(k=3:10), ...) {
   
   library(caret)
   
-  set.seed(seed)
-  
-  knn_model <- train(t(exprs(train_split)), 
+  knn_model <- caret::train(t(exprs(train_split)), 
                      as.factor(pData(train_split)[[classifier_column]]), 
                      method = "knn",
                      tuneLength=tuneLength,
                      trControl=trControl, 
-                     tuneGrid=tuneGrid)
+                     tuneGrid=tuneGrid, ...)
   
   print(knn_model)
-  plot(knn_model)
   
   imp_knn <- caret::varImp(knn_model, useModel=FALSE, nonpara=FALSE, scale=FALSE)
   print(imp_knn)
@@ -106,84 +101,34 @@ custom_knn <- function(train_split, test_split, classifier_column, seed=125, tun
   print(auc)
 }
 
-# XGBoost Input Parameters:
-# tuneLength: amount of granularity in the tuning parameter grid
-# trControl: specifices training resampling method
-# tuneGrid: data frame with tuning values
-          # nrounds: Boosting Iterations
-          # max_depth: Max Tree Depth
-          # eta: Shrinkage
-          # gamma: Minimum Loss Reduction
-          # subsample: Subsample Percentage
-          # colsample_bytree: Subsample Ratio of Columns
-          # rate_drop: Fraction of Trees Dropped
-          # skip_drop: Probability of Skipping Drop-out
-          # min_child_weight: Minimum Sum of Instance Weight (min_child_weight)
-custom_xgb <- function(train_split, test_split, classifier_column, seed=100, tuneLength=1, trControl=trainControl(method="none"), tuneGrid=expand.grid(nrounds=100, max_depth=6, eta=0.3, gamma=0, subsample=1, colsample_bytree=1, rate_drop=0, skip_drop=0, min_child_weight=1), ...) {
-  
-  library(xgboost)
-  
-  set.seed(seed)
-  
-  xgb_model <- train(t(exprs(train_split)), 
-                     as.factor(pData(train_split)[[classifier_column]]), 
-                     method = "xgbDART", 
-                     tuneLength=tuneLength,
-                     trControl=trControl,
-                     tuneGrid=tuneGrid)
-  
-  print(xgb_model)
-  
-  imp_xgb <- caret::varImp(xgb_model, useModel=FALSE, nonpara=FALSE, scale=FALSE)
-  print(imp_xgb)
-  
-  xgb_predict <- predict(xgb_model, newdata = t(exprs(test_split)))
-  xgb_predict_prob <- predict(xgb_model, newdata = t(exprs(test_split)), type = "prob")[,2]
-  
-  cm_xgb <- caret::confusionMatrix(xgb_predict, as.factor(pData(test_split)[[classifier_column]]))
-  print(cm_xgb)
-  
-  library(ROCR)
-  pred <- prediction(xgb_predict_prob, as.factor(pData(test_split)[[classifier_column]]))
-  perf <- performance(pred, "tpr", "fpr")
-  plot(perf)
-  
-  auc <- performance(pred, "auc")
-  auc <- auc@y.values[[1]]
-  print("AUC")
-  print(auc)
-}
-
 # Random Forest Input Parameters:
-# mtryStart: Starting Value of Number of Predictors Randomly Sampled at Each Split
-# ntreeTry: Number of Trees Used at The Tuning Step
-# Number By Which mtry is Changed at Every Iteration (stepFactor)
-# Required Improvement In OOB Error for Search to Continue (improve)
-# Print Progress of Search (plot)
-# Run Forest Using Optimal mtry Found (doBest)
-custom_rf <- function(train_split, test_split, classifier_column, seed=50, ntreeTry=100, stepFactor=5, improve=0.05, trace=FALSE, plot=TRUE, doBest=TRUE, ...) {
+# tuneLength: amount of granularity in the tuning parameter grid
+# trControl: specifies training resampling method
+# tuneGrid: data frame with tuning values
+custom_rf <- function(train_split, test_split, classifier_column, tuneLength=5, trControl=caret::trainControl(method="cv"), tuneGrid=NULL, ...) {
   
   library(randomForest)
   
-  set.seed(seed)
+  rf_model <- caret::train(t(exprs(train_split)), 
+                            as.factor(pData(train_split)[[classifier_column]]), 
+                            method = "rf",
+                            tuneLength=tuneLength,
+                            trControl=trControl, 
+                            tuneGrid=tuneGrid, ...)
   
-  random_forest_model <- tuneRF(t(exprs(train_split)), as.factor(pData(train_split)[[classifier_column]]), ntreeTry=ntreeTry, stepFactor=stepFactor, improve=improve, trace=trace, plot=plot, doBest=doBest, ...)
+  print(rf_model)
   
-  plot(random_forest_model)
+  imp_rf <- caret::varImp(rf_model, useModel=FALSE, nonpara=FALSE, scale=FALSE)
+  print(imp_rf)
   
-  print(random_forest_model)
+  rf_predict <- predict(rf_model, newdata = t(exprs(test_split)))
+  rf_predict_prob <- predict(rf_model, newdata = t(exprs(test_split)), type = "prob")[,2]
   
-  importance(random_forest_model)
-  varImpPlot(random_forest_model, sort = TRUE, n.var = 10, scale = TRUE)
-  
-  rf_prediction <- predict(random_forest_model, t(exprs(test_split)), type = "response", norm.votes = FALSE)
-  rf_prediction_prob <- predict(random_forest_model, t(exprs(test_split)), type = "prob", norm.votes = FALSE)[,2]
-  
-  cm_rf <- caret::confusionMatrix(rf_prediction, as.factor(pData(test_split)[[classifier_column]]))
+  cm_rf <- caret::confusionMatrix(rf_predict, as.factor(pData(test_split)[[classifier_column]]))
   print(cm_rf)
   
   library(ROCR)
-  pred <- prediction(rf_prediction_prob, as.factor(pData(test_split)[[classifier_column]]))
+  pred <- prediction(rf_predict_prob, as.factor(pData(test_split)[[classifier_column]]))
   perf <- performance(pred, "tpr", "fpr")
   plot(perf)
   
@@ -195,15 +140,14 @@ custom_rf <- function(train_split, test_split, classifier_column, seed=50, ntree
 
 # SVM Input Parameters:
 # tuneLength: amount of granularity in the tuning parameter grid
-# trControl: specifices training resampling method
+# trControl: specifies training resampling method
 # tuneGrid: data frame with tuning values
-custom_svm <- function(train_split, test_split, classifier_column, seed=125, tuneLength=3, trControl=trainControl(method="repeatedcv", repeats=3), tuneGrid=NULL, ...) {
+custom_svm <- function(train_split, test_split, classifier_column, tuneLength=3, trControl=caret::trainControl(method="cv"), tuneGrid=NULL, ...) {
   
   library(LiblineaR)
   
-  set.seed(seed)
   
-  svm_model <- train(t(exprs(train_split)),
+  svm_model <- caret::train(t(exprs(train_split)),
                      as.factor(pData(train_split)[[classifier_column]]),
                      method = "svmLinearWeights2",
                      tuneLength=tuneLength,
@@ -211,8 +155,6 @@ custom_svm <- function(train_split, test_split, classifier_column, seed=125, tun
                      tuneGrid=tuneGrid)
   
   print(svm_model)
-  
-  plot(svm_model)
   
   imp_svm <- caret::varImp(svm_model, useModel=FALSE, nonpara=FALSE, scale=FALSE)
   print(imp_svm)
@@ -222,4 +164,3 @@ custom_svm <- function(train_split, test_split, classifier_column, seed=125, tun
   cm_svm <- caret::confusionMatrix(svm_predict, as.factor(pData(test_split)[[classifier_column]]))
   print(cm_svm)
 }
-

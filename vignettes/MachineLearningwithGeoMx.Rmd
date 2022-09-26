@@ -22,12 +22,12 @@ knitr::opts_chunk$set(
 ```
 
 
-```{r include=FALSE}
+```{r set working directory, include=FALSE}
 # getwd() to get working directory
-# setwd(dir)
 
 # Setting Working Directory
-setwd("~/hades/nyeshlur")
+# Note - Remember to update the working directory paths in MLFunctions.R
+setwd("~/Downloads/GeomxTools-nayana_machine_learning/vignettes/")
 ```
 
 ### Load Libraries
@@ -38,29 +38,36 @@ library(GeoMxWorkflows)
 library(data.table)
 ```
 
-### Overview
+## **Overview**
 This vignette demonstrates the use of GeoMx gene expression data in machine learning models.
 
 ### Loading Data
 The dataset used in this guide is a GeoMx kidney dataset created with the WTA assay. The gene expression data from this dataset will be used for supervised binary classification of diabetic kidney disease (DKD) and normal samples.
-```{r}
+```{r load data}
 target_demoData <- readRDS("target_demoData.rds")
 ```
 
-```{r echo = FALSE, fig.cap = "Sankey Diagram of Kidney Dataset"}
+#### Dimensions of Data
+```{r dimensions of data, echo=FALSE}
+dim(target_demoData)
+```
+
+#### Sankey Diagram of Kidney Dataset
+```{r sankey, echo=FALSE}
 library(knitr)
 include_graphics("sankey.png")
 ```
 
 ## **Data Pre-processing**
 
-```{r echo = FALSE, fig.cap = "The data has already undergone QC and Normalization."}
+#### The data has already undergone QC and Normalization.
+```{r pre-processing, echo=FALSE}
 include_graphics("Processing.png")
 ```
 
 ### Subsetting target_demoData by region
 This dataset is subset by region to account for region-specific effects on gene expression. Going forward, the Glomerulus region subset will be utilized.
-```{r}
+```{r subset by region}
 # subsetting target_demoData by region
 glomerulus_region_subset <- 
   subset(target_demoData,
@@ -72,14 +79,75 @@ tubule_region_subset <-
 ```
 
 ### Count of DKD and normal samples in the Glomeruli
-```{r}
+```{r class imbalance?}
 table(glomerulus_region_subset$class)
 ```
 
-### **Feature Selection**
+### **Data Splitting for Training and Testing of Models**
 
-### Identifying Genes with High Coefficient of Variation
-```{r cache=TRUE}
+### Split Function
+The splitgeomx function splits the GeoMxSet Object into two objects, one to be used for model training and one for model testing. Maintaining the split data as GeoMxSet Objects allows users to continue to be able to link experiment data with associated metadata. So each subset object contains the subset experiment data and all of the associated subset metadata.
+
+```{r split function}
+source("GeoMxSetSplit.R")
+
+# It is common for the training and testing dataset split ratio to be 70/30 or 80/20.
+split_ratio <- 0.7
+
+train_test_list <- splitgeomx(glomerulus_region_subset,split_ratio)
+train_split <- train_test_list[[1]]
+test_split <- train_test_list[[2]]
+```
+
+#### Dimensions of the original GeoMxSet Object, subset by region
+```{r split dim, echo=FALSE}
+dim(glomerulus_region_subset)
+```
+
+#### Dimensions of the GeoMxSet Object for training
+```{r train split dim, echo=FALSE}
+dim(train_split)
+```
+
+#### Dimensions of the GeoMxSet Object for testing
+```{r test split dim, echo=FALSE}
+dim(test_split)
+```
+
+### Dataset Builder Function
+The datasetBuilder function takes the output split objects from the splitgeomx function and creates training and testing data frames. The function combines transposed expression data with the class used for classification. The expression data consists of samples as rows and gene expression counts as columns.
+
+```{r dataset builder}
+source("DatasetBuilder.R")
+classifier_column <- "class" # For this dataset, the classification column is labeled as class
+train_data <- datasetBuilder(exprs(train_split), pData(train_split)[[classifier_column]])
+test_data <- datasetBuilder(exprs(test_split), pData(test_split)[[classifier_column]])
+```
+
+#### Dimensions of train_data
+```{r train_data, echo=FALSE}
+dim(train_data)
+```
+
+#### First 5 rows and last 10 columns of train_data
+```{r train_data printed, echo=FALSE}
+train_data[1:5,10123:10132]
+```
+
+#### Dimensions of test_data
+```{r test_data, echo=FALSE}
+dim(test_data)
+```
+
+#### First 5 rows and last 10 columns of test_data
+```{r test_data printed, echo=FALSE}
+test_data[1:5,10123:10132]
+```
+
+## **Feature Selection**
+
+### Identifying Genes with Highest Coefficient of Variation
+```{r CV, cache=TRUE}
 # create a log2 transform of the data for analysis
 assayDataElement(object = glomerulus_region_subset, elt = "log_q") <-
   assayDataApply(glomerulus_region_subset, 2, FUN = log, base = 2, elt = "q_norm")
@@ -90,28 +158,13 @@ CV_dat <- assayDataApply(glomerulus_region_subset,
                          elt = "log_q", MARGIN = 1, calc_CV)
 # show the highest CD genes and their CV values
 CV_dat_ordered <- sort(CV_dat, decreasing = TRUE)[1:20]
-CV_dat_ordered
+
+kable(CV_dat_ordered, col.names = c(), digits = 5,
+      caption = "CV results",
+      align = "lc", row.names = TRUE)
 ```
 
-### Heatmap Showing Unsupervised Hierarchical Clustering of Genes with High CVs
-```{r echo = FALSE, cache=TRUE}
-library(pheatmap)  # for pheatmap
-# Identify genes in the top 3rd of the CV values
-GOI <- names(CV_dat)[CV_dat > quantile(CV_dat, 0.8)]
-pheatmap(assayDataElement(glomerulus_region_subset[GOI, ], elt = "log_q"),
-         scale = "row",
-         show_rownames = FALSE, show_colnames = FALSE,
-         border_color = NA,
-         clustering_method = "average",
-         clustering_distance_rows = "correlation",
-         clustering_distance_cols = "correlation",
-         breaks = seq(-3, 3, 0.05),
-         color = colorRampPalette(c("purple3", "black", "yellow2"))(120),
-         annotation_col =
-             pData(target_demoData)[, c("class", "segment", "region")])
-```
-
-```{r include=FALSE, cache=TRUE}
+```{r DE #1, include=FALSE, cache=TRUE}
 library(knitr)
 
 # convert test variables to factors
@@ -123,7 +176,7 @@ assayDataElement(object = target_demoData, elt = "log_q") <-
   assayDataApply(target_demoData, 2, FUN = log, base = 2, elt = "q_norm")
 ```
 
-```{r include=FALSE, cache=TRUE}
+```{r DE #2, include=FALSE, cache=TRUE}
 # run LMM:
 # formula follows conventions defined by the lme4 package
 results <- c()
@@ -157,13 +210,13 @@ for(status in c("DKD", "normal")) {
 ```
 
 ### Identifying Genes with Significant Differential Expression
-```{r cache=TRUE}
+```{r DE printed #1, cache=TRUE}
 # convert test variables to factors
 pData(target_demoData)$testClass <-
   factor(pData(target_demoData)$class, c("normal", "DKD"))
 ```
 
-```{r cache=TRUE}
+```{r DE printed #2, cache=TRUE}
 # run LMM:
 # formula follows conventions defined by the lme4 package
 results2 <- c()
@@ -196,18 +249,18 @@ for(region in c("glomerulus", "tubule")) {
 }
 ```
 
-```{r cache=TRUE}
+```{r DE printed #3}
 results2_sorted <- results2[order(-abs(results2$Estimate)),]
 results2_filtered <- results2_sorted[results2_sorted$FDR <= .05,]
 results2_filtered <- results2_filtered[results2_filtered$Subset == "glomerulus",]
 
-kable(results2_filtered[1:20,], digits = 10,
+kable(results2_filtered[1:20,], digits = 5,
       caption = "DE results",
       align = "lc", row.names = FALSE)
 ```
 
 ### Volcano Plot of Differential Expression Results
-```{r echo=FALSE, cache=TRUE}
+```{r volcano plot, echo=FALSE, cache=TRUE}
 library(ggrepel)
 # Categorize Results based on P-value & FDR for plotting
 results2$Color <- "NS or FC < 0.5"
@@ -261,77 +314,17 @@ ggplot(results2,
 
 
 ### Subsetting GeoMxSet Object by 20 genes of interest, as determined by DE
-```{r}
+```{r DE subset}
 DE_genes <- results2_filtered$Gene[1:20]
 DE_subset <- subset(glomerulus_region_subset, TargetName %in% DE_genes)
 ```
 
 ### Subsetting GeoMxSet Object by 20 genes of interest, as determined by CV
-```{r}
+```{r CV subset}
 CV_genes <- names(CV_dat_ordered)
 CV_subset <- subset(glomerulus_region_subset, TargetName %in% CV_genes)
 ```
 
-### **Data Splitting for Training and Testing of Models**
-
-### Split Function
-The splitgeomx function splits the GeoMxSet Object into two objects, one to be used for model training and one for model testing. Maintaining the split data as GeoMxSet Objects allows users to continue to be able to link experiment data with associated metadata. So each subset object contains the subset experiment data and all of the associated subset metadata.
-
-```{r}
-source("GeoMxSetSplit.R")
-
-# It is common for the training and testing dataset split ratio to be 70/30 or 80/20.
-split_ratio <- 0.7
-
-train_test_list <- splitgeomx(glomerulus_region_subset,split_ratio)
-train_split <- train_test_list[[1]]
-test_split <- train_test_list[[2]]
-```
-
-#### Dimensions of the original GeoMxSet Object, subset by region
-```{r echo = FALSE}
-dim(glomerulus_region_subset)
-```
-
-#### Dimensions of the GeoMxSet Object for training
-```{r echo = FALSE}
-dim(train_split)
-```
-
-#### Dimensions of the GeoMxSet Object for testing
-```{r echo = FALSE}
-dim(test_split)
-```
-
-### Dataset Builder Function
-The datasetBuilder function takes the output split objects from the splitgeomx function and creates training and testing data frames. The function combines transposed expression data with the class used for classification. The expression data consists of samples as rows and gene expression counts as columns.
-
-```{r}
-source("DatasetBuilder.R")
-classifier_column <- "class" # For this dataset, the classification column is labeled as class
-train_data <- datasetBuilder(exprs(train_split), pData(train_split)[[classifier_column]])
-test_data <- datasetBuilder(exprs(test_split), pData(test_split)[[classifier_column]])
-```
-
-#### Dimensions of train_data
-```{r echo = FALSE}
-dim(train_data)
-```
-
-#### First 5 rows and first 10 columns of train_data
-```{r echo = FALSE}
-train_data[1:5,1:10]
-```
-
-#### Dimensions of test_data
-```{r echo = FALSE}
-dim(test_data)
-```
-
-#### First 5 rows and last 10 columns of test_data
-```{r echo = FALSE}
-test_data[1:5,10123:10132]
-```
 
 ## **Building Machine Learning Models**
 
@@ -340,11 +333,9 @@ test_data[1:5,10123:10132]
 #### 2. Classification Class
 #### 3. Model Type
 #### 4. Split Ratio (optional)
-#### 5. Model Specific Parameters (optional)
-##### a. Resampling Method (tuneLenght, trainControl, tuneGrid)
-##### b. Seed
+#### 6. Model Specific Parameters: Resampling Method (tuneLength, trainControl, tuneGrid) (optional)
 
-### Outputs for ML Functions
+### Model Outputs
 #### 1. Results of Parameter Tuning
 #### 2. Most Important Variables
 #### 3. Results of Testing Model
@@ -353,11 +344,11 @@ test_data[1:5,10123:10132]
 #### **1. Naive Bayes (nb)**
 ##### Naive Bayes Classifier is a probabilistic classifier that assumes conditional independence between features. This model assumes a Gaussian distribution of data.
 ##### Parameters: 
-##### a. Laplace Correction (laplace)
-##### b. Distribution Type (usekernel)
-##### c. Bandwidth Adjustment (adjust)
+#####     a. Laplace Correction (laplace)
+#####     b. Distribution Type (usekernel)
+#####     c. Bandwidth Adjustment (adjust)
 
-```{r echo = FALSE}
+```{r nb picture, echo = FALSE}
 library(knitr)
 include_graphics("naivebayes.png")
 ```
@@ -365,113 +356,98 @@ include_graphics("naivebayes.png")
 #### **2. K-Nearest Neighbor (knn)**
 ##### K-Nearest Neighbor Classifier is a non-parametric model that determines class membership (label) based on the most common label amongst k nearest neighbors.
 ##### Parameters: 
-##### a. Neighbors (k)
+#####     a. Number of Neighbors (k)
 
-```{r echo = FALSE}
+```{r knn picture, echo = FALSE}
 include_graphics("knn2.png")
 ```
 
-#### **3. Extreme Gradient Boosting (XGBoost) (xgb)**
-##### XGBoost Classifier is an optimized distributed gradient boosting model. The model uses additive training and boosted trees for optimization.
-##### Parameters: 
-##### a. Boosting Iterations (nrounds)
-##### b. Max Tree Depth (max_depth)
-##### c. Shrinkage (eta)
-##### d. Minimum Loss Reduction (gamma)
-##### e. Subsample Percentage (subsample)
-##### f. Subsample Ratio of Columns (colsample_bytree)
-##### g. Fraction of Trees Dropped (rate_drop)
-##### h. Probability of Skipping Drop-out (skip_drop)
-##### i. Minimum Sum of Instance Weight (min_child_weight)
-
-```{r echo = FALSE}
-include_graphics("xgb.png")
-```
-
-#### **4. Random Forest (rf)**
+#### **3. Random Forest (rf)**
 ##### Random Forest Classifier is an ensemble learning method. The outputs of many decision trees, which are trained on a random sampling of data, are aggregated to a single final decision.
 ##### Parameters: 
-##### a. Starting Value of Number of Predictors Randomly Sampled at Each Split (mtryStart)
-##### b. Number of Trees Used at The Tuning Step (ntreeTry)
-##### c. Number By Which mtry is Changed at Every Iteration (stepFactor)
-##### d. Required Improvement In OOB Error for Search to Continue (improve)
-##### e. Print Progress of Search (plot)
-##### f. Run Forest Using Optimal mtry Found (doBest)
+#####     a. Number of Randomly Selected Predictors (mtry)
 
-```{r echo = FALSE}
+```{r random forest picture, echo = FALSE}
 include_graphics("randomforest2.png")
 ```
 
-#### **5. Support Vector Machine (svm)**
+#### **4. Support Vector Machine (svm)**
 ##### Support Vector Machine Classifier is a non-probabilistic binary linear model. SVM aims to classify data based on the position in relation to a border or hyperplance between the positive and negative class. The border is determined to maximize the distance between the classes.
 ##### Parameters: 
-##### a. Cost (cost)
-##### b. Loss Function (Loss)
-##### c. Class Weight (weight)
+#####     a. Cost (cost)
+#####     b. Loss Function (Loss)
+#####     c. Class Weight (weight)
 
-```{r echo = FALSE}
+```{r svm picture, echo = FALSE}
 include_graphics("svm3.png")
 ```
 
-```{r}
+```{r mlfunctions}
 source("MLFunctions.R")
 ```
 
 ## Naive Bayes
-```{r}
+```{r nb}
 ml_function(glomerulus_region_subset,"class", "nb")
 ```
 
 ## K-Nearest Neighbor
-```{r}
+```{r knn}
 ml_function(glomerulus_region_subset,"class", "knn")
 ```
 
-## K-Nearest Neighbor with CV gene subset
-```{r}
-ml_function(CV_subset,"class", "knn")
-```
-
-## K-Nearest Neighbor with DE gene subset
-```{r}
-ml_function(DE_subset,"class", "knn")
-```
-
-## XGBoost
-```{r warning=FALSE}
-ml_function(glomerulus_region_subset,"class", "xgb")
-```
-
 ## Random Forest
-```{r}
+```{r rf}
 ml_function(glomerulus_region_subset, "class", "rf")
 ```
 
-## Random Forest with CV gene subset
-```{r}
-ml_function(CV_subset,"class", "rf")
-```
-
-## Random Forest with DE gene subset
-```{r}
-ml_function(DE_subset,"class", "rf")
-```
-
 ## Support Vector Machine
-```{r}
+```{r svm}
 ml_function(glomerulus_region_subset,"class", "svm")
 ```
 
-### Future Work
-#### 1. Implement error handling and parameter checking in mlfunction.
-#### 2. Implement cross validation function over entire dataset, without any splitting.
-#### 3. Implement additional models, ex. logisitic regression.
-#### 4. Perform user testing.
-#### 5. Additional testing with more datasets.
-#### 6. Explore machine learning applications of spatial data.
-#### 7. Coercion to Python
+## Naive Bayes, Utilizing CV Results for Feature Selection
+```{r nb and cv}
+ml_function(CV_subset,"class", "nb")
+```
+
+## K-Nearest Neighbor, Utilizing CV Results for Feature Selection
+```{r knn and cv}
+ml_function(CV_subset,"class", "knn")
+```
+
+## Random Forest, Utilizing CV Results for Feature Selection
+```{r rf and cv}
+ml_function(CV_subset, "class", "rf")
+```
+
+## Support Vector Machine, Utilizing CV Results for Feature Selection
+```{r rf and svm}
+ml_function(CV_subset,"class", "svm")
+```
+
+## Naive Bayes, Utilizing DE Results for Feature Selection
+```{r nb and de}
+ml_function(DE_subset,"class", "nb")
+```
+
+## K-Nearest Neighbor, Utilizing DE Results for Feature Selection
+```{r knn and de}
+ml_function(DE_subset,"class", "knn")
+```
+
+## Random Forest, Utilizing DE Results for Feature Selection
+```{r rf and de}
+ml_function(DE_subset, "class", "rf")
+```
+
+## Support Vector Machine, Utilizing DE Results for Feature Selection
+```{r svm and de}
+ml_function(DE_subset,"class", "svm")
+```
+
 
 ### Session Information
-```{r}
+```{r session info}
 sessionInfo()
 ```
