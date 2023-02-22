@@ -113,11 +113,15 @@ function(dccFiles,
       protocolDataColNames <- paste0(phenoDataColPrefix, protocolDataColNames)
     }
     
-    if("area" %in% colnames(pheno)){
-        pheno[["area"]] <- as.numeric(pheno[["area"]])
+    if("area" %in% tolower(colnames(pheno))){
+      areaCol <- colnames(pheno)[grep("area", tolower(colnames(pheno)))]
+      pheno[[areaCol]] <- as.numeric(pheno[[areaCol]])
     }
     if("nuclei" %in% colnames(pheno)){
-        pheno[["nuclei"]] <- as.numeric(pheno[["nuclei"]])
+      pheno[["nuclei"]] <- as.numeric(pheno[["nuclei"]])
+    }
+    if("AOINucleiCount" %in% colnames(pheno)){
+      pheno[["AOINucleiCount"]] <- as.numeric(pheno[["AOINucleiCount"]])
     }
     
     pheno <- Biobase::AnnotatedDataFrame(pheno,
