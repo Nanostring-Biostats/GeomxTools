@@ -114,14 +114,16 @@ function(dccFiles,
     }
     
     if("area" %in% tolower(colnames(pheno))){
-      areaCol <- colnames(pheno)[grep("area", tolower(colnames(pheno)))]
+      areaCol <- colnames(pheno)[which(tolower(colnames(pheno)) == "area")]
       pheno[[areaCol]] <- as.numeric(pheno[[areaCol]])
     }
-    if("nuclei" %in% colnames(pheno)){
-      pheno[["nuclei"]] <- as.numeric(pheno[["nuclei"]])
+    if("nuclei" %in% tolower(colnames(pheno))){
+      nucleiCol <- colnames(pheno)[which(tolower(colnames(pheno)) == "nuclei")]
+      pheno[[nucleiCol]] <- as.numeric(pheno[[nucleiCol]])
     }
-    if("AOINucleiCount" %in% colnames(pheno)){
-      pheno[["AOINucleiCount"]] <- as.numeric(pheno[["AOINucleiCount"]])
+    if("AOINucleiCount" %in% tolower(colnames(pheno))){
+      nucleiCol <- colnames(pheno)[which(tolower(colnames(pheno)) == "aoinucleicount")]
+      pheno[[nucleiCol]] <- as.numeric(pheno[[nucleiCol]])
     }
     
     pheno <- Biobase::AnnotatedDataFrame(pheno,
