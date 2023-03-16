@@ -86,6 +86,9 @@ function(file)
              colClasses = c(RTS_ID = "character", Count = "numeric"))
   output[["Code_Summary"]][["Count"]] <-
     as.integer(round(output[["Code_Summary"]][["Count"]]))
+  
+  output[["Code_Summary"]][["RTS_ID"]] <- gsub("RNA", "RTS00", output[["Code_Summary"]][["RTS_ID"]])
+  
   rn <- output[["Code_Summary"]][["RTS_ID"]]
   if ((ndups <- anyDuplicated(rn)) > 0L) {
     warning(sprintf("removed %d rows from \"Code_Summary\" due to duplicate rownames",

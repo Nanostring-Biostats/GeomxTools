@@ -156,7 +156,7 @@ function(dccFiles,
     " The following probes are ignored from analysis",
     " and were most likely removed from metadata while",
     " resolving multiple module PKC version conflicts.\n",
-    paste(missingProbes, sep=", "))
+    paste(missingProbes, collapse=", "))
   }
   
   if(!is.null(configFile)){
