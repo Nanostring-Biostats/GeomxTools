@@ -121,7 +121,7 @@ function(dccFiles,
       nucleiCol <- colnames(pheno)[which(tolower(colnames(pheno)) == "nuclei")]
       pheno[[nucleiCol]] <- as.numeric(pheno[[nucleiCol]])
     }
-    if("AOINucleiCount" %in% tolower(colnames(pheno))){
+    if("aoinucleicount" %in% tolower(colnames(pheno))){
       nucleiCol <- colnames(pheno)[which(tolower(colnames(pheno)) == "aoinucleicount")]
       pheno[[nucleiCol]] <- as.numeric(pheno[[nucleiCol]])
     }
