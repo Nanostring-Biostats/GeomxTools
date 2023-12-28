@@ -136,7 +136,7 @@ demoSeurat@misc[1:8] # experiment data
 
 head(demoSeurat@misc$sequencingMetrics) # sequencing metrics
 head(demoSeurat@misc$QCMetrics$QCFlags) # QC metrics
-head(demoSeurat@assays$GeoMx@meta.features) # gene metadata
+head(demoSeurat@assays$GeoMx@meta.data) # gene metadata
 ```
 
 All Seurat functionality is available after coercing. Outputs might differ if the *ident* value is set or not. 
@@ -257,16 +257,16 @@ tumor <- suppressMessages(SpatialFeaturePlot(nsclcSeurat[,nsclcSeurat$AOI.name =
   labs(title = "Tumor") + 
   theme(legend.position = "none") + 
   scale_fill_continuous(type = "viridis",
-                        limits = c(min(nsclcSeurat@assays$GeoMx@counts["A2M",]), 
-                                   max(nsclcSeurat@assays$GeoMx@counts["A2M",]))))
+                        limits = c(min(nsclcSeurat@assays$GeoMx$data["A2M",]), 
+                                   max(nsclcSeurat@assays$GeoMx$data["A2M",]))))
 
 TME <- suppressMessages(SpatialFeaturePlot(nsclcSeurat[,nsclcSeurat$AOI.name == "TME"], 
                                            features = "A2M", pt.size.factor = 12) + 
   labs(title = "TME") + 
   theme(legend.position = "right") +
   scale_fill_continuous(type = "viridis", 
-                        limits = c(min(nsclcSeurat@assays$GeoMx@counts["A2M",]),
-                                   max(nsclcSeurat@assays$GeoMx@counts["A2M",]))))
+                        limits = c(min(nsclcSeurat@assays$GeoMx$data["A2M",]),
+                                   max(nsclcSeurat@assays$GeoMx$data["A2M",]))))
 
 wrap_plots(tumor, TME)
 ```
@@ -289,16 +289,16 @@ for(i in rownames(de_genes)[1:2]){
   labs(title = "Tumor") + 
   theme(legend.position = "none") + 
   scale_fill_continuous(type = "viridis",
-                        limits = c(min(nsclcSeurat@assays$GeoMx@counts[i,]), 
-                                   max(nsclcSeurat@assays$GeoMx@counts[i,]))))
+                        limits = c(min(nsclcSeurat@assays$GeoMx$data[i,]), 
+                                   max(nsclcSeurat@assays$GeoMx$data[i,]))))
 
   TME <- suppressMessages(SpatialFeaturePlot(nsclcSeurat[,nsclcSeurat$AOI.name == "TME"], 
                                              features = i, pt.size.factor = 12) + 
     labs(title = "TME") + 
     theme(legend.position = "right") +
     scale_fill_continuous(type = "viridis", 
-                          limits = c(min(nsclcSeurat@assays$GeoMx@counts[i,]),
-                                     max(nsclcSeurat@assays$GeoMx@counts[i,]))))
+                          limits = c(min(nsclcSeurat@assays$GeoMx$data[i,]),
+                                     max(nsclcSeurat@assays$GeoMx$data[i,]))))
   
   print(wrap_plots(tumor, TME))
 }

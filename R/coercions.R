@@ -77,9 +77,16 @@ as.Seurat.NanoStringGeoMxSet <- function(x, ident = NULL, normData = NULL,
     
     QCMetrics <- "QCFlags"
     
-    seuratConvert <- suppressWarnings(Seurat::CreateSeuratObject(counts = assayDataElement(x, normData), 
+    projectName <- expinfo(experimentData(x))[["title"]]
+    if(projectName == ""){
+      projectName <- "GeoMx"
+    }
+    
+    seuratConvert <- suppressWarnings(Seurat::CreateSeuratObject(counts = assayDataElement(x, "exprs"), 
                                                                  assay = "GeoMx", 
-                                        project = expinfo(experimentData(x))[["title"]]))
+                                        project = projectName))
+    seuratConvert <- Seurat::SetAssayData(seuratConvert, layer = "data", 
+                                          new.data = assayDataElement(x, normData))
     seuratConvert <- suppressWarnings(Seurat::AddMetaData(object = seuratConvert, 
                                                   metadata = sData(x)[,!colnames(sData(x)) %in% 
                                                                                c(sequencingMetrics,
@@ -92,7 +99,7 @@ as.Seurat.NanoStringGeoMxSet <- function(x, ident = NULL, normData = NULL,
             stop(paste0("ident \"", ident, "\" not found in GeoMxSet Object"))
         }
         
-        Seurat::Idents(seuratConvert) <- seuratConvert[[ident]]
+        Seurat::Idents(seuratConvert) <- as.factor(seuratConvert@meta.data[[ident]])
     }
     
     

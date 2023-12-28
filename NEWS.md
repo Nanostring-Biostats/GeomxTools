@@ -1,3 +1,8 @@
+# GeomxTools 3.7.2
+* Seurat v5 coercion
+* improved Proteogenomics error handling
+* bug fix on area filtering
+
 # GeomxTools 3.1.1
 * Documentation correction
 

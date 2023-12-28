@@ -187,6 +187,13 @@ function(dccFiles,
     pkcHeader[[i]] <- pkcHeader[[i]][names(pkcHeader[[i]]) %in% pkcs]
   }
   
+  # Handle older assay probe labels
+  if (any(startsWith(pkcData[["RTS_ID"]][1L], "RTS")) &
+      any(startsWith(probeAssay[["RTS_ID"]][1L], "RNA"))) {
+    # replace RNA with RTS00 in probeAssay[["RTS_ID"]]
+    probeAssay[["RTS_ID"]] <- gsub("^RNA", "RTS00", probeAssay[["RTS_ID"]])
+  }
+  
   probeAssay <- probeAssay[probeAssay[["RTS_ID"]] %in% pkcData[["RTS_ID"]],]
   
   zeroProbes <- setdiff(rownames(pkcData), unique(probeAssay[["RTS_ID"]]))

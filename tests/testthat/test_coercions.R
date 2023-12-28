@@ -85,11 +85,11 @@ test_that("Seurat Ident is equal to given column",{
 
 # count matrix in correct location
 test_that("Count matrix is in the correct location - Seurat", {
-    expect_true(all(GetAssayData(seurat_object, "counts") == 
+    expect_true(all(GetAssayData(seurat_object, assay = "GeoMx", "data") == 
                       assayDataElement(target_demoData, "exprs_norm")))
-    expect_identical(colnames(GetAssayData(seurat_object, "counts")), 
+    expect_identical(colnames(GetAssayData(seurat_object, assay = "GeoMx", "data")), 
                      colnames(assayDataElement(target_demoData, "exprs_norm")))
-    expect_identical(rownames(GetAssayData(seurat_object, "counts")), 
+    expect_identical(rownames(GetAssayData(seurat_object, assay = "GeoMx", "data")), 
                      rownames(assayDataElement(target_demoData, "exprs_norm")))
 })
 test_that("Count matrix is in the correct location - SpatialExperiment", {
@@ -115,10 +115,10 @@ identMetrics <- colnames(sData(target_demoData))[!colnames(sData(target_demoData
 # pheno data in correct spot
 test_that("pheno data is in the correct location - Seurat", {
     expect_true(all(seurat_object[[]][,colnames(seurat_object[[]]) %in% 
-                                              gsub("\\W", ".", identMetrics)] == 
+                                              identMetrics] == 
                         sData(target_demoData)[,identMetrics]))
     expect_true(all(noQC_seurat_object[[]][,colnames(noQC_seurat_object[[]]) %in% 
-                                                   gsub("\\W", ".", identMetrics)] == 
+                                                   identMetrics] == 
                         sData(noQC)[,identMetrics]))
 })
 test_that("pheno data is in the correct location - SpatialExperiment", {
@@ -183,7 +183,7 @@ test_that("experiment data are in the correct location - SpatialExperiment", {
 
 # feature metadata in correct spot
 test_that("feature data is in the correct location - Seurat", {
-    expect_true(all(seurat_object@assays$GeoMx@meta.features == 
+    expect_true(all(seurat_object@assays$GeoMx@meta.data == 
                       fData(target_demoData), na.rm=TRUE))
 })
 test_that("feature data is in the correct location - SpatialExperiment", {
