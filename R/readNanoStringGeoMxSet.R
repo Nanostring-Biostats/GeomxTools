@@ -213,8 +213,7 @@ function(dccFiles,
     
     data <- data[which(names(data) %in% names(probeAssay))]
     
-    pheno <- pheno[which(names(data) %in% 
-                           sampleNames(pheno)),]
+    pheno <- pheno[names(data),]
   }
   
   assay <- as.matrix(probeAssay[, names(data)])

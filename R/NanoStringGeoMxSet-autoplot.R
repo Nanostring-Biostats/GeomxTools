@@ -103,13 +103,17 @@ qcProteinSignal <- function(object, neg.names=NULL) {
     snr <- snrOrder(object, neg.names)
     
     protnames <- rownames(snr)
+    ylim <- range(log2(snr))
+    if(ylim[1L] == -Inf){
+      ylim[1L] <- 0
+    }
     
     fig <- function(){
         par(mar = c(11, 4, 2, 1))
         boxplot(t(log2(snr)),
                 las = 2,
                 outline = FALSE,
-                ylim = range(log2(snr)),
+                ylim = ylim,
                 names = protnames,
                 ylab = "Log2 signal-to-background ratio",
                 cex.axis = .85 - 0.3 * (nrow(snr) > 60)
