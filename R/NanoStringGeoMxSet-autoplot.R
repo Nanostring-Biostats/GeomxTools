@@ -107,6 +107,9 @@ qcProteinSignal <- function(object, neg.names=NULL) {
     if(ylim[1L] == -Inf){
       ylim[1L] <- 0
     }
+    if(ylim[2L] == -Inf){
+      ylim[2L] <- 0
+    }
     
     fig <- function(){
         par(mar = c(11, 4, 2, 1))

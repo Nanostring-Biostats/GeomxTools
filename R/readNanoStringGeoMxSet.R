@@ -21,12 +21,12 @@ function(dccFiles,
   }
   # Read data rccFiles
   data <- structure(lapply(dccFiles, readDccFile), names = basename(dccFiles))
-
+  
   # Create assayData
   assay <- lapply(data, function(x)
     structure(x[["Code_Summary"]][["Count"]],
               names = rownames(x[["Code_Summary"]])))
-
+  
   # Create phenoData
   if (is.null(phenoDataFile)) {
     stop("Please specify an input for phenoDataFile.")
@@ -41,7 +41,7 @@ function(dccFiles,
     }
     # check protocolDataColNames
     if (!(all(protocolDataColNames %in% colnames(pheno))) &
-          !(is.null(protocolDataColNames))) {
+        !(is.null(protocolDataColNames))) {
       stop("Columns specified in `protocolDataColNames` are not found in `phenoDataFile`")
     }
     # check experimentDataColNames
@@ -53,44 +53,44 @@ function(dccFiles,
     pheno[[j]] <- ifelse(grepl(".dcc", pheno[[j]]), paste0(pheno[[j]]),
                          paste0(pheno[[j]], ".dcc"))
     if ("slide name" %in% colnames(pheno)) {
-        ntcs <- which(tolower(pheno[["slide name"]]) == "no template control")
-        if (length(ntcs) > 0) {
-            ntcData <- lapply(seq_along(ntcs), function(x) {
-                ntcID <- pheno[ntcs[x], j]
-                if(!is.na(ntcs[x + 1L])) {
-                    ntcNames <- rep(ntcID, ntcs[x + 1L] - ntcs[x])
-                    ntcCounts <-
-                        rep(sum(assay[[ntcID]]), ntcs[x + 1L] - ntcs[x])
-                    ntcDF <- data.frame("NTC_ID"=ntcNames, "NTC"=ntcCounts)
-                } else {
-                    ntcNames <- rep(ntcID, dim(pheno)[1L] - ntcs[x] + 1L)
-                    ntcCounts <-
-                        rep(sum(assay[[ntcID]]), dim(pheno)[1L] - ntcs[x] + 1L)
-                    ntcDF <- data.frame("NTC_ID"=ntcNames, "NTC"=ntcCounts)
-                }
-                return(ntcDF)
-            })
-            if (length(ntcs) > 1L) {
-                ntcData <- do.call(rbind, ntcData)
-            } else {
-                ntcData <- ntcData[[1L]]
-            }
-            pheno <- cbind(pheno, ntcData)
-            pheno <- pheno[!rownames(pheno) %in% ntcs, ]
-            assay <- assay[!names(assay) %in% unique(pheno[["NTC_ID"]])]
-            data <- data[!names(data) %in% unique(pheno[["NTC_ID"]])]
-            protocolDataColNames <- c(protocolDataColNames, "NTC_ID", "NTC")
+      ntcs <- which(tolower(pheno[["slide name"]]) == "no template control")
+      if (length(ntcs) > 0) {
+        ntcData <- lapply(seq_along(ntcs), function(x) {
+          ntcID <- pheno[ntcs[x], j]
+          if(!is.na(ntcs[x + 1L])) {
+            ntcNames <- rep(ntcID, ntcs[x + 1L] - ntcs[x])
+            ntcCounts <-
+              rep(sum(assay[[ntcID]]), ntcs[x + 1L] - ntcs[x])
+            ntcDF <- data.frame("NTC_ID"=ntcNames, "NTC"=ntcCounts)
+          } else {
+            ntcNames <- rep(ntcID, dim(pheno)[1L] - ntcs[x] + 1L)
+            ntcCounts <-
+              rep(sum(assay[[ntcID]]), dim(pheno)[1L] - ntcs[x] + 1L)
+            ntcDF <- data.frame("NTC_ID"=ntcNames, "NTC"=ntcCounts)
+          }
+          return(ntcDF)
+        })
+        if (length(ntcs) > 1L) {
+          ntcData <- do.call(rbind, ntcData)
+        } else {
+          ntcData <- ntcData[[1L]]
         }
+        pheno <- cbind(pheno, ntcData)
+        pheno <- pheno[!rownames(pheno) %in% ntcs, ]
+        assay <- assay[!names(assay) %in% unique(pheno[["NTC_ID"]])]
+        data <- data[!names(data) %in% unique(pheno[["NTC_ID"]])]
+        protocolDataColNames <- c(protocolDataColNames, "NTC_ID", "NTC")
+      }
     }
     rownames(pheno) <- pheno[[j]]
     zeroReads <- names(which(lapply(assay, length) == 0L))
     if (length(zeroReads) > 0L) {
-        warning("The following DCC files had no counts: ",
-                paste0(zeroReads, sep=", "),
-                "These will be excluded from the GeoMxSet object.")
-        pheno <- pheno[!rownames(pheno) %in% zeroReads, ]
-        assay <- assay[!names(assay) %in% zeroReads]
-        data <- data[!names(data) %in% zeroReads]
+      warning("The following DCC files had no counts: ",
+              paste0(zeroReads, sep=", "),
+              "These will be excluded from the GeoMxSet object.")
+      pheno <- pheno[!rownames(pheno) %in% zeroReads, ]
+      assay <- assay[!names(assay) %in% zeroReads]
+      data <- data[!names(data) %in% zeroReads]
     }
     missingDCCFiles <- pheno[[j]][!pheno[[j]] %in% names(assay)]
     missingPhenoData <- names(assay)[!names(assay) %in% pheno[[j]]]
@@ -127,24 +127,24 @@ function(dccFiles,
     }
     
     pheno <- Biobase::AnnotatedDataFrame(pheno,
-                                dimLabels = c("sampleNames", "sampleColumns"))
+                                         dimLabels = c("sampleNames", "sampleColumns"))
   }
-
+  
   #stopifnot(all(sapply(feature, function(x) identical(feature[[1L]], x))))
   if (is.null(pkcFiles)) {
     stop("Please specify an input for pkcFiles")
   } else if (!is.null(pkcFiles)) {
     pkcData <- readPKCFile(pkcFiles, default_pkc_vers=defaultPKCVersions)
-
+    
     pkcHeader <- S4Vectors::metadata(pkcData)
     # pkcHeader[["PKCFileDate"]] <- as.character(pkcHeader[["PKCFileDate"]])
-
+    
     pkcData$RTS_ID <- gsub("RNA", "RTS00", pkcData$RTS_ID)
-
+    
     pkcData <- as.data.frame(pkcData)
     rownames(pkcData) <- pkcData[["RTS_ID"]]
   }
-
+  
   probeAssay <- lapply(names(data), function(x)
     data.frame(data[[x]][["Code_Summary"]],
                Sample_ID = x))
@@ -153,10 +153,10 @@ function(dccFiles,
   missingProbes <- setdiff(unique(probeAssay[["RTS_ID"]]), rownames(pkcData))
   if (length(missingProbes) > 0L){
     warning("Not all probes are found within PKC probe metadata.",
-    " The following probes are ignored from analysis",
-    " and were most likely removed from metadata while",
-    " resolving multiple module PKC version conflicts.\n",
-    paste(missingProbes, sep=", "))
+            " The following probes are ignored from analysis",
+            " and were most likely removed from metadata while",
+            " resolving multiple module PKC version conflicts.\n",
+            paste(missingProbes, sep=", "))
   }
   
   if(!is.null(configFile)){
