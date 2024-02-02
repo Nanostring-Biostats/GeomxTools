@@ -26,6 +26,7 @@ NULL
 #' 
 #' @importFrom Seurat CreateSeuratObject 
 #' @importFrom Seurat AddMetaData 
+#' @importFrom data.table as.data.table
 #' 
 #' @export 
 #' @rdname as.Seurat
@@ -77,14 +78,14 @@ as.Seurat.NanoStringGeoMxSet <- function(x, ident = NULL, normData = NULL,
     
     QCMetrics <- "QCFlags"
     
+    meta <- as.data.frame(as.data.table(sData(x)[,!colnames(sData(x)) %in%  c(sequencingMetrics, QCMetrics)]))
+    
     if(packageVersion("Seurat") < 5){
       seuratConvert <- suppressWarnings(Seurat::CreateSeuratObject(counts = assayDataElement(x, normData), 
                                                                    assay = "GeoMx", 
                                                                    project = expinfo(experimentData(x))[["title"]]))
       seuratConvert <- suppressWarnings(Seurat::AddMetaData(object = seuratConvert, 
-                                                            metadata = sData(x)[,!colnames(sData(x)) %in% 
-                                                                                  c(sequencingMetrics,
-                                                                                    QCMetrics)]))
+                                                            metadata = meta))
       seuratConvert@assays$GeoMx <- Seurat::AddMetaData(object = seuratConvert@assays$GeoMx, 
                                                         metadata = fData(x))
       
@@ -107,9 +108,7 @@ as.Seurat.NanoStringGeoMxSet <- function(x, ident = NULL, normData = NULL,
       seuratConvert <- Seurat::SetAssayData(seuratConvert, layer = "data", 
                                             new.data = assayDataElement(x, normData))
       seuratConvert <- suppressWarnings(Seurat::AddMetaData(object = seuratConvert, 
-                                                            metadata = sData(x)[,!colnames(sData(x)) %in% 
-                                                                                  c(sequencingMetrics,
-                                                                                    QCMetrics)]))
+                                                            metadata = meta))
       seuratConvert@assays$GeoMx <- Seurat::AddMetaData(object = seuratConvert@assays$GeoMx, 
                                                         metadata = fData(x))
       
