@@ -77,32 +77,51 @@ as.Seurat.NanoStringGeoMxSet <- function(x, ident = NULL, normData = NULL,
     
     QCMetrics <- "QCFlags"
     
-    projectName <- expinfo(experimentData(x))[["title"]]
-    if(projectName == ""){
-      projectName <- "GeoMx"
-    }
-    
-    seuratConvert <- suppressWarnings(Seurat::CreateSeuratObject(counts = assayDataElement(x, "exprs"), 
-                                                                 assay = "GeoMx", 
-                                        project = projectName))
-    seuratConvert <- Seurat::SetAssayData(seuratConvert, layer = "data", 
-                                          new.data = assayDataElement(x, normData))
-    seuratConvert <- suppressWarnings(Seurat::AddMetaData(object = seuratConvert, 
-                                                  metadata = sData(x)[,!colnames(sData(x)) %in% 
-                                                                               c(sequencingMetrics,
-                                                                                 QCMetrics)]))
-    seuratConvert@assays$GeoMx <- Seurat::AddMetaData(object = seuratConvert@assays$GeoMx, 
-                                                      metadata = fData(x))
-    
-    if(!is.null(ident)){
+    if(packageVersion("Seurat") < 5){
+      seuratConvert <- suppressWarnings(Seurat::CreateSeuratObject(counts = assayDataElement(x, normData), 
+                                                                   assay = "GeoMx", 
+                                                                   project = expinfo(experimentData(x))[["title"]]))
+      seuratConvert <- suppressWarnings(Seurat::AddMetaData(object = seuratConvert, 
+                                                            metadata = sData(x)[,!colnames(sData(x)) %in% 
+                                                                                  c(sequencingMetrics,
+                                                                                    QCMetrics)]))
+      seuratConvert@assays$GeoMx <- Seurat::AddMetaData(object = seuratConvert@assays$GeoMx, 
+                                                        metadata = fData(x))
+      
+      if(!is.null(ident)){
         if(!ident %in% colnames(seuratConvert@meta.data)){
-            stop(paste0("ident \"", ident, "\" not found in GeoMxSet Object"))
+          stop(paste0("ident \"", ident, "\" not found in GeoMxSet Object"))
+        }
+        
+        Seurat::Idents(seuratConvert) <- seuratConvert[[ident]]
+      }
+    }else{
+      projectName <- expinfo(experimentData(x))[["title"]]
+      if(projectName == ""){
+        projectName <- "GeoMx"
+      }
+      
+      seuratConvert <- suppressWarnings(Seurat::CreateSeuratObject(counts = assayDataElement(x, "exprs"), 
+                                                                   assay = "GeoMx", 
+                                                                   project = projectName))
+      seuratConvert <- Seurat::SetAssayData(seuratConvert, layer = "data", 
+                                            new.data = assayDataElement(x, normData))
+      seuratConvert <- suppressWarnings(Seurat::AddMetaData(object = seuratConvert, 
+                                                            metadata = sData(x)[,!colnames(sData(x)) %in% 
+                                                                                  c(sequencingMetrics,
+                                                                                    QCMetrics)]))
+      seuratConvert@assays$GeoMx <- Seurat::AddMetaData(object = seuratConvert@assays$GeoMx, 
+                                                        metadata = fData(x))
+      
+      if(!is.null(ident)){
+        if(!ident %in% colnames(seuratConvert@meta.data)){
+          stop(paste0("ident \"", ident, "\" not found in GeoMxSet Object"))
         }
         
         Seurat::Idents(seuratConvert) <- as.factor(seuratConvert@meta.data[[ident]])
+      }
     }
-    
-    
+
     seuratConvert@misc <- otherInfo(experimentData(x)) 
     seuratConvert@misc[["sequencingMetrics"]] <- sData(x)[colnames(sData(x)) %in% 
                                                                    sequencingMetrics]
