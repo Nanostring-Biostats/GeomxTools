@@ -68,7 +68,7 @@ as.Seurat.NanoStringGeoMxSet <- function(x, ident = NULL, normData = NULL,
         stop("It is NOT recommended to use Seurat's normalization for GeoMx data. 
              Normalize using GeomxTools::normalize() or set forceRaw to TRUE if you want to continue with Raw data")
     }else if(length(grep(pattern = normFactor_names, names(sData(x)))) == 0){
-      warning("Coercing raw data, it is NOT recommended to use Seurat's normalization for GeoMx data.")
+      message("Coercing raw data, it is NOT recommended to use Seurat's normalization for GeoMx data.")
     }
     
     
@@ -84,7 +84,7 @@ as.Seurat.NanoStringGeoMxSet <- function(x, ident = NULL, normData = NULL,
     
     if(any(grepl("_", rownames(x)))){
       rownames(x) <- gsub("_", "-", rownames(x))
-      warning("Warning: Feature names cannot have underscores ('_'), replacing with dashes ('-')")
+      message("Feature names cannot have underscores ('_'), replacing with dashes ('-')")
     }
     
     if(packageVersion("Seurat") < 5){
