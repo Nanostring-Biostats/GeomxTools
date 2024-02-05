@@ -67,6 +67,8 @@ as.Seurat.NanoStringGeoMxSet <- function(x, ident = NULL, normData = NULL,
        forceRaw == FALSE){
         stop("It is NOT recommended to use Seurat's normalization for GeoMx data. 
              Normalize using GeomxTools::normalize() or set forceRaw to TRUE if you want to continue with Raw data")
+    }else if(length(grep(pattern = normFactor_names, names(sData(x)))) == 0){
+      warning("Coercing raw data, it is NOT recommended to use Seurat's normalization for GeoMx data.")
     }
     
     
@@ -79,6 +81,11 @@ as.Seurat.NanoStringGeoMxSet <- function(x, ident = NULL, normData = NULL,
     QCMetrics <- "QCFlags"
     
     meta <- as.data.frame(as.data.table(sData(x)[,!colnames(sData(x)) %in%  c(sequencingMetrics, QCMetrics)]))
+    
+    if(any(grepl("_", rownames(x)))){
+      rownames(x) <- gsub("_", "-", rownames(x))
+      warning("Warning: Feature names cannot have underscores ('_'), replacing with dashes ('-')")
+    }
     
     if(packageVersion("Seurat") < 5){
       seuratConvert <- suppressWarnings(Seurat::CreateSeuratObject(counts = assayDataElement(x, normData), 
@@ -245,6 +252,8 @@ as.SpatialExperiment.NanoStringGeoMxSet <- function(x, normData = NULL,
        forceRaw == FALSE){
         stop("It is NOT recommended to use Seurat's normalization for GeoMx data. 
              Normalize using GeomxTools::normalize() or set forceRaw to TRUE if you want to continue with Raw data")
+    }else if(length(grep(pattern = normFactor_names, names(sData(x)))) == 0){
+      warning("Coercing raw data, it is NOT recommended to use Seurat's normalization for GeoMx data.")
     }
     
     sequencingMetrics <- c("FileVersion", "SoftwareVersion", "Date", "Plate_ID", 
