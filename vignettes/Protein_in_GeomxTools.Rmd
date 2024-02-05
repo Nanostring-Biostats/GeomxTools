@@ -165,8 +165,8 @@ fig()
 rect(xleft = 3.5, xright = P62, ybottom = -6, ytop = 10, density = 2, col = "red", lty = 3)
 
 #Right most protein where all proteins to the left will get removed
-#start at 4 to keep the 3 IgG targets
-proteinOrder <- proteinOrder[-c(4:P62)]
+#start after the IgG targets
+proteinOrder <- proteinOrder[-c((length(igg.names)+1):P62)]
 length(proteinOrder)
 
 #replot with fewer targets

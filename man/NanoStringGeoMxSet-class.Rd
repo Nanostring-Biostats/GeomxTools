@@ -106,65 +106,60 @@ NanoStringGeoMxSet(assayData,
   In addition to the standard \code{\linkS4class{ExpressionSet}} accessor
   methods, \code{NanoStringGeoMxSet} objects have the following:
   \describe{
-    \item{}{
-      \code{sData(object)}: extracts the \code{data.frame} containing the
+    \item{\code{sData(object)}}{
+      extracts the \code{data.frame} containing the
       sample data, \code{cbind(pData(object), pData(protocolData(object)))}.
     }
-    \item{}{
-      \code{svarLabels(object)}: extracts the sample data column names,
+    \item{\code{svarLabels(object)}}{
+      extracts the sample data column names,
       \code{c(varLabels(object), varLabels(protocolData(object)))}.
     }
-    \item{}{
-      \code{dimLabels(object)}: extracts the column names to use as labels
+    \item{\code{dimLabels(object)}}{
+      extracts the column names to use as labels
       for the features and samples.
     }
-    \item{}{
-      \code{dimLabels(object) <- value}: replaces the \code{dimLabels} of
+    \item{\code{dimLabels(object) <- value}}{
+      replaces the \code{dimLabels} of
       the \code{object}.
     }
-    \item{}{
-      \code{featureType(object)}: extracts the \code{featureType}
+    \item{\code{featureType(object)}}{
+      extracts the \code{featureType}
       of the \code{object}.
     }
-    \item{}{
-      \code{featureType(object) <- value}: replaces the \code{featureType}
+    \item{\code{featureType(object) <- value}}{
+      replaces the \code{featureType}
       of the \code{object}.
     }
-    \item{}{
-      \code{signatures(object)}: extracts the \code{\link{SignatureSet}}
+    \item{\code{signatures(object)}}{
+      extracts the \code{\link{SignatureSet}}
       of the \code{object}.
     }
-    \item{}{
-      \code{signatures(object) <- value}: replaces the
-      \code{\link{SignatureSet}} of the \code{object}.
+    \item{\code{signatures(object) <- value}}{
+      replaces the \code{\link{SignatureSet}} of the \code{object}.
     }
-    \item{}{
-      \code{signatureScores(object, elt="exprs")}: extracts the matrix
+    \item{\code{signatureScores(object, elt="exprs")}}{
+      extracts the matrix
       of computed signature scores.
     }
-    \item{}{
-      \code{design(object)}: extracts the one-sided formula representing
+    \item{\code{design(object)}}{
+      extracts the one-sided formula representing
       the experimental design based on columns from
       \code{\link[Biobase]{phenoData}}.
     }
-    \item{}{
-      \code{design(object) <- value}: replaces the one-sided formula
+    \item{\code{design(object) <- value}}{
+      replaces the one-sided formula
       representing the experimental design based on columns from
       \code{\link[Biobase]{phenoData}}.
     }
-    \item{}{
-      \code{signatureGroups(object)}: extract the groups of
-      \code{\link{SignatureSet}}.
+    \item{\code{signatureGroups(object)}}{
+      extract the groups of \code{\link{SignatureSet}}.
     }     
-    \item{}{
-      \code{signatureGroups(object) <- value }: replaces the groups of
-      \code{\link{SignatureSet}}.
+    \item{\code{signatureGroups(object) <- value }}{
+      replaces the groups of \code{\link{SignatureSet}}.
     } 
-    \item{}{
-      \code{analyte(object)}: extracts the \code{analyte}
-      of the \code{object}.
+    \item{\code{analyte(object)}}{
+      extracts the \code{analyte} of the \code{object}.
     }
-    
   }
 }
 
