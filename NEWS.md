@@ -1,3 +1,9 @@
+# GeomxTools 3.6.2
+* Seurat v5 coercion
+* IPA data loading
+* improved Proteogenomics error handling
+* bug fix on area filtering
+
 # GeomxTools 3.1.1
 * Documentation correction
 

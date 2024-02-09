@@ -57,7 +57,7 @@ function(file, default_pkc_vers=NULL)
     }
   }
 
-  rtsid_lookup_df <- generate_pkc_lookup(pkc_json_list)
+  rtsid_lookup_df <- generate_pkc_lookup(jsons_vec = pkc_json_list)
   # create negative column 
   rtsid_lookup_df$Negative <- grepl("Negative", rtsid_lookup_df$CodeClass)
   rtsid_lookup_df$RTS_ID <- gsub("RNA", "RTS00", rtsid_lookup_df[["RTS_ID"]])
@@ -112,19 +112,25 @@ generate_pkc_lookup <- function(jsons_vec) {
     for (targ in curr_json[["Targets"]]) {
       curr_targ <- targ[["DisplayName"]]
       curr_code_class <- gsub("\\d+$", "", targ[["CodeClass"]])
+
       for (prb in targ[["Probes"]]) {
         if(curr_json[["AnalyteType"]] == "Protein"){
           curr_RTS_ID <- targ$RTS_ID
+          curr_gene_ID <- paste(targ$GeneID, collapse = ", ")
+          if (length(targ$GeneID) < 1) {
+            curr_gene_ID <- NA
+          }
+          curr_syst_name <- paste(targ$SystematicName, collapse = ", ")
         }else{
           curr_RTS_ID <- prb$RTS_ID
+          curr_gene_ID <- paste(prb$GeneID, collapse = ", ")
+          if (length(prb$GeneID) < 1) {
+            curr_gene_ID <- NA
+          }
+          curr_syst_name <- paste(prb$SystematicName, collapse = ", ")
         }
         curr_probe_ID <- prb$ProbeID
-        curr_gene_ID <- 
-          paste(prb$GeneID, collapse = ", ")
-        if (length(prb$GeneID) < 1) {
-          curr_gene_ID <- NA
-        }
-        curr_syst_name <- paste(prb$SystematicName, collapse = ", ")
+        
         lookup_df[nrow(lookup_df) + 1, ] <- 
           list(curr_RTS_ID, curr_targ, curr_module, curr_code_class, 
                curr_probe_ID, curr_gene_ID, curr_syst_name)

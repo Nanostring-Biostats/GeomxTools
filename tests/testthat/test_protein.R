@@ -108,7 +108,7 @@ test_that("Correct segment flags are added to protein data",{
   expect_equal(ncol(protocolData(proteinData_seqQC)$QCFlags), ncol(protocolData(proteinData_background)$QCFlags))
   expect_equal(ncol(protocolData(proteinData_seqQC)$QCFlags), ncol(protocolData(proteinData)$QCFlags))
   expect_gt(ncol(protocolData(RNAData_background)$QCFlags), ncol(protocolData(RNAData_seqQC)$QCFlags))
-  expect_equal(ncol(protocolData(RNAData_background)$QCFlags), ncol(protocolData(RNAData)$QCFlags))
+  expect_lt(ncol(protocolData(RNAData_background)$QCFlags), ncol(protocolData(RNAData)$QCFlags))
 })
 
 # Spec 21: A warning is given if protein data is run through setBioProbeQCFlags.:------
@@ -182,11 +182,11 @@ test_that("Protein data is normalized",{
 normfactors <- computeNormalizationFactors(object = proteinData)
 
 normfactors_area <- computeNormalizationFactors(object = proteinData,
-                                                  area = "AOI.Size.um2")
+                                                  area = "area")
 
 normfactors_area_nuc <- computeNormalizationFactors(object = proteinData,
-                                                      area = "AOI.Size.um2",
-                                                      nuclei = "Nuclei.Counts")
+                                                      area = "area",
+                                                      nuclei = "nuclei")
 
 # Spec 3: computeNormalizationFactors and normalize calculations match.:------
 test_that("computeNormalizationFactors vs normalization",{
