@@ -127,7 +127,7 @@ as.Seurat(norm_target_demoData, normData = "exprs_norm")
 After coercing to a Seurat object all of the metadata is still accessible. 
 
 ```{r coercion to Seurat}
-demoSeurat <- as.Seurat(norm_target_demoData, normData = "q_norm")
+demoSeurat <- as.Seurat(x = norm_target_demoData, normData = "q_norm")
 
 demoSeurat # overall data object
 
