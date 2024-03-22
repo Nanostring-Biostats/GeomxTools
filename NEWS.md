@@ -1,3 +1,7 @@
+# GeomxTools 3.7.3
+* small bug fix in version comparisons (PKC & Seurat)
+* update SpatialExperiment vignette plot coordinates
+
 # GeomxTools 3.7.2
 * Seurat v5 coercion
 * IPA data loading

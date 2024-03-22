@@ -349,20 +349,21 @@ When coercing, we can add the coordinate columns and they will be appended to th
 
 ```{r SpatialExperiment coercion}
 
-nsclcSPE <- as.SpatialExperiment(nsclc, normData = "exprs_norm", coordinates = c("x", "y"))
+nsclcSPE <- as.SpatialExperiment(nsclc, normData = "exprs_norm", 
+                                 coordinates = c("x", "y"))
 
 nsclcSPE
 
 data.frame(head(spatialCoords(nsclcSPE)))
 ```
 
-With the coordinates and the metadata, we can create spatial graphing figures similar to Seurat's
+With the coordinates and the metadata, we can create spatial graphing figures similar to Seurat's. To get the same orientation as Seurat we must swap the axes and flip the y. 
 ```{r graphing with SPE}
 figureData <- as.data.frame(cbind(colData(nsclcSPE), spatialCoords(nsclcSPE)))
 
 figureData <- cbind(figureData, A2M=as.numeric(nsclcSPE@assays@data$GeoMx["A2M",]))
 
-tumor <- ggplot(figureData[figureData$AOI.name == "Tumor",], aes(x=x, y=y, color = A2M))+
+tumor <- ggplot(figureData[figureData$AOI.name == "Tumor",], aes(x=y, y=-x, color = A2M))+
   geom_point(size = 6)+
   scale_color_continuous(type = "viridis",
                         limits = c(min(figureData$A2M), 
@@ -374,7 +375,7 @@ tumor <- ggplot(figureData[figureData$AOI.name == "Tumor",], aes(x=x, y=y, color
   labs(title = "Tumor")
 
 
-TME <- ggplot(figureData[figureData$AOI.name == "TME",], aes(x=x, y=y, color = A2M))+
+TME <- ggplot(figureData[figureData$AOI.name == "TME",], aes(x=y, y=-x, color = A2M))+
   geom_point(size = 6)+
   scale_color_continuous(type = "viridis",
                         limits = c(min(figureData$A2M), 
