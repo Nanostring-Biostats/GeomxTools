@@ -28,8 +28,8 @@ function(file, default_pkc_vers=NULL)
   } else {
     use_pkc_names <- lapply(multi_mods, function(mod) {
         mod_idx <- header[["PKCModule"]] == mod
-        max_vers <- as.numeric(as.character(max(as.numeric_version(
-          header[["PKCFileVersion"]][mod_idx]))))
+        max_vers <- as.numeric(as.character(max(as.numeric_version(as.character(
+          header[["PKCFileVersion"]][mod_idx])))))
         max_name <- names(header[["PKCFileVersion"]][
           header[["PKCFileVersion"]] == max_vers])
         return(max_name)
