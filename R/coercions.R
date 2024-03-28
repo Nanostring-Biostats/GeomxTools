@@ -80,14 +80,15 @@ as.Seurat.NanoStringGeoMxSet <- function(x, ident = NULL, normData = NULL,
     
     QCMetrics <- "QCFlags"
     
-    meta <- as.data.frame(as.data.table(sData(x)[,!colnames(sData(x)) %in%  c(sequencingMetrics, QCMetrics)]))
+    meta <- as.data.frame(as.data.table(sData(x)[,!colnames(sData(x)) %in%  
+                                                   c(sequencingMetrics, QCMetrics)]))
     
     if(any(grepl("_", rownames(x)))){
       rownames(x) <- gsub("_", "-", rownames(x))
       message("Feature names cannot have underscores ('_'), replacing with dashes ('-')")
     }
     
-    if(packageVersion("Seurat") < 5){
+    if(packageVersion("Seurat") < "5.0.0"){
       seuratConvert <- suppressWarnings(Seurat::CreateSeuratObject(counts = assayDataElement(x, normData), 
                                                                    assay = "GeoMx", 
                                                                    project = expinfo(experimentData(x))[["title"]]))
