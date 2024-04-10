@@ -6,9 +6,9 @@ Version: 3.7.3
 Encoding: UTF-8
 Authors@R: c(person("Maddy", "Griswold", email = "mgriswold@nanostring.com", role = c("cre", "aut")),
 	     person("Nicole", "Ortogero", email = "nortogero@nanostring.com", role = c("aut")), 
-             person("Zhi", "Yang", email = "zyang@nanostring.com", role = c("aut")),
+             person("Zhi", "Yang", role = c("aut")),
              person("Ronalyn", "Vitancol", email = "rvitancol@nanostring.com", role = c("aut")),
-             person("David", "Henderson", email = "dhenderson@nanostring.com", role = c("aut")))
+             person("David", "Henderson", role = c("aut")))
 Depends: R (>= 3.6), Biobase, NanoStringNCTools, S4Vectors
 Imports: BiocGenerics, rjson, readxl, EnvStats, reshape2, methods, 
          utils, stats, data.table, lmerTest, dplyr, stringr,
