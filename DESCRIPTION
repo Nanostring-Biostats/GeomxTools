@@ -2,7 +2,7 @@ Package: GeomxTools
 Title: NanoString GeoMx Tools
 Description: Tools for NanoString Technologies GeoMx Technology.  Package provides functions for reading in DCC and
          PKC files based on an ExpressionSet derived object.  Normalization and QC functions are also included.
-Version: 3.8.0
+Version: 3.9.0
 Encoding: UTF-8
 Authors@R: c(person("Maddy", "Griswold", email = "mgriswold@nanostring.com", role = c("cre", "aut")),
 	     person("Nicole", "Ortogero", email = "nortogero@nanostring.com", role = c("aut")), 
