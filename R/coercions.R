@@ -308,7 +308,7 @@ as.SpatialExperiment.NanoStringGeoMxSet <- function(x, normData = NULL,
                                                 rowData = fData(x),
                                                 spatialCoords = coord.df)
     
-    names(spe@assays@data) <- "GeoMx"
+    names(spe@assays@data) <- "geomx"
     
     spe@metadata <- otherInfo(experimentData(x))
     spe@metadata[["sequencingMetrics"]] <- sData(x)[colnames(sData(x)) %in% 
