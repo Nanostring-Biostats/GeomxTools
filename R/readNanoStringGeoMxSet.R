@@ -1,8 +1,9 @@
 readNanoStringGeoMxSet <-
 function(dccFiles,
          pkcFiles,
-         phenoDataFile,
-         phenoDataSheet,
+         phenoData=NULL,
+         phenoDataFile=NULL,
+         phenoDataSheet=NULL,
          phenoDataDccColName = "Sample_ID",
          phenoDataColPrefix = "",
          protocolDataColNames = NULL,
@@ -28,10 +29,18 @@ function(dccFiles,
               names = rownames(x[["Code_Summary"]])))
   
   # Create phenoData
-  if (is.null(phenoDataFile)) {
-    stop("Please specify an input for phenoDataFile.")
+  if (is.null(phenoDataFile) && is.null(phenoData)) {
+      stop("Please specify a value for phenoData or phenoDataFile.")
   } else {
-    pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet, ...)
+    if (!is.null(phenoDataFile) && !is.null(phenoData)) {
+      stop("Please specify a value for phenoData or phenoDataFile, but not both.")
+    } else {
+      if (!is.null(phenoDataFile)) {
+        pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet, ...)
+      } else { # Means that phenoData must be not NULL
+        pheno = phenoData
+      }
+    }
     pheno <- data.frame(pheno, stringsAsFactors = FALSE, check.names = FALSE)
     j <- colnames(pheno)[colnames(pheno) == phenoDataDccColName]
     if (length(j) == 0L){
