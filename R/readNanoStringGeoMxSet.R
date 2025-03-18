@@ -30,39 +30,53 @@ function(dccFiles,
   
   # Create phenoData
   if (is.null(phenoDataFile) && is.null(phenoData)) {
-      stop("Please specify a value for phenoData or phenoDataFile.")
+      stop("Please specify a value for `phenoData` or `phenoDataFile`.")
   } else {
-    if (!is.null(phenoDataFile) && !is.null(phenoData)) {
-      stop("Please specify a value for phenoData or phenoDataFile, but not both.")
-    } else {
-      if (!is.null(phenoDataFile)) {
-        pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet, ...)
-      } else { # Means that phenoData must be not NULL
-        pheno = phenoData
+    if (!is.null(phenoData)) { # use phenoData if available
+      pheno <- phenoData
+      rm(phenoData)
+      var <- "phenoData"
+    } else { 
+      if(!file.exists(phenoDataFile)){
+        stop("`phenoDataFile` path is invalid")
       }
+      if(endsWith(x = phenoDataFile, suffix = ".xlsx")){
+        pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet, ...)
+      }else if(endsWith(tolower(phenoDataFile), "_labworksheet.txt")){
+        startLine <- grep(readLines(phenoDataFile), pattern = "^Annotations")
+        
+        pheno <- read.table(phenoDataFile, header = TRUE, sep = "\t", 
+                            skip = startLine, fill = TRUE, check.names = FALSE)
+      }else{
+        pheno <- data.table::fread(phenoDataFile)
+      }
+      
+      var <- "phenoDataFile"
     }
+    
     pheno <- data.frame(pheno, stringsAsFactors = FALSE, check.names = FALSE)
     j <- colnames(pheno)[colnames(pheno) == phenoDataDccColName]
     if (length(j) == 0L){
-      stop("Column `phenoDataDccColName` not found in `phenoDataFile`")
+      stop(paste0("Column `phenoDataDccColName` not found in `", var, "`"))
     } else if (length(j) > 1L){
-      stop("Multiple columns in `phenoDataFile` match `phenoDataDccColName`")
+      stop(paste0("Multiple columns in `", var, "` match `phenoDataDccColName`"))
     }
     # check protocolDataColNames
     if (!(all(protocolDataColNames %in% colnames(pheno))) &
         !(is.null(protocolDataColNames))) {
-      stop("Columns specified in `protocolDataColNames` are not found in `phenoDataFile`")
+      stop(paste0("Columns specified in `protocolDataColNames` are not found in `", var, "`"))
     }
     # check experimentDataColNames
     if (!(all(experimentDataColNames %in% colnames(pheno))) &
         !(is.null(experimentDataColNames))) {
-      stop("Columns specified in `experimentDataColNames` are not found in `phenoDataFile`")
+      stop(paste0("Columns specified in `experimentDataColNames` are not found in `", var, "`"))
     }
     # add ".dcc" to the filenames if there is none
     pheno[[j]] <- ifelse(grepl(".dcc", pheno[[j]]), paste0(pheno[[j]]),
                          paste0(pheno[[j]], ".dcc"))
-    if ("slide name" %in% colnames(pheno)) {
-      ntcs <- which(tolower(pheno[["slide name"]]) == "no template control")
+    if ("slide name" %in% tolower(colnames(pheno))) {
+      col <- which(tolower(colnames(pheno)) == "slide name")
+      ntcs <- which(tolower(pheno[[col]]) == "no template control")
       if (length(ntcs) > 0) {
         ntcData <- lapply(seq_along(ntcs), function(x) {
           ntcID <- pheno[ntcs[x], j]

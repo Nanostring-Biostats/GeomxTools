@@ -14,18 +14,17 @@ DCCFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)[1:10]
 PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
 SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
 
-testData <-
-  suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
-                                          pkcFiles = PKCFiles,
-                                          phenoDataFile = SampleAnnotationFile,
-                                          phenoDataSheet = "CW005",
-                                          phenoDataDccColName = "Sample_ID",
-                                          protocolDataColNames = c("aoi",
-                                                                   "cell_line",
-                                                                   "roi_rep",
-                                                                   "pool_rep",
-                                                                   "slide_rep"),
-                                          experimentDataColNames = c("panel")))
+testData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                                    pkcFiles = PKCFiles,
+                                                    phenoDataFile = SampleAnnotationFile,
+                                                    phenoDataSheet = "CW005",
+                                                    phenoDataDccColName = "Sample_ID",
+                                                    protocolDataColNames = c("aoi",
+                                                                             "cell_line",
+                                                                             "roi_rep",
+                                                                             "pool_rep",
+                                                                             "slide_rep"),
+                                                    experimentDataColNames = c("panel")))
 
 pkcFile <- readPKCFile(PKCFiles)
 
@@ -103,7 +102,7 @@ testthat::test_that("test that the counts of testData@assayData$exprs match thos
   correct <- TRUE
   i <- 1
   while(correct == TRUE & i < length(DCCFiles)){
-    dccFile <- suppressWarnings(readDccFile(DCCFiles[i]))
+    dccFile <- readDccFile(DCCFiles[i])
     
     mtxCount <- testData@assayData$exprs[,basename(DCCFiles[i])]
     genes <- match(dccFile$Code_Summary$RTS_ID, names(mtxCount))
@@ -206,7 +205,7 @@ ProteinData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles,
                                                                                 "ROI.Size"),
                                                        analyte = "protein"))
 
-# Spec 11: Only a single analyte is read in to a GeomMxSe object
+# Spec 11: Only a single analyte is read in to a GeomMxSet object
 testthat::test_that("only a single analyte is read in to a GeoMxSet object",{
   expect_false(dim(RNAData)["Features"] == dim(ProteinData)["Features"])
   expect_true(dim(RNAData)["Samples"] == dim(ProteinData)["Samples"])
@@ -219,5 +218,64 @@ testthat::test_that("only a single analyte is read in to a GeoMxSet object",{
   expect_false(any(rownames(RNAData) %in% rownames(ProteinData)))
   expect_true(all(colnames(RNAData) %in% colnames(ProteinData)))
   expect_true(all(sData(RNAData) == sData(ProteinData)))
+})
+
+# Spec 12: Object should be able to be loaded with Lab worksheet or data.frame
+phenoData <- readxl::read_xlsx(SampleAnnotationFile, col_names = TRUE, sheet = "CW005")
+sampleLW <- file.path(datadir, "GxT_testing_labWorksheet.txt")
+
+DCCFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)[1:10]
+PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
+SampleAnnotationFile <- file.path(datadir, "annotations.xlsx")
+
+testData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                                    pkcFiles = PKCFiles,
+                                                    phenoDataFile = SampleAnnotationFile,
+                                                    phenoDataSheet = "CW005",
+                                                    phenoDataDccColName = "Sample_ID",
+                                                    protocolDataColNames = c("aoi",
+                                                                             "cell_line",
+                                                                             "roi_rep",
+                                                                             "pool_rep",
+                                                                             "slide_rep"),
+                                                    experimentDataColNames = c("panel")))
+
+dfData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                                  pkcFiles = PKCFiles,
+                                                  phenoData = phenoData,
+                                                  phenoDataFile = SampleAnnotationFile,
+                                                  phenoDataSheet = "CW005",
+                                                  phenoDataDccColName = "Sample_ID",
+                                                  protocolDataColNames = c("aoi",
+                                                                           "cell_line",
+                                                                           "roi_rep",
+                                                                           "pool_rep",
+                                                                           "slide_rep"),
+                                                  experimentDataColNames = c("panel")))
+
+lwData <- suppressWarnings(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                                  pkcFiles = PKCFiles,
+                                                  phenoDataFile = sampleLW,
+                                                  phenoDataSheet = "CW005",
+                                                  phenoDataDccColName = "Sample_ID",
+                                                  protocolDataColNames = c("Aoi",
+                                                                           "Cell_line",
+                                                                           "Roi_rep",
+                                                                           "Pool_rep",
+                                                                           "Slide_rep"),
+                                                  experimentDataColNames = c("Panel")))
+
+testthat::test_that("GeoMxSet objects can be read in using lab worksheet and data.frames",{
+  testthat::expect_equal(object = dfData, expected = testData)
+  
+  # change column names to be all lower case
+  colnames(lwData@phenoData) <- tolower(colnames(lwData@phenoData))
+  colnames(lwData@protocolData) <- tolower(colnames(lwData@protocolData))
+  names(lwData@experimentData@other) <- tolower(names(lwData@experimentData@other))
+  colnames(testData@phenoData) <- tolower(colnames(testData@phenoData))
+  colnames(testData@protocolData) <- tolower(colnames(testData@protocolData))
+  names(testData@experimentData@other) <- tolower(names(testData@experimentData@other))
+  
+  testthat::expect_equal(object = lwData, expected = testData)
 })
 

@@ -2,7 +2,7 @@ readDccFile <-
 function(file)
 {
   # Read data from Reporter Code Count (RCC) file
-  lines <- trimws(readLines(file))
+  lines <- trimws(readLines(file, warn = FALSE))
   
   # removing unused dnd program lines and reformat
   trimGalore <- grep("trimGalore", lines)
