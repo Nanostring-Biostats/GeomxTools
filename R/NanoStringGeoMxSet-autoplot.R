@@ -100,16 +100,20 @@ qcProteinSignal <- function(object, neg.names=NULL) {
         neg.names <- iggNames(object)
     }
     
-    snr <- snrOrder(object, neg.names)
+    snr <- GeomxTools:::snrOrder(object, neg.names)
     
     protnames <- rownames(snr)
-    ylim <- range(log2(snr))
+    
+    nonZero <- snr
+    nonZero[nonZero == 0] <- NA
+    ylim <- log2(range(nonZero, na.rm = TRUE))
     if(ylim[1L] == -Inf){
       ylim[1L] <- 0
     }
     if(ylim[2L] == -Inf){
       ylim[2L] <- 0
     }
+    rm(nonZero)
     
     fig <- function(){
         par(mar = c(11, 4, 2, 1))
