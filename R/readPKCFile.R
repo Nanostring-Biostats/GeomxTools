@@ -147,7 +147,7 @@ generate_pkc_targ_notes <- function(jsons_vec, lookup_tab) {
   notes_df <- 
     data.frame(TargetName=sub_lookup[["Target"]],
                HUGOSymbol=sub_lookup[["Target"]],
-               TargetGroup=rep("All Probes", length(rownames(sub_lookup))),
+               TargetGroup=rep("All Probes", nrow(sub_lookup)),
                AnalyteType=rep("RNA", nrow(sub_lookup)),
                CodeClass=sub_lookup[, "CodeClass"],
                Pooling=sub_lookup[, "Module"],
