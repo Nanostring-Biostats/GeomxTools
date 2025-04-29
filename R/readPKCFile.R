@@ -58,6 +58,10 @@ function(file, default_pkc_vers=NULL)
   }
 
   rtsid_lookup_df <- generate_pkc_lookup(jsons_vec = pkc_json_list)
+  targNotes <- generate_pkc_targ_notes(jsons_vec = pkc_json_list, lookup_tab = rtsid_lookup_df)
+  
+  rtsid_lookup_df$TargetGroup <- targNotes$TargetGroup[match(rtsid_lookup_df$Target, targNotes$TargetName)]
+  
   # create negative column 
   rtsid_lookup_df$Negative <- grepl("Negative", rtsid_lookup_df$CodeClass)
   rtsid_lookup_df$RTS_ID <- gsub("RNA", "RTS00", rtsid_lookup_df[["RTS_ID"]])
@@ -132,7 +136,7 @@ generate_pkc_lookup <- function(jsons_vec) {
         curr_probe_ID <- prb$ProbeID
         
         lookup_df[nrow(lookup_df) + 1, ] <- 
-          list(curr_RTS_ID, curr_targ, curr_module, curr_code_class, 
+          c(curr_RTS_ID, curr_targ, curr_module, curr_code_class, 
                curr_probe_ID, curr_gene_ID, curr_syst_name)
       }
     }
@@ -146,11 +150,7 @@ generate_pkc_targ_notes <- function(jsons_vec, lookup_tab) {
   #rownames(sub_lookup) <- sub_lookup[["Target"]]
   notes_df <- 
     data.frame(TargetName=sub_lookup[["Target"]],
-               HUGOSymbol=sub_lookup[["Target"]],
-               TargetGroup=rep("All Probes", length(rownames(sub_lookup))),
-               AnalyteType=rep("RNA", nrow(sub_lookup)),
-               CodeClass=sub_lookup[, "CodeClass"],
-               Pooling=sub_lookup[, "Module"],
+               TargetGroup=rep("All Probes", nrow(sub_lookup)),
                stringsAsFactors=FALSE)
   for (curr_idx in seq_len(length(jsons_vec))) {
     curr_module <- names(jsons_vec)[curr_idx]

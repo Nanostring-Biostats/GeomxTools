@@ -180,7 +180,10 @@ testthat::test_that("PKCs are removed if they aren't in the config", {
   
   expect_identical(testData@annotation, testDataWithExtraConfig@annotation)
   expect_identical(rownames(testData), rownames(testDataWithExtraConfig))
-  expect_identical(fData(testData), fData(testDataWithExtraConfig))
+  
+  # TargetGroup is not expected to be identical with an extra pkc
+  targGroupCol <- which(colnames(fData(testData)) == "TargetGroup")
+  expect_identical(fData(testData)[,-targGroupCol], fData(testDataWithExtraConfig)[,-targGroupCol])
 })
 
 DCCFiles <- unzip(zipfile = file.path(proteinDatadir,  "/DCCs.zip"))[1:10]

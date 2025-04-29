@@ -68,7 +68,7 @@ as.Seurat.NanoStringGeoMxSet <- function(x, ident = NULL, normData = NULL,
         stop("It is NOT recommended to use Seurat's normalization for GeoMx data. 
              Normalize using GeomxTools::normalize() or set forceRaw to TRUE if you want to continue with Raw data")
     }else if(length(grep(pattern = normFactor_names, names(sData(x)))) == 0){
-      message("Coercing raw data, it is NOT recommended to use Seurat's normalization for GeoMx data.")
+      warning("Coercing raw data, it is NOT recommended to use Seurat's normalization for GeoMx data.")
     }
     
     
@@ -251,10 +251,10 @@ as.SpatialExperiment.NanoStringGeoMxSet <- function(x, normData = NULL,
     
     if(length(grep(pattern = normFactor_names, names(sData(x)))) == 0 & 
        forceRaw == FALSE){
-        stop("It is NOT recommended to use Seurat's normalization for GeoMx data. 
+        stop("It is NOT recommended to use SpatialExperiment's normalization for GeoMx data. 
              Normalize using GeomxTools::normalize() or set forceRaw to TRUE if you want to continue with Raw data")
     }else if(length(grep(pattern = normFactor_names, names(sData(x)))) == 0){
-      warning("Coercing raw data, it is NOT recommended to use Seurat's normalization for GeoMx data.")
+      warning("Coercing raw data, it is NOT recommended to use SpatialExperiment's normalization for GeoMx data.")
     }
     
     sequencingMetrics <- c("FileVersion", "SoftwareVersion", "Date", "Plate_ID", 
