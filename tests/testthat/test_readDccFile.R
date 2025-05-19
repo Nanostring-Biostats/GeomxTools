@@ -4,7 +4,7 @@ library(testthat)
 
 datadir <- system.file("extdata", "DSP_NGS_Example_Data",
                        package="GeomxTools")
-dccFile <- suppressWarnings(readDccFile(file.path(datadir,  "DSP-1001250002642-E12.dcc")))
+dccFile <- testthat::expect_no_warning(readDccFile(file.path(datadir,  "DSP-1001250002642-E12.dcc")))
 lines <- suppressWarnings(trimws(readLines(file.path(datadir,  "DSP-1001250002642-E12.dcc"))))
 
 

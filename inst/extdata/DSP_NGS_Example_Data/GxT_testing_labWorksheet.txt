@@ -1,0 +1,104 @@
+Experiment Summary
+Readout group name	04June2021_CTA
+Date	15 Jun 2021  9:58 PM
+Readout mode	NGS
+Number of Collection Plates	1
+Number Of AOIs	93
+Library Prep Protocol Version
+
+Library Prep Summary
+Library Prep Plate	Collection Plate	Primer Plate	Rows
+04June2021_msWTA-A	"=""1012999073013"""	GeoMx Seq Code A	A - H
+Total Area	5572977
+
+Annotations
+Sample_ID	Slide name	Scan name	Panel	Roi	Segment	Aoi	Area	Cell_line	Roi_rep	Pool_rep	Slide_rep
+DSP-1001250002642-A01	No Template Control										
+DSP-1001250002642-A02	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	1	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HS578T	1	1	1
+DSP-1001250002642-A03	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	2	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HS578T	2	1	1
+DSP-1001250002642-A04	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	3	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HEL	1	1	1
+DSP-1001250002642-A05	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	4	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HEL	2	1	1
+DSP-1001250002642-A06	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	5	Geometric Segment	Geometric Segment-aoi-001	31318.72624	U118MG	1	1	1
+DSP-1001250002642-A07	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	6	Geometric Segment	Geometric Segment-aoi-001	31318.72624	U118MG	2	1	1
+DSP-1001250002642-A08	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	7	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HDLM2	1	1	1
+DSP-1001250002642-A09	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	8	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HDLM2	2	1	1
+DSP-1001250002642-A10	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	9	Geometric Segment	Geometric Segment-aoi-001	31318.72624	THP1	1	1	1
+DSP-1001250002642-A11	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	10	Geometric Segment	Geometric Segment-aoi-001	31318.72624	THP1	2	1	1
+DSP-1001250002642-A12	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	11	Geometric Segment	Geometric Segment-aoi-001	31318.72624	H596	1	1	1
+DSP-1001250002642-B01	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	12	Geometric Segment	Geometric Segment-aoi-001	31318.72624	H596	2	1	1
+DSP-1001250002642-B02	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	13	Geometric Segment	Geometric Segment-aoi-001	31318.72624	OPM2	1	1	1
+DSP-1001250002642-B03	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	14	Geometric Segment	Geometric Segment-aoi-001	31318.72624	OPM2	2	1	1
+DSP-1001250002642-B04	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	15	Geometric Segment	Geometric Segment-aoi-001	31318.72624	DAUDI	1	1	1
+DSP-1001250002642-B05	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	16	Geometric Segment	Geometric Segment-aoi-001	31318.72624	DAUDI	2	1	1
+DSP-1001250002642-B06	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	17	Geometric Segment	Geometric Segment-aoi-001	31318.72624	MALME3M	1	1	1
+DSP-1001250002642-B07	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	18	Geometric Segment	Geometric Segment-aoi-001	31318.72624	MALME3M	2	1	1
+DSP-1001250002642-B08	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	19	Geometric Segment	Geometric Segment-aoi-001	31318.72624	COLO201	1	1	1
+DSP-1001250002642-B09	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	20	Geometric Segment	Geometric Segment-aoi-001	31318.72624	COLO201	2	1	1
+DSP-1001250002642-B10	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	21	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HUT78	1	1	1
+DSP-1001250002642-B11	6panel-old-slide1 (PTL-10891)	cw005 (PTL-10891) Slide1	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	22	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HUT78	2	1	1
+DSP-1001250002642-B12	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	1	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HS578T	1	1	2
+DSP-1001250002642-C01	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	2	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HS578T	2	1	2
+DSP-1001250002642-C02	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	3	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HEL	1	1	2
+DSP-1001250002642-C03	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	4	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HEL	2	1	2
+DSP-1001250002642-C04	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	5	Geometric Segment	Geometric Segment-aoi-001	31318.72624	U118MG	1	1	2
+DSP-1001250002642-C05	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	6	Geometric Segment	Geometric Segment-aoi-001	31318.72624	U118MG	2	1	2
+DSP-1001250002642-C06	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	7	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HDLM2	1	1	2
+DSP-1001250002642-C07	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	8	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HDLM2	2	1	2
+DSP-1001250002642-C08	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	9	Geometric Segment	Geometric Segment-aoi-001	31318.72624	THP1	1	1	2
+DSP-1001250002642-C09	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	10	Geometric Segment	Geometric Segment-aoi-001	31318.72624	THP1	2	1	2
+DSP-1001250002642-C10	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	11	Geometric Segment	Geometric Segment-aoi-001	31318.72624	H596	1	1	2
+DSP-1001250002642-C11	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	12	Geometric Segment	Geometric Segment-aoi-001	31318.72624	H596	2	1	2
+DSP-1001250002642-C12	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	13	Geometric Segment	Geometric Segment-aoi-001	31318.72624	OPM2	1	1	2
+DSP-1001250002642-D01	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	14	Geometric Segment	Geometric Segment-aoi-001	31318.72624	OPM2	2	1	2
+DSP-1001250002642-D02	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	15	Geometric Segment	Geometric Segment-aoi-001	31318.72624	DAUDI	1	1	2
+DSP-1001250002642-D03	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	16	Geometric Segment	Geometric Segment-aoi-001	31318.72624	DAUDI	2	1	2
+DSP-1001250002642-D04	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	17	Geometric Segment	Geometric Segment-aoi-001	31318.72624	MALME3M	1	1	2
+DSP-1001250002642-D05	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	18	Geometric Segment	Geometric Segment-aoi-001	31318.72624	MALME3M	2	1	2
+DSP-1001250002642-D06	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	19	Geometric Segment	Geometric Segment-aoi-001	31318.72624	COLO201	1	1	2
+DSP-1001250002642-D07	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	20	Geometric Segment	Geometric Segment-aoi-001	31318.72624	COLO201	2	1	2
+DSP-1001250002642-D08	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	21	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HUT78	1	1	2
+DSP-1001250002642-D09	6panel-old-slide2 (PTL-10891)	cw005 (PTL-10891) Slide2	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	22	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HUT78	2	1	2
+DSP-1001250002642-D10	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	1	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HS578T	1	2	1
+DSP-1001250002642-D11	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	2	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HS578T	2	2	1
+DSP-1001250002642-D12	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	3	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HEL	1	2	1
+DSP-1001250002642-E01	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	4	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HEL	2	2	1
+DSP-1001250002642-E02	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	5	Geometric Segment	Geometric Segment-aoi-001	31318.72624	U118MG	1	2	1
+DSP-1001250002642-E03	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	6	Geometric Segment	Geometric Segment-aoi-001	31318.72624	U118MG	2	2	1
+DSP-1001250002642-E04	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	7	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HDLM2	1	2	1
+DSP-1001250002642-E05	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	8	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HDLM2	2	2	1
+DSP-1001250002642-E06	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	9	Geometric Segment	Geometric Segment-aoi-001	31318.72624	THP1	1	2	1
+DSP-1001250002642-E07	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	10	Geometric Segment	Geometric Segment-aoi-001	31318.72624	THP1	2	2	1
+DSP-1001250002642-E08	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	11	Geometric Segment	Geometric Segment-aoi-001	31318.72624	H596	1	2	1
+DSP-1001250002642-E09	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	12	Geometric Segment	Geometric Segment-aoi-001	31318.72624	H596	2	2	1
+DSP-1001250002642-E10	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	13	Geometric Segment	Geometric Segment-aoi-001	31318.72624	OPM2	1	2	1
+DSP-1001250002642-E11	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	14	Geometric Segment	Geometric Segment-aoi-001	31318.72624	OPM2	2	2	1
+DSP-1001250002642-E12	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	15	Geometric Segment	Geometric Segment-aoi-001	31318.72624	DAUDI	1	2	1
+DSP-1001250002642-F01	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	16	Geometric Segment	Geometric Segment-aoi-001	31318.72624	DAUDI	2	2	1
+DSP-1001250002642-F02	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	17	Geometric Segment	Geometric Segment-aoi-001	31318.72624	MALME3M	1	2	1
+DSP-1001250002642-F03	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	18	Geometric Segment	Geometric Segment-aoi-001	31318.72624	MALME3M	2	2	1
+DSP-1001250002642-F04	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	19	Geometric Segment	Geometric Segment-aoi-001	31318.72624	COLO201	1	2	1
+DSP-1001250002642-F05	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	20	Geometric Segment	Geometric Segment-aoi-001	31318.72624	COLO201	2	2	1
+DSP-1001250002642-F06	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	21	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HUT78	1	2	1
+DSP-1001250002642-F07	6panel-new-slide3 (PTL-10891)	cw005 (PTL-10891) Slide3	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	22	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HUT78	2	2	1
+DSP-1001250002642-F08	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	1	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HS578T	1	2	2
+DSP-1001250002642-F09	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	2	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HS578T	2	2	2
+DSP-1001250002642-F10	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	3	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HEL	1	2	2
+DSP-1001250002642-F11	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	4	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HEL	2	2	2
+DSP-1001250002642-F12	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	5	Geometric Segment	Geometric Segment-aoi-001	31318.72624	U118MG	1	2	2
+DSP-1001250002642-G01	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	6	Geometric Segment	Geometric Segment-aoi-001	31318.72624	U118MG	2	2	2
+DSP-1001250002642-G02	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	7	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HDLM2	1	2	2
+DSP-1001250002642-G03	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	8	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HDLM2	2	2	2
+DSP-1001250002642-G04	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	9	Geometric Segment	Geometric Segment-aoi-001	31318.72624	THP1	1	2	2
+DSP-1001250002642-G05	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	10	Geometric Segment	Geometric Segment-aoi-001	31318.72624	THP1	2	2	2
+DSP-1001250002642-G06	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	11	Geometric Segment	Geometric Segment-aoi-001	31318.72624	H596	1	2	2
+DSP-1001250002642-G07	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	12	Geometric Segment	Geometric Segment-aoi-001	31318.72624	H596	2	2	2
+DSP-1001250002642-G08	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	13	Geometric Segment	Geometric Segment-aoi-001	31318.72624	OPM2	1	2	2
+DSP-1001250002642-G09	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	14	Geometric Segment	Geometric Segment-aoi-001	31318.72624	OPM2	2	2	2
+DSP-1001250002642-G10	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	15	Geometric Segment	Geometric Segment-aoi-001	31318.72624	DAUDI	1	2	2
+DSP-1001250002642-G11	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	16	Geometric Segment	Geometric Segment-aoi-001	31318.72624	DAUDI	2	2	2
+DSP-1001250002642-G12	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	17	Geometric Segment	Geometric Segment-aoi-001	31318.72624	MALME3M	1	2	2
+DSP-1001250002642-H01	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	18	Geometric Segment	Geometric Segment-aoi-001	31318.72624	MALME3M	2	2	2
+DSP-1001250002642-H02	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	19	Geometric Segment	Geometric Segment-aoi-001	31318.72624	COLO201	1	2	2
+DSP-1001250002642-H03	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	20	Geometric Segment	Geometric Segment-aoi-001	31318.72624	COLO201	2	2	2
+DSP-1001250002642-H04	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	21	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HUT78	1	2	2
+DSP-1001250002642-H05	6panel-new-slide4 (PTL-10891)	cw005 (PTL-10891) Slide4	(v1.2) VnV Cancer Transcriptome Atlas, (v1.0) Six gene test custom	22	Geometric Segment	Geometric Segment-aoi-001	31318.72624	HUT78	2	2	2

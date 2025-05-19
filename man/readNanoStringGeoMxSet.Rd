@@ -10,8 +10,8 @@
 }
 
 \usage{
-readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile, 
-                       phenoDataSheet, phenoDataDccColName = "Sample_ID",
+readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoData = NULL, phenoDataFile = NULL, 
+                       phenoDataSheet= NULL, phenoDataDccColName = "Sample_ID",
                        phenoDataColPrefix = "", protocolDataColNames = NULL,
                        experimentDataColNames = NULL,  
                        configFile = NULL, analyte = "RNA",
@@ -22,12 +22,13 @@ readNanoStringGeoMxSet(dccFiles, pkcFiles, phenoDataFile,
   \item{dccFiles}{A character vector containing the paths to the DCC files.}
   \item{pkcFiles}{A character vector representing the path to the
     corresponding PKC file.}
+  \item{phenoData}{A data.frame containing the phenotypic data. If both \code{phenoData} and \code{phenoDataFile} are available, \code{phenoData} will be used.}
   \item{phenoDataFile}{Character string representing the path
-    to the corresponding phenotypic excel data file. It is recommended to use the Lab Worksheet in the exact order samples are provided in.}
+    to the corresponding phenotypic data file. Data file can be Lab Worksheet, excel, or other delimited file. It is recommended to use the Lab Worksheet in the exact order samples are provided in.}
   \item{phenoDataSheet}{Character string representing the excel 
-  sheet name containing the phenotypic data.}
+  sheet name containing the phenotypic data, if needed.}
   \item{phenoDataDccColName}{Character string identifying unique sample identifier 
-  column in \code{phenoDataFile}.}
+  column in \code{phenoData} or \code{phenoDataFile}.}
   \item{phenoDataColPrefix}{An optional prefix to add to the phenoData
     column names to distinguish them from the names of assayData matrices,
     featureData columns, and protocolData columns.}
