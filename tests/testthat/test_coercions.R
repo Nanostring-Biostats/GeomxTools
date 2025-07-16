@@ -28,10 +28,10 @@ test_that("GeomxSet object has been normalized - SpatialExperiment",{
 
 # but will work on non-normalized data
 test_that("if GeomxSet object hasn't been normalized, it can be forced to convert - Seurat",{
-    expect_visible(as.Seurat(target_demoData, normData = "exprs", forceRaw = TRUE))
+    expect_warning(as.Seurat(target_demoData, normData = "exprs", forceRaw = TRUE))
 })
 test_that("if GeomxSet object hasn't been normalized, it can be forced to convert - SpatialExperiment",{
-    expect_visible(as.SpatialExperiment(target_demoData, normData = "exprs", forceRaw = TRUE))
+    expect_warning(as.SpatialExperiment(target_demoData, normData = "exprs", forceRaw = TRUE))
 })
 
 target_demoData <- normalize(target_demoData, norm_method="quant")

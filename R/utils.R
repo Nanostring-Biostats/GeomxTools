@@ -119,7 +119,7 @@ shiftCountsOne <- function(object, elt="exprs", useDALogic=FALSE) {
 #' 
 iggNames <- function(object){
   if(analyte(object) == "Protein"){
-    names <- featureData(object)$Target[featureData(object)$CodeClass == "Negative"]
+    names <- featureData(object)$TargetName[featureData(object)$CodeClass == "Negative"]
     return(names)
   }else{
     warning("No Protein data in object so no IgG probes to return")
@@ -136,7 +136,7 @@ iggNames <- function(object){
 #' 
 hkNames <- function(object){
   if(analyte(object) == "Protein"){
-    names <- featureData(object)$Target[featureData(object)$CodeClass == "Control"]
+    names <- featureData(object)$TargetName[featureData(object)$CodeClass == "Control"]
     return(names)
   }else{
     warning("No Protein data in object so no HK probes to return")

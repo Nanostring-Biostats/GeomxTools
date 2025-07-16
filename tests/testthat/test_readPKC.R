@@ -15,7 +15,7 @@ lines <- suppressWarnings(c(readLines(file.path(PKCFiles[1])), readLines(file.pa
 # Spec 1: test that the column names of PKC files are in correct format:------
 testthat::test_that("test that the column names of PKC files are in correct format", {
   expect_true(all(colnames(pkcFile) == c("RTS_ID", "Target", "Module", 
-    "CodeClass", "ProbeID", "GeneID", "SystematicName", "Negative")))
+    "CodeClass", "ProbeID", "GeneID", "SystematicName", "TargetGroup", "Negative")))
 })
 
 
@@ -55,8 +55,19 @@ testthat::test_that("check for error if multiple defaults per module", {
 
 # req7: check for warning when resolving multiple PKC versions:------
 testthat::test_that("check for warning when resolving multiple PKC versions", {
-  expect_warning(expect_warning(readPKCFile(multiPKCFiles), 
-    "The following probes"), "The following PKC")
+  expect_warning(readPKCFile(multiPKCFiles),"The following probes")
+  expect_warning(readPKCFile(multiPKCFiles),"The following PKC")
+})
+
+# req: Confirm Target Groups are as expected:------
+pkc <- rjson::fromJSON(file = PKCFiles[1L])
+testthat::test_that("Target Groups are as expected", {
+  for(i in seq_len(length(pkc$ProbeGroups))){
+    groupName <- pkc$ProbeGroups[[i]]$Name
+    groupTargs <- pkc$ProbeGroups[[i]]$Targets
+    testthat::expect_true(all(grepl(pattern = groupName, 
+                                    pkcFile$TargetGroup[pkcFile$Target %in% groupTargs])))
+  }
 })
 
 firstVer <- readPKCFile(multiPKCFiles[1L])
