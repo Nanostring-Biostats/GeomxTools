@@ -103,24 +103,22 @@ qcProteinSignal <- function(object, neg.names=NULL) {
     snr <- snrOrder(object, neg.names)
     
     protnames <- rownames(snr)
-    ylim <- range(log2(snr))
-    if(ylim[1L] == -Inf){
-      ylim[1L] <- 0
-    }
-    if(ylim[2L] == -Inf){
-      ylim[2L] <- 0
-    }
+    
+    nonZero <- snr
+    nonZero[nonZero == 0] <- NA
+    ylim <- log2(range(nonZero, na.rm = TRUE))
+    rm(nonZero)
     
     fig <- function(){
         par(mar = c(11, 4, 2, 1))
-        boxplot(t(log2(snr)),
+        suppressWarnings(boxplot(t(log2(snr)),
                 las = 2,
                 outline = FALSE,
                 ylim = ylim,
                 names = protnames,
                 ylab = "Log2 signal-to-background ratio",
                 cex.axis = .85 - 0.3 * (nrow(snr) > 60)
-        )
+        ))
         axis(2, at = 1, labels = 1, las = 2, cex = 0.5)
         points(jitter(rep(1:nrow(snr), ncol(snr))),
                log2(snr),

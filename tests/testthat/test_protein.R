@@ -113,7 +113,8 @@ test_that("Correct segment flags are added to protein data",{
 
 # Spec 21: A warning is given if protein data is run through setBioProbeQCFlags.:------
 test_that("Warnings are given if protein data is run through setBioProbeQCFlags", {
-  expect_warning(setBioProbeQCFlags(proteinData, qcCutoffs=list(minProbeRatio=0.1,
+  expect_warning(setBioProbeQCFlags(proteinData, 
+                                    qcCutoffs=list(minProbeRatio=0.1,
                                                    percentFailGrubbs=20)))
 })
 
@@ -220,7 +221,10 @@ test_that("QC plots are plotted", {
   expect_true(all(proteinOrder %in% rownames(proteinData)))
   expect_true(all(rownames(proteinData) %in% proteinOrder))
   
-  expect_error(qcProteinSignal(object = RNAData))
+  exprs(proteinData)[igg.names[1],] <- 0
+  fig <- qcProteinSignal(object = proteinData,
+                         neg.names = igg.names)
+  expect_true(par("usr")[3L] < -1) # confirm 0s don't cutoff negative part of graph
 })
 
 
