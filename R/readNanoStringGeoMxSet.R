@@ -1,8 +1,9 @@
 readNanoStringGeoMxSet <-
 function(dccFiles,
          pkcFiles,
-         phenoDataFile,
-         phenoDataSheet,
+         phenoData=NULL,
+         phenoDataFile=NULL,
+         phenoDataSheet=NULL,
          phenoDataDccColName = "Sample_ID",
          phenoDataColPrefix = "",
          protocolDataColNames = NULL,
@@ -28,32 +29,63 @@ function(dccFiles,
               names = rownames(x[["Code_Summary"]])))
   
   # Create phenoData
-  if (is.null(phenoDataFile)) {
-    stop("Please specify an input for phenoDataFile.")
+  if (is.null(phenoDataFile) && is.null(phenoData)) {
+      stop("Please specify a value for `phenoData` or `phenoDataFile`.")
   } else {
-    pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet, ...)
+    if (!is.null(phenoData)) { # use phenoData if available
+      if(any(duplicated(colnames(phenoData)))){
+        dups <- colnames(phenoData)[which(duplicated(colnames(phenoData)))]
+        stop(paste("column names are duplicated in given `phenoData`:", 
+                   paste0("\"", dups, "\"", collapse = ", ")))
+      }
+      pheno <- phenoData
+      rm(phenoData)
+      var <- "phenoData"
+    } else { 
+      if(!file.exists(phenoDataFile)){
+        stop("`phenoDataFile` path is invalid")
+      }
+      if(endsWith(x = phenoDataFile, suffix = ".xlsx")){
+        pheno <- readxl::read_xlsx(phenoDataFile, col_names = TRUE, sheet = phenoDataSheet, ...)
+      }else if(endsWith(tolower(phenoDataFile), "_labworksheet.txt")){
+        startLine <- grep(readLines(phenoDataFile), pattern = "^Annotations")
+        
+        pheno <- read.table(phenoDataFile, header = TRUE, sep = "\t", 
+                            skip = startLine, fill = TRUE, check.names = FALSE)
+      }else{
+        pheno <- data.table::fread(phenoDataFile)
+      }
+      
+      var <- "phenoDataFile"
+    }
+    
     pheno <- data.frame(pheno, stringsAsFactors = FALSE, check.names = FALSE)
     j <- colnames(pheno)[colnames(pheno) == phenoDataDccColName]
     if (length(j) == 0L){
-      stop("Column `phenoDataDccColName` not found in `phenoDataFile`")
+      stop(paste0("Column `phenoDataDccColName` not found in `", var, "`"))
     } else if (length(j) > 1L){
-      stop("Multiple columns in `phenoDataFile` match `phenoDataDccColName`")
+      stop(paste0("Multiple columns in `", var, "` match `phenoDataDccColName`"))
     }
     # check protocolDataColNames
     if (!(all(protocolDataColNames %in% colnames(pheno))) &
         !(is.null(protocolDataColNames))) {
-      stop("Columns specified in `protocolDataColNames` are not found in `phenoDataFile`")
+      notAvail <- protocolDataColNames[which(!protocolDataColNames %in% colnames(pheno))]
+      stop(paste0("Columns specified in `protocolDataColNames` are not found in `", var, "`: ", 
+                   paste0("\"", notAvail, "\"", collapse = ", ")))
     }
     # check experimentDataColNames
     if (!(all(experimentDataColNames %in% colnames(pheno))) &
         !(is.null(experimentDataColNames))) {
-      stop("Columns specified in `experimentDataColNames` are not found in `phenoDataFile`")
+      notAvail <- experimentDataColNames[which(!experimentDataColNames %in% colnames(pheno))]
+      stop(paste0("Columns specified in `experimentDataColNames` are not found in `", var, "`: ", 
+                  paste0("\"", notAvail, "\"", collapse = ", ")))
     }
     # add ".dcc" to the filenames if there is none
     pheno[[j]] <- ifelse(grepl(".dcc", pheno[[j]]), paste0(pheno[[j]]),
                          paste0(pheno[[j]], ".dcc"))
-    if ("slide name" %in% colnames(pheno)) {
-      ntcs <- which(tolower(pheno[["slide name"]]) == "no template control")
+    if ("slide name" %in% tolower(colnames(pheno))) {
+      col <- which(tolower(colnames(pheno)) == "slide name")
+      ntcs <- which(tolower(pheno[[col]]) == "no template control")
       if (length(ntcs) > 0) {
         ntcData <- lapply(seq_along(ntcs), function(x) {
           ntcID <- pheno[ntcs[x], j]
@@ -80,7 +112,11 @@ function(dccFiles,
         assay <- assay[!names(assay) %in% unique(pheno[["NTC_ID"]])]
         data <- data[!names(data) %in% unique(pheno[["NTC_ID"]])]
         protocolDataColNames <- c(protocolDataColNames, "NTC_ID", "NTC")
+      }else{
+        warning("No NTCs were found. These are determined by 'no template control' being located in the 'slide name' column. Please ensure this column is available and formatted as expected. The lack of template controls may affect downstream analysis like QC.")
       }
+    }else{
+      warning("'slide name' is an expected column in phenoData. Without this column, template controls are not able to be identified and may affect downstream analysis like QC.")
     }
     rownames(pheno) <- pheno[[j]]
     zeroReads <- names(which(lapply(assay, length) == 0L))
