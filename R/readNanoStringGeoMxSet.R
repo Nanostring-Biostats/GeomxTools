@@ -33,6 +33,11 @@ function(dccFiles,
       stop("Please specify a value for `phenoData` or `phenoDataFile`.")
   } else {
     if (!is.null(phenoData)) { # use phenoData if available
+      if(any(duplicated(colnames(phenoData)))){
+        dups <- colnames(phenoData)[which(duplicated(colnames(phenoData)))]
+        stop(paste("column names are duplicated in given `phenoData`:", 
+                   paste0("\"", dups, "\"", collapse = ", ")))
+      }
       pheno <- phenoData
       rm(phenoData)
       var <- "phenoData"
@@ -64,12 +69,16 @@ function(dccFiles,
     # check protocolDataColNames
     if (!(all(protocolDataColNames %in% colnames(pheno))) &
         !(is.null(protocolDataColNames))) {
-      stop(paste0("Columns specified in `protocolDataColNames` are not found in `", var, "`"))
+      notAvail <- protocolDataColNames[which(!protocolDataColNames %in% colnames(pheno))]
+      stop(paste0("Columns specified in `protocolDataColNames` are not found in `", var, "`: ", 
+                   paste0("\"", notAvail, "\"", collapse = ", ")))
     }
     # check experimentDataColNames
     if (!(all(experimentDataColNames %in% colnames(pheno))) &
         !(is.null(experimentDataColNames))) {
-      stop(paste0("Columns specified in `experimentDataColNames` are not found in `", var, "`"))
+      notAvail <- experimentDataColNames[which(!experimentDataColNames %in% colnames(pheno))]
+      stop(paste0("Columns specified in `experimentDataColNames` are not found in `", var, "`: ", 
+                  paste0("\"", notAvail, "\"", collapse = ", ")))
     }
     # add ".dcc" to the filenames if there is none
     pheno[[j]] <- ifelse(grepl(".dcc", pheno[[j]]), paste0(pheno[[j]]),
@@ -103,7 +112,11 @@ function(dccFiles,
         assay <- assay[!names(assay) %in% unique(pheno[["NTC_ID"]])]
         data <- data[!names(data) %in% unique(pheno[["NTC_ID"]])]
         protocolDataColNames <- c(protocolDataColNames, "NTC_ID", "NTC")
+      }else{
+        warning("No NTCs were found. These are determined by 'no template control' being located in the 'slide name' column. Please ensure this column is available and formatted as expected. The lack of template controls may affect downstream analysis like QC.")
       }
+    }else{
+      warning("'slide name' is an expected column in phenoData. Without this column, template controls are not able to be identified and may affect downstream analysis like QC.")
     }
     rownames(pheno) <- pheno[[j]]
     zeroReads <- names(which(lapply(assay, length) == 0L))

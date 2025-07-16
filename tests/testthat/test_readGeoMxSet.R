@@ -279,3 +279,80 @@ testthat::test_that("GeoMxSet objects can be read in using lab worksheet and dat
   testthat::expect_equal(object = lwData, expected = testData)
 })
 
+testthat::test_that("Loading will error if expected columns are not available in phenoData",{
+  testthat::expect_warning(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                                  pkcFiles = PKCFiles,
+                                                  phenoData = phenoData[,-2], # remove "slide name" column
+                                                  phenoDataFile = SampleAnnotationFile,
+                                                  phenoDataSheet = "CW005",
+                                                  phenoDataDccColName = "Sample_ID",
+                                                  protocolDataColNames = c("aoi",
+                                                                           "cell_line",
+                                                                           "roi_rep",
+                                                                           "pool_rep",
+                                                                           "slide_rep"),
+                                                  experimentDataColNames = c("panel")), 
+                           regexp = "'slide name' is an expected column in phenoData.")
+  
+  testthat::expect_error(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                                pkcFiles = PKCFiles,
+                                                phenoData = phenoData[,c(1,1,2)],
+                                                phenoDataFile = SampleAnnotationFile,
+                                                phenoDataSheet = "CW005",
+                                                phenoDataDccColName = "Sample_ID",
+                                                protocolDataColNames = c("aoi",
+                                                                         "cell_line",
+                                                                         "roi_rep",
+                                                                         "pool_rep",
+                                                                         "slide_rep"),
+                                                experimentDataColNames = c("panel")),
+                         regexp = "column names are duplicated in given")
+  
+  testthat::expect_error(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                                pkcFiles = PKCFiles,
+                                                phenoData = phenoData,
+                                                phenoDataFile = SampleAnnotationFile,
+                                                phenoDataSheet = "CW005",
+                                                phenoDataDccColName = "Sample_ID",
+                                                protocolDataColNames = c("aoi",
+                                                                         "cell_line",
+                                                                         "roi_rep",
+                                                                         "pool_rep",
+                                                                         "slide_rep",
+                                                                         "fake_column"), # fake column name
+                                                experimentDataColNames = c("panel")),
+                         regexp = "Columns specified in `protocolDataColNames` are not found in")
+  
+  testthat::expect_error(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                                pkcFiles = PKCFiles,
+                                                phenoData = phenoData,
+                                                phenoDataFile = SampleAnnotationFile,
+                                                phenoDataSheet = "CW005",
+                                                phenoDataDccColName = "Sample_ID",
+                                                protocolDataColNames = c("aoi",
+                                                                         "cell_line",
+                                                                         "roi_rep",
+                                                                         "pool_rep",
+                                                                         "slide_rep"),
+                                                experimentDataColNames = c("panel",
+                                                                           "fake_column")), # fake column name
+                         regexp = "Columns specified in `experimentDataColNames` are not found in")
+  
+  badPhenoData <- phenoData
+  badPhenoData$`slide name`[1] <- "slide1"
+  
+  testthat::expect_warning(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+                                                pkcFiles = PKCFiles,
+                                                phenoData = badPhenoData,
+                                                phenoDataFile = SampleAnnotationFile,
+                                                phenoDataSheet = "CW005",
+                                                phenoDataDccColName = "Sample_ID",
+                                                protocolDataColNames = c("aoi",
+                                                                         "cell_line",
+                                                                         "roi_rep",
+                                                                         "pool_rep",
+                                                                         "slide_rep"),
+                                                experimentDataColNames = c("panel")), 
+                         regexp = "No NTCs were found. These are determined by")
+})
+
