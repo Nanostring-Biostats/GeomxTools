@@ -21,7 +21,7 @@ numDCC <- 10
 tolerance <- 1e-4
 
 #random subset of 10 DCC files
-DCCFiles <- DCCFiles[sample(1:length(DCCFiles), numDCC, replace = TRUE)]
+DCCFiles <- DCCFiles[sample(1:length(DCCFiles), numDCC)]
 
 matches <- NULL
 dcc <- 1
