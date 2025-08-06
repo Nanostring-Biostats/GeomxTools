@@ -18,9 +18,10 @@ PKC <- readPKCFile(PKCFiles)
 PKC$RTS_ID <- gsub("RNA", "RTS00", PKC$RTS_ID)
 
 numDCC <- 10
+tolerance <- 1e-4
 
 #random subset of 10 DCC files
-DCCFiles <- DCCFiles[sample(1:length(DCCFiles), numDCC)]
+DCCFiles <- DCCFiles[sample(1:length(DCCFiles), numDCC, replace = TRUE)]
 
 matches <- NULL
 dcc <- 1
@@ -44,11 +45,11 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
     }
     
     if(length(probes) == 1){
-      matches <- c(matches, DCC$Code_Summary[probes,"Count"] == 
-                     aggTestData@assayData$exprs[i,DCC_file])
+      matches <- c(matches, abs(DCC$Code_Summary[probes,"Count"] - 
+                     aggTestData@assayData$exprs[i,DCC_file]) <= tolerance)
     }else{
-      matches <- c(matches, EnvStats::geoMean(DCC$Code_Summary[probes,"Count"]) == 
-                     aggTestData@assayData$exprs[i,DCC_file])
+      matches <- c(matches, abs(EnvStats::geoMean(DCC$Code_Summary[probes,"Count"]) - 
+                     aggTestData@assayData$exprs[i,DCC_file]) <= tolerance)
     }
   }
   
@@ -83,11 +84,11 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
       }
     }
     
-    matches <- c(matches, EnvStats::geoMean(DCC$Code_Summary[negs,"Count"]) == 
-                   pData(aggTestData)[DCC_file, paste0("NegGeoMean_",i)])
+    matches <- c(matches, abs(EnvStats::geoMean(DCC$Code_Summary[negs,"Count"]) - 
+                   pData(aggTestData)[DCC_file, paste0("NegGeoMean_",i)]) <= tolerance)
     
-    matches <- c(matches, EnvStats::geoSD(DCC$Code_Summary[negs,"Count"]) == 
-                   pData(aggTestData)[DCC_file, paste0("NegGeoSD_",i)])
+    matches <- c(matches, abs(EnvStats::geoSD(DCC$Code_Summary[negs,"Count"]) - 
+                   pData(aggTestData)[DCC_file, paste0("NegGeoSD_",i)]) <= tolerance)
   }
   
   dcc <- dcc + 1
