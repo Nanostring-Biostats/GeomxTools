@@ -8,7 +8,7 @@ DCCFiles <- dir(datadir, pattern=".dcc$", full.names=TRUE)
 PKCFiles <- unzip(zipfile = file.path(datadir,  "/pkcs.zip"))
 
 testData <- readRDS(file= system.file("extdata", "DSP_NGS_Example_Data", 
-                            "demoData.rds", package = "GeomxTools"))
+                                      "demoData.rds", package = "GeomxTools"))
 
 aggTestData <- aggregateCounts(testData)
 
@@ -36,7 +36,7 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
     if(sum(is.na(DCC$Code_Summary[probes,"Count"])) > 0){
       #NAs are changed to 0 counts
       DCC$Code_Summary[probes, "Count"][is.na(DCC$Code_Summary[probes, "Count"])] <- 0
-
+      
       #0 count doesn't meet minimum threshold so all counts are increased by threshold
       #0.5 is default threshold from thresholdValues()
       if(length(probes) != 1){
@@ -46,10 +46,10 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
     
     if(length(probes) == 1){
       matches <- c(matches, abs(DCC$Code_Summary[probes,"Count"] - 
-                     aggTestData@assayData$exprs[i,DCC_file]) <= tolerance)
+                                  aggTestData@assayData$exprs[i,DCC_file]) <= tolerance)
     }else{
       matches <- c(matches, abs(EnvStats::geoMean(DCC$Code_Summary[probes,"Count"]) - 
-                     aggTestData@assayData$exprs[i,DCC_file]) <= tolerance)
+                                  aggTestData@assayData$exprs[i,DCC_file]) <= tolerance)
     }
   }
   
@@ -85,10 +85,10 @@ while(dcc <= length(DCCFiles) & all(matches == TRUE)){
     }
     
     matches <- c(matches, abs(EnvStats::geoMean(DCC$Code_Summary[negs,"Count"]) - 
-                   pData(aggTestData)[DCC_file, paste0("NegGeoMean_",i)]) <= tolerance)
+                                pData(aggTestData)[DCC_file, paste0("NegGeoMean_",i)]) <= tolerance)
     
     matches <- c(matches, abs(EnvStats::geoSD(DCC$Code_Summary[negs,"Count"]) - 
-                   pData(aggTestData)[DCC_file, paste0("NegGeoSD_",i)]) <= tolerance)
+                                pData(aggTestData)[DCC_file, paste0("NegGeoSD_",i)]) <= tolerance)
   }
   
   dcc <- dcc + 1
@@ -103,72 +103,72 @@ testthat::test_that("test that the geomean and geosd of negatives is correct", {
 
 
 subData <- 
-    subset(testData, subset=Module == "VnV_GeoMx_Hs_CTA_v1.2", 
-           select=sampleNames(testData) %in% 
-                      sample(sampleNames(testData), 
+  subset(testData, subset=Module == "VnV_GeoMx_Hs_CTA_v1.2", 
+         select=sampleNames(testData) %in% 
+           sample(sampleNames(testData), 
                   10, replace=FALSE))
 subData <- 
-    subset(subData, 
-           subset=TargetName %in% 
-                      sample(unique(fData(subData)[["TargetName"]]), 
+  subset(subData, 
+         subset=TargetName %in% 
+           sample(unique(fData(subData)[["TargetName"]]), 
                   10, replace=FALSE))
 
 subAggd <- suppressWarnings(aggregateCounts(subData))
 
 # Spec 3: featureType is changed after aggregation
 testthat::test_that("Feature type changed after aggregation", {
-    expect_true(featureType(subData) == "Probe")
-    expect_true(featureType(subAggd) == "Target")
-
+  expect_true(featureType(subData) == "Probe")
+  expect_true(featureType(subAggd) == "Target")
+  
 })
 
 # Spec 4: Aggregated object has target dimension and annotations
 testthat::test_that("Aggregated object has target dimension and annotations", {
-    expect_true(all(fData(subData)[["TargetName"]] %in% featureNames(subAggd)))
-    expect_true(length(unique(fData(subData)[["TargetName"]])) == 
-                    dim(subAggd)[[1L]])
-    expect_true(dim(subData)[[2L]] == dim(subAggd)[[2L]])
-
-    targetLabels <- 
-        fvarLabels(subData)[!fvarLabels(subData) %in% 
-                                c("RTS_ID", "QCFlags", "ProbeID")]
-    expect_true(all(targetLabels %in% fvarLabels(subAggd)))
-    expect_true(all(svarLabels(subData) %in% svarLabels(subAggd)))
+  expect_true(all(fData(subData)[["TargetName"]] %in% featureNames(subAggd)))
+  expect_true(length(unique(fData(subData)[["TargetName"]])) == 
+                dim(subAggd)[[1L]])
+  expect_true(dim(subData)[[2L]] == dim(subAggd)[[2L]])
+  
+  targetLabels <- 
+    fvarLabels(subData)[!fvarLabels(subData) %in% 
+                          c("RTS_ID", "QCFlags", "ProbeID")]
+  expect_true(all(targetLabels %in% fvarLabels(subAggd)))
+  expect_true(all(svarLabels(subData) %in% svarLabels(subAggd)))
 })
 
 # Spec 5: Target expression matrix contains aggregated counts
 testthat::test_that("Target expression matrix contains aggregated counts", {
-    expect_true(all(colnames(exprs(subData)) == colnames(exprs(subAggd))))
-    sameTargs <- intersect(fData(subData)[["TargetName"]],
-                           rownames(exprs(subAggd)))
-    expect_true(length(sameTargs) == 
-                    length(unique(fData(subData)[["TargetName"]])))
-    subList <- lapply(featureNames(subAggd), function(currTarg) {
-        aggdCounts <- exprs(subAggd)[currTarg, sampleNames(subData)]
-        targData <- exprs(subset(subData, subset=TargetName == currTarg))
-        targMeans <- apply(targData, 2L, function(sampCount) {
-            ifelse(length(sampCount) > 1, ngeoMean(sampCount), sampCount)})
-        return(all(aggdCounts == targMeans))
-    })
-    expect_true(all(unlist(subList)))
+  expect_true(all(colnames(exprs(subData)) == colnames(exprs(subAggd))))
+  sameTargs <- intersect(fData(subData)[["TargetName"]],
+                         rownames(exprs(subAggd)))
+  expect_true(length(sameTargs) == 
+                length(unique(fData(subData)[["TargetName"]])))
+  subList <- lapply(featureNames(subAggd), function(currTarg) {
+    aggdCounts <- exprs(subAggd)[currTarg, sampleNames(subData)]
+    targData <- exprs(subset(subData, subset=TargetName == currTarg))
+    targMeans <- apply(targData, 2L, function(sampCount) {
+      ifelse(length(sampCount) > 1, ngeoMean(sampCount), sampCount)})
+    return(all(aggdCounts == targMeans))
+  })
+  expect_true(all(unlist(subList)))
 })
 
 # Spec 6: Other aggregation functions work
 testthat::test_that("Other aggregation functions work", {
-    subSum <- suppressWarnings(aggregateCounts(subData, FUN=sum))
-    expect_true(all(colnames(exprs(subData)) == colnames(exprs(subSum))))
-    sameTargs <- intersect(fData(subData)[["TargetName"]],
-                           rownames(exprs(subSum)))
-    expect_true(length(sameTargs) == 
-                    length(unique(fData(subData)[["TargetName"]])))
-    subList <- lapply(featureNames(subSum), function(currTarg) {
-        aggdCounts <- exprs(subSum)[currTarg, sampleNames(subData)]
-        targData <- exprs(subset(subData, subset=TargetName == currTarg))
-        targSums <- apply(targData, 2L, function(sampCount) {
-            ifelse(length(sampCount) > 1, sum(sampCount), sampCount)})
-        return(all(aggdCounts == targSums))
-    })
-    expect_true(all(unlist(subList)))
+  subSum <- suppressWarnings(aggregateCounts(subData, FUN=sum))
+  expect_true(all(colnames(exprs(subData)) == colnames(exprs(subSum))))
+  sameTargs <- intersect(fData(subData)[["TargetName"]],
+                         rownames(exprs(subSum)))
+  expect_true(length(sameTargs) == 
+                length(unique(fData(subData)[["TargetName"]])))
+  subList <- lapply(featureNames(subSum), function(currTarg) {
+    aggdCounts <- exprs(subSum)[currTarg, sampleNames(subData)]
+    targData <- exprs(subset(subData, subset=TargetName == currTarg))
+    targSums <- apply(targData, 2L, function(sampCount) {
+      ifelse(length(sampCount) > 1, sum(sampCount), sampCount)})
+    return(all(aggdCounts == targSums))
+  })
+  expect_true(all(unlist(subList)))
 })
 
 
@@ -202,7 +202,7 @@ negs2 <- summarizeNegatives(negs)
 
 # Spec 1: summarizeNegatives can be rerun
 testthat::test_that("summarizeNegatives can be rerun", {
-    expect_identical(negs, negs2)
+  expect_identical(negs, negs2)
 })
 
 # Spec 2: negatives are summarized by panel
