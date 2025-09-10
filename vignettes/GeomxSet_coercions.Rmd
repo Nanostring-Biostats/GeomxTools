@@ -279,7 +279,7 @@ de_genes <- FindMarkers(nsclcSeurat, ident.1 = "Tumor", ident.2 = "TME")
 de_genes <- de_genes[order(abs(de_genes$avg_log2FC), decreasing = TRUE),]
 de_genes <- de_genes[is.finite(de_genes$avg_log2FC) & de_genes$p_val < 1e-25,]
 
-
+gps <- list()
 
 for(i in rownames(de_genes)[1:2]){
   print(data.frame(de_genes[i,]))
@@ -300,8 +300,10 @@ for(i in rownames(de_genes)[1:2]){
                           limits = c(min(nsclcSeurat@assays$GeoMx$data[i,]),
                                      max(nsclcSeurat@assays$GeoMx$data[i,]))))
   
-  print(wrap_plots(tumor, TME))
+  gps[[i]] <- wrap_plots(tumor, TME)
 }
+
+print(gps)
 
 ```
 

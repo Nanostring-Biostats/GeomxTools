@@ -55,8 +55,8 @@ testthat::test_that("check for error if multiple defaults per module", {
 
 # req7: check for warning when resolving multiple PKC versions:------
 testthat::test_that("check for warning when resolving multiple PKC versions", {
-  expect_warning(readPKCFile(multiPKCFiles),"The following probes")
-  expect_warning(readPKCFile(multiPKCFiles),"The following PKC")
+  expect_warning(expect_warning(readPKCFile(multiPKCFiles),
+                                "The following probes"),"The following PKC")
 })
 
 # req: Confirm Target Groups are as expected:------
@@ -100,3 +100,4 @@ testthat::test_that("check module probes in all PKC versions", {
   expect_false(combineReVer$Module[reassignedProbe] %in% combineVer$Module)
   expect_false(combineVer$Module[reassignedProbe] %in% combineReVer$Module)
 })
+
