@@ -1,3 +1,9 @@
+# GeomxTools 3.12.1
+* Added pathway information to feature metadata
+* Allowed more input types for pheno data (data.frames, lab worksheet) during readNanoStringGeoMxSet
+* Bug fix to qcProteinSignal figure axis limit when one or more protein have 0 expression
+* Updated tests for Mac and ggplot2 update
+
 # GeomxTools 3.7.3
 * small bug fix in version comparisons (PKC & Seurat)
 * update SpatialExperiment vignette plot coordinates
