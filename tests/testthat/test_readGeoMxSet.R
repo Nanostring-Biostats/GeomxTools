@@ -283,7 +283,8 @@ testthat::test_that("GeoMxSet objects can be read in using lab worksheet and dat
 })
 
 testthat::test_that("Loading will error if expected columns are not available in phenoData",{
-  testthat::expect_warning(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+  testthat::expect_warning(testthat::expect_warning(
+                           readNanoStringGeoMxSet(dccFiles = DCCFiles, 
                                                   pkcFiles = PKCFiles,
                                                   phenoData = phenoData[,-2], # remove "slide name" column
                                                   phenoDataFile = SampleAnnotationFile,
@@ -295,7 +296,7 @@ testthat::test_that("Loading will error if expected columns are not available in
                                                                            "pool_rep",
                                                                            "slide_rep"),
                                                   experimentDataColNames = c("panel")), 
-                           regexp = "'slide name' is an expected column in phenoData.")
+                           regexp = "'slide name' is an expected column in phenoData."))
   
   testthat::expect_error(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
                                                 pkcFiles = PKCFiles,
@@ -344,7 +345,8 @@ testthat::test_that("Loading will error if expected columns are not available in
   badPhenoData <- phenoData
   badPhenoData$`slide name`[1] <- "slide1"
   
-  testthat::expect_warning(readNanoStringGeoMxSet(dccFiles = DCCFiles, 
+  testthat::expect_warning(testthat::expect_warning(
+                           readNanoStringGeoMxSet(dccFiles = DCCFiles, 
                                                 pkcFiles = PKCFiles,
                                                 phenoData = badPhenoData,
                                                 phenoDataFile = SampleAnnotationFile,
@@ -356,6 +358,6 @@ testthat::test_that("Loading will error if expected columns are not available in
                                                                          "pool_rep",
                                                                          "slide_rep"),
                                                 experimentDataColNames = c("panel")), 
-                         regexp = "No NTCs were found. These are determined by")
+                         regexp = "No NTCs were found. These are determined by"))
 })
 
