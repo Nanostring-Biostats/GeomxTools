@@ -37,7 +37,6 @@ Loading the NanoStringNCTools and GeoMxTools packages allow users access to the 
 library(NanoStringNCTools)
 library(GeomxTools)
 library(EnvStats)
-library(ggiraph)
 ```
 
 ## Building a NanoStringGeoMxSet from .DCC files 

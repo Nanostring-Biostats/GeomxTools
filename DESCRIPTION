@@ -2,10 +2,10 @@ Package: GeomxTools
 Title: NanoString GeoMx Tools
 Description: Tools for NanoString Technologies GeoMx Technology.  Package provides functions for reading in DCC and
          PKC files based on an ExpressionSet derived object.  Normalization and QC functions are also included.
-Version: 3.12.1
+Version: 3.13.2
 Encoding: UTF-8
 Authors@R: c(person("Maddy", "Griswold", email = "mgriswold@nanostring.com", role = c("cre", "aut")),
-	     person("Nicole", "Ortogero", email = "nortogero@nanostring.com", role = c("aut")), 
+             person("Nicole", "Ortogero", email = "nortogero@nanostring.com", role = c("aut")), 
              person("Zhi", "Yang", role = c("aut")),
              person("Ronalyn", "Vitancol", email = "rvitancol@nanostring.com", role = c("aut")),
              person("David", "Henderson", role = c("aut")))
@@ -18,7 +18,6 @@ Suggests:
     knitr,
     testthat (>= 3.0.0),
     parallel,
-    ggiraph,
     Seurat,
     SpatialExperiment (>= 1.4.0),
     SpatialDecon,
