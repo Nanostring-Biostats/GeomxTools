@@ -4,7 +4,6 @@ library(NanoStringNCTools)
 library(GeomxTools)
 library(testthat)
 library(EnvStats)
-library(ggiraph)
 
 
 testDataRaw <- readRDS(file= system.file("extdata","DSP_NGS_Example_Data", 
@@ -174,7 +173,7 @@ test_results <- readRDS("testData/outliersGrubbsTest.RDS")
 test_results <- test_results[names(test_results) %in% colnames(testDataRaw)]
 
 test_that("copied grubbs test function works as expected",{
-    expect_equal(test_results, apply(neg_set, 2, grubbs.test, two.sided=TRUE),
+    expect_equal(test_results, apply(neg_set, 2, GeomxTools:::grubbs.test, two.sided=TRUE),
                  tolerance = 1e-12)
 })
 
